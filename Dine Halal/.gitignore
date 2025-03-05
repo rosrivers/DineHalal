@@ -1,0 +1,22 @@
+# Firebase Configuration Files
+GoogleService-Info.plist
+
+# Xcode generated files
+*.xcuserstate
+*.xcworkspace
+*.xcodeproj
+DerivedData/
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# API Keys or Secrets (if stored in separate files)
+Secrets.swift
+
+# Environment files
+.env
+
+# macOS system files
+.DS_Store
+
