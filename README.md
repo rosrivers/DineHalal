@@ -39,7 +39,8 @@ Followed the proper steps to integrate Firebase into the project and authenticat
 These configurations should be tested and verified during the development phase sometime later.
 
 
-.gitignore File Explanation. 
+---> .gitignore File Explanation. 
+
 The .gitignore file is used to specify which files and directories should be ignored by Git. 
 This is useful to ensure sensitive data, unnecessary files, or files that are automatically generated during development (like build artifacts or dependency files) do not get committed to the repository.
 
