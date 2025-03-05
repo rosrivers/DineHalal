@@ -32,7 +32,7 @@ Google Sign-In is configured using the GIDSignIn.sharedInstance method, passing 
 
 2. Handling Sign-In:
 The Google sign-in process is not yet implemented.
-This will be handled in a separate view model, and not directly in the ContentView.swift.
+** This will be handled in a separate view model, and not directly in the ContentView.swift.****
 
 3. Environment Setup:
 Followed the proper steps to integrate Firebase into the project and authenticated using Google Sign-In.
@@ -65,3 +65,7 @@ macOS System Files:
 
 .DS_Store: A macOS system file used by Finder to store directory settings, which should not be tracked by Git.
 
+
+*****TO-DO***
+1.Set-up database storage. 
+2. Handle sign-in processes. 
