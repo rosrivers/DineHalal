@@ -1,9 +1,11 @@
-Dine Halal - Firebase and Google Sign-In Setup
+***Dine Halal - Firebase and Google Sign-In Setup***
+
+
 This project is for the Dine Halal app, where users can rate halal restaurants and food. 
 The primary goal is to integrate Firebase for backend services and Google Sign-In for user authentication. 
 Below is an explanation of the setup and configuration done so far.
 
-Technologies Used
+***Technologies Used***
 
 Firebase: Used for authentication and backend services.
 Google Sign-In: Used for user authentication via Google OAuth.
@@ -24,7 +26,7 @@ Configured Google Sign-In with Firebase Authentication in the app.
 
 
 
-Steps Taken:
+***Steps Taken:**
 1. Firebase and Google Sign-In Configuration:
 The Dine_HalalApp.swift file is configured to initialize Firebase using FirebaseApp.configure().
 
@@ -39,7 +41,7 @@ Followed the proper steps to integrate Firebase into the project and authenticat
 These configurations should be tested and verified during the development phase sometime later.
 
 
----> .gitignore File Explanation. 
+***.gitignore File Explanation.*** 
 
 The .gitignore file is used to specify which files and directories should be ignored by Git. 
 This is useful to ensure sensitive data, unnecessary files, or files that are automatically generated during development (like build artifacts or dependency files) do not get committed to the repository.
