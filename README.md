@@ -1,5 +1,5 @@
 <p align="center"> 
-  <img src="logo/DineHalal.jpg" alt="DineHalal" width="80px" height="80px">
+  <img src="logonobackground.png" alt="DineHalal" width="80px" height="80px">
 </p>
 <h1 align="center"> DineHalal </h1>
 <h3 align="center"> CSCI 499.05 Advanced Applications: Capstone Course in Computer Science </h3>
