@@ -18,10 +18,11 @@ struct Dine_HalalApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SplashScreenView() // Start with Splash Screen
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url) // Handle URL callback
                 }
         }
     }
+    
 }
