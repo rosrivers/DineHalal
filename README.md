@@ -30,6 +30,36 @@ No more **second-guessing**. With DineHalal, finding **authentic halal food** is
 
 ![----------------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-<!-- TO DO LIST BELOW -->
+<!-- TO DO - DONE LIST BELOW -->
 <h2 id="to-do"> To Do </h2>
--[X] 
+
+# DineHalal Authentication Setup 🔐
+
+## Authentication Progress ✅
+- [x] Email Authentication
+- [x] Google Sign-In Implementation (Added by @Joana2337)
+- [x] Info.plist Configuration
+- [x] SignIniew 
+## Google Sign-In Setup Guide 
+
+After pulling the latest changes, follow these steps to set up Google Sign-In:
+
+1. In Xcode, locate the `Dine-Halal-Info.plist` file in the project navigator
+
+2. Add the Info.plist to your target:
+   - Click on your project in the navigator
+   - Select the "Dine Halal" target
+   - Go to "Build Phases"
+   - Expand "Copy Bundle Resources"
+   - Click the "+" button
+   - Choose `Dine-Halal-Info.plist`
+   - Click "Add"
+
+3. Verify the setup:
+   - The Google Sign-In configuration should now work automatically
+   - If you see any issues, make sure the `Dine-Halal-Info.plist` is included in your target's "Copy Bundle Resources"
+
+Note: The Info.plist file contains the necessary Google Sign-In configuration, and this setup needs to be done only once after pulling these changes.
+
+---
+Last updated: 2025-03-07 20:24:18 UTC by @Joana2337
