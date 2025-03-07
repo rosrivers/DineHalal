@@ -62,4 +62,4 @@ After pulling the latest changes, follow these steps to set up Google Sign-In:
 Note: The Info.plist file contains the necessary Google Sign-In configuration, and this setup needs to be done only once after pulling these changes.
 
 ---
-Last updated: 2025-03-07 20:24:18 UTC by @Joana2337
+Last updated: 2025-03-07 20:24:18 UTC. 
