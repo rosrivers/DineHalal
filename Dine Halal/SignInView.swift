@@ -36,55 +36,83 @@ struct SignInView: View {
                     .font(.headline)
                     .foregroundColor(.darkBrown)
                 TextField("Enter your email", text: $email)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(.bottom)
+                    .padding()
+                    .background(Color.accent.opacity(0.7)) // Add a background color
+                    .cornerRadius(8) //
+                    .foregroundColor(.darkBrown.opacity(0.8)) // Placeholder color not changing!
+                  
 
                 Text("Password")
                     .font(.headline)
                     .foregroundColor(.darkBrown)
-                SecureField("Password", text: $password)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                SecureField("Password", text: $password )
+                    .padding()
+                    .background(Color.accent.opacity(0.7)) // Add a background color
+                    .cornerRadius(8)
+                    .foregroundColor(.darkBrown.opacity(0.8)) // Placeholder color not changing!
+                    
 
                 HStack {
                     Spacer()
                     Text("Forgot Password?")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                        .font(.system(size: 16))
+                        .foregroundColor(.accent)
+                }
+                
+                Button(action: {
+                    // Handle sign-in action
+                }) {
+                    Text("Next")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(.accent)
+                        .foregroundColor(.darkBrown)
+                        .cornerRadius(10)
                 }
             }
             .padding()
-            .background(Color.brown.opacity(0.2))
+            .background(.mud)
             .cornerRadius(10)
+            .padding(.all, 30) // Margin around the entire box (you can adjust this value)
 
-            Button(action: {
-                // Handle sign-in action
-            }) {
-                Text("Next")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.brown)
-                    .foregroundColor(.darkBrown)
-                    .cornerRadius(10)
+
+            HStack {
+                Rectangle()
+                    .frame(height: 2)
+                    .foregroundColor(.or)
+                    .padding(.trailing, 5) // Space between the line and "Or"
+                
+                Text("Or")
+                    .foregroundColor(.or) // Set color of "Or" text
+                    .padding(.horizontal, 5) // Padding around "Or"
+                
+                Rectangle()
+                    .frame(height: 2)
+                    .foregroundColor(.or)
+                    .padding(.leading, 5) // Space between the line and "Or"
             }
-            .padding()
-
-            Divider()
-                .padding()
 
             Button(action: {
                 // Handle Google Sign-In
             }) {
-                HStack {
-                    Image(systemName: "globe") // Use a Google icon if available
+                HStack(spacing: 12) {
+                    Image("google_logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 26, height: 26) // Adjust size as needed
                     Text("Continue with Google")
                         .font(.headline)
                         .foregroundColor(.darkBrown)
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(Color.brown.opacity(0.1))
+                .background(.accent)
                 .cornerRadius(10)
+                .overlay(
+                        RoundedRectangle(cornerRadius: 30)
+                            .stroke(Color.darkBrown, lineWidth: 2) // Border color and width
+                    )
             }
             .padding()
 
