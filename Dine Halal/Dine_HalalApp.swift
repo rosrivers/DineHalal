@@ -9,8 +9,11 @@ import GoogleSignIn
 
 @main
 struct Dine_HalalApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     init() {
-        FirebaseApp.configure() // Configuring Firebase
+        FirebaseApp.configure() // Configuring Firebase for when the app launches
+        
         if let clientID = FirebaseApp.app()?.options.clientID {
             GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
         }
@@ -20,9 +23,8 @@ struct Dine_HalalApp: App {
         WindowGroup {
             SplashScreenView() // Start with Splash Screen
                 .onOpenURL { url in
-                    GIDSignIn.sharedInstance.handle(url) // Handle URL callback
+                    GIDSignIn.sharedInstance.handle(url)
                 }
         }
     }
-    
 }
