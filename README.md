@@ -37,7 +37,7 @@ No more **second-guessing**. With DineHalal, finding **authentic halal food** is
 
 ## Authentication Progress ✅
 - [x] Email Authentication
-- [x] Google Sign-In Implementation (Added by @Joana2337)
+- [x] Google Sign-In Implementation 
 - [x] Info.plist Configuration
 - [x] SignIniew 
 ## Google Sign-In Setup Guide 
