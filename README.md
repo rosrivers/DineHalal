@@ -32,4 +32,16 @@ No more **second-guessing**. With DineHalal, finding **authentic halal food** is
 
 <!-- TO DO LIST BELOW -->
 <h2 id="to-do"> To Do </h2>
+<p align="justify"> 
+  
+  Do you ever get tired of restaurants **falsely claiming** they’re halal? Meet Layla, a college student who follows a halal diet. After class, she wants to grab a quick meal but struggles to find **verified halal options**. Google and Yelp list restaurants as “halal,” but many aren’t actually **certified**. She wastes time calling restaurants or checking multiple apps, only to find out they **don’t meet her dietary needs**.  
+
+DineHalal is the solution—a platform designed to make discovering **verified halal food** easier. It provides:  
+- **Accurate Halal Listings** – Every restaurant is **verified** to ensure it truly meets halal standards.  
+- **Smart Search & Filters** – Find places based on **location, cuisine, and dietary preferences**.  
+- **Community Reviews** – Read experiences from other **halal-conscious diners** before you go.  
+- **Menus, Reservations & Delivery** – Access restaurant menus, book tables, or **order food directly**.  
+
+No more **second-guessing**. With DineHalal, finding **authentic halal food** is simple, reliable, and stress-free.
+</p>
 
