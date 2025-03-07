@@ -32,4 +32,4 @@ No more **second-guessing**. With DineHalal, finding **authentic halal food** is
 
 <!-- TO DO LIST BELOW -->
 <h2 id="to-do"> To Do </h2>
--[x] 
+-[X] 
