@@ -36,12 +36,27 @@
 		848DA2FF2D78951F00ED130D /* DineHalalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DineHalalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		848DA2E62D78951E00ED130D /* Dine Halal */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Dine Halal";
-			sourceTree = "<group>";
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D334636D2D7BEE4500191902 /* Exceptions for "Dine Halal" folder in "DineHalal" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				.gitignore,
+				AppDelegate.swift,
+				Assets.xcassets,
+				AuthView.swift,
+				ContentView.swift,
+				Dine_HalalApp.swift,
+				"GoogleService-Info.plist",
+				GoogleSignInHelper.swift,
+				"Preview Content/Preview Assets.xcassets",
+				SignInView.swift,
+				SplashScreenView.swift,
+			);
+			target = 848DA2E32D78951E00ED130D /* DineHalal */;
 		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
 		848DA2F82D78951F00ED130D /* Dine HalalTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Dine HalalTests";
@@ -50,6 +65,14 @@
 		848DA3022D78951F00ED130D /* Dine HalalUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Dine HalalUITests";
+			sourceTree = "<group>";
+		};
+		D33463692D7BC2BF00191902 /* Dine Halal */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D334636D2D7BEE4500191902 /* Exceptions for "Dine Halal" folder in "DineHalal" target */,
+			);
+			path = "Dine Halal";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -86,7 +109,7 @@
 		848DA2DB2D78951E00ED130D = {
 			isa = PBXGroup;
 			children = (
-				848DA2E62D78951E00ED130D /* Dine Halal */,
+				D33463692D7BC2BF00191902 /* Dine Halal */,
 				848DA2F82D78951F00ED130D /* Dine HalalTests */,
 				848DA3022D78951F00ED130D /* Dine HalalUITests */,
 				848DA2E52D78951E00ED130D /* Products */,
@@ -117,9 +140,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				848DA2E62D78951E00ED130D /* Dine Halal */,
 			);
 			name = DineHalal;
 			packageProductDependencies = (
@@ -413,6 +433,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Dine Halal/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "DineHalal-Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -431,10 +452,11 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "TeamProject.Dine-Halal";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = 1;
 				XROS_DEPLOYMENT_TARGET = 2.2;
 			};
 			name = Debug;
@@ -450,6 +472,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Dine Halal/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "DineHalal-Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -468,10 +491,11 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "TeamProject.Dine-Halal";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = 1;
 				XROS_DEPLOYMENT_TARGET = 2.2;
 			};
 			name = Release;

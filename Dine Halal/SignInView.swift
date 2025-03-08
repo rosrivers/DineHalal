@@ -39,7 +39,7 @@ struct SignInView: View {
                     .foregroundColor(.darkBrown)
                 TextField("Enter your email", text: $email)
                     .padding()
-                    .background(Color.accent.opacity(0.7)) // Add a background color
+                    .background(Color.accent.opacity(0.7))
                     .cornerRadius(8) //
                     .foregroundColor(.darkBrown.opacity(0.8)) // Placeholder color not changing!
                   
@@ -49,7 +49,7 @@ struct SignInView: View {
                     .foregroundColor(.darkBrown)
                 SecureField("Password", text: $password )
                     .padding()
-                    .background(Color.accent.opacity(0.7)) // Add a background color
+                    .background(Color.accent.opacity(0.7))
                     .cornerRadius(8)
                     .foregroundColor(.darkBrown.opacity(0.8)) // Placeholder color not changing!
                     
