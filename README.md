@@ -44,7 +44,7 @@ No more **second-guessing**. With DineHalal, finding **authentic halal food** is
 
 After pulling the latest changes, follow these steps to set up Google Sign-In:
 
-1. In Xcode, locate the `Dine-Halal-Info.plist` file in the project navigator
+1. In Xcode, locate the `Dine-Halal-Info.plist` file in the project navigator, make sure the file name is correct, it may be `DineHalal-Info.plist`
 
 2. Add the Info.plist to your target:
    - Click on your project in the navigator
