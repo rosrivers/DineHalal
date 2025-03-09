@@ -1,0 +1,667 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		84B9B8792D7896B30029C143 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 84B9B8782D7896B30029C143 /* FirebaseAuth */; };
+		84B9B87B2D7896B30029C143 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 84B9B87A2D7896B30029C143 /* FirebaseFirestore */; };
+		84B9B8802D78A47D0029C143 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 84B9B87F2D78A47D0029C143 /* GoogleSignIn */; };
+		84B9B8822D78A47D0029C143 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 84B9B8812D78A47D0029C143 /* GoogleSignInSwift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		848DA2F62D78951F00ED130D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 848DA2DC2D78951E00ED130D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 848DA2E32D78951E00ED130D;
+			remoteInfo = "Dine Halal";
+		};
+		848DA3002D78951F00ED130D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 848DA2DC2D78951E00ED130D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 848DA2E32D78951E00ED130D;
+			remoteInfo = "Dine Halal";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		848DA2E42D78951E00ED130D /* Dine Halal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Dine Halal.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		848DA2F52D78951F00ED130D /* Dine HalalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Dine HalalTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		848DA2FF2D78951F00ED130D /* Dine HalalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Dine HalalUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		84A33F8D2D7B4C9700862E87 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.2.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		848DA2E62D78951E00ED130D /* Dine Halal */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Dine Halal";
+			sourceTree = "<group>";
+		};
+		848DA2F82D78951F00ED130D /* Dine HalalTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Dine HalalTests";
+			sourceTree = "<group>";
+		};
+		848DA3022D78951F00ED130D /* Dine HalalUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Dine HalalUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		848DA2E12D78951E00ED130D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				84B9B8792D7896B30029C143 /* FirebaseAuth in Frameworks */,
+				84B9B87B2D7896B30029C143 /* FirebaseFirestore in Frameworks */,
+				84B9B8802D78A47D0029C143 /* GoogleSignIn in Frameworks */,
+				84B9B8822D78A47D0029C143 /* GoogleSignInSwift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		848DA2F22D78951F00ED130D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		848DA2FC2D78951F00ED130D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		848DA2DB2D78951E00ED130D = {
+			isa = PBXGroup;
+			children = (
+				848DA2E62D78951E00ED130D /* Dine Halal */,
+				848DA2F82D78951F00ED130D /* Dine HalalTests */,
+				848DA3022D78951F00ED130D /* Dine HalalUITests */,
+				84A33F8C2D7B4C9700862E87 /* Frameworks */,
+				848DA2E52D78951E00ED130D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		848DA2E52D78951E00ED130D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				848DA2E42D78951E00ED130D /* Dine Halal.app */,
+				848DA2F52D78951F00ED130D /* Dine HalalTests.xctest */,
+				848DA2FF2D78951F00ED130D /* Dine HalalUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		84A33F8C2D7B4C9700862E87 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				84A33F8D2D7B4C9700862E87 /* UIKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		848DA2E32D78951E00ED130D /* Dine Halal */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 848DA3092D78951F00ED130D /* Build configuration list for PBXNativeTarget "Dine Halal" */;
+			buildPhases = (
+				848DA2E02D78951E00ED130D /* Sources */,
+				848DA2E12D78951E00ED130D /* Frameworks */,
+				848DA2E22D78951E00ED130D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				848DA2E62D78951E00ED130D /* Dine Halal */,
+			);
+			name = "Dine Halal";
+			packageProductDependencies = (
+				84B9B8782D7896B30029C143 /* FirebaseAuth */,
+				84B9B87A2D7896B30029C143 /* FirebaseFirestore */,
+				84B9B87F2D78A47D0029C143 /* GoogleSignIn */,
+				84B9B8812D78A47D0029C143 /* GoogleSignInSwift */,
+			);
+			productName = "Dine Halal";
+			productReference = 848DA2E42D78951E00ED130D /* Dine Halal.app */;
+			productType = "com.apple.product-type.application";
+		};
+		848DA2F42D78951F00ED130D /* Dine HalalTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 848DA30C2D78951F00ED130D /* Build configuration list for PBXNativeTarget "Dine HalalTests" */;
+			buildPhases = (
+				848DA2F12D78951F00ED130D /* Sources */,
+				848DA2F22D78951F00ED130D /* Frameworks */,
+				848DA2F32D78951F00ED130D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				848DA2F72D78951F00ED130D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				848DA2F82D78951F00ED130D /* Dine HalalTests */,
+			);
+			name = "Dine HalalTests";
+			packageProductDependencies = (
+			);
+			productName = "Dine HalalTests";
+			productReference = 848DA2F52D78951F00ED130D /* Dine HalalTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		848DA2FE2D78951F00ED130D /* Dine HalalUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 848DA30F2D78951F00ED130D /* Build configuration list for PBXNativeTarget "Dine HalalUITests" */;
+			buildPhases = (
+				848DA2FB2D78951F00ED130D /* Sources */,
+				848DA2FC2D78951F00ED130D /* Frameworks */,
+				848DA2FD2D78951F00ED130D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				848DA3012D78951F00ED130D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				848DA3022D78951F00ED130D /* Dine HalalUITests */,
+			);
+			name = "Dine HalalUITests";
+			packageProductDependencies = (
+			);
+			productName = "Dine HalalUITests";
+			productReference = 848DA2FF2D78951F00ED130D /* Dine HalalUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		848DA2DC2D78951E00ED130D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					848DA2E32D78951E00ED130D = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					848DA2F42D78951F00ED130D = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 848DA2E32D78951E00ED130D;
+					};
+					848DA2FE2D78951F00ED130D = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 848DA2E32D78951E00ED130D;
+					};
+				};
+			};
+			buildConfigurationList = 848DA2DF2D78951E00ED130D /* Build configuration list for PBXProject "Dine Halal" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 848DA2DB2D78951E00ED130D;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				84B9B8772D7896B30029C143 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				84B9B87E2D78A47D0029C143 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 848DA2E52D78951E00ED130D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				848DA2E32D78951E00ED130D /* Dine Halal */,
+				848DA2F42D78951F00ED130D /* Dine HalalTests */,
+				848DA2FE2D78951F00ED130D /* Dine HalalUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		848DA2E22D78951E00ED130D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		848DA2F32D78951F00ED130D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		848DA2FD2D78951F00ED130D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		848DA2E02D78951E00ED130D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		848DA2F12D78951F00ED130D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		848DA2FB2D78951F00ED130D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		848DA2F72D78951F00ED130D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 848DA2E32D78951E00ED130D /* Dine Halal */;
+			targetProxy = 848DA2F62D78951F00ED130D /* PBXContainerItemProxy */;
+		};
+		848DA3012D78951F00ED130D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 848DA2E32D78951E00ED130D /* Dine Halal */;
+			targetProxy = 848DA3002D78951F00ED130D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		848DA3072D78951F00ED130D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		848DA3082D78951F00ED130D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		848DA30A2D78951F00ED130D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Dine Halal/Dine_Halal.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Dine Halal/Preview Content\"";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Dine-Halal-Info.plist";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				NEW_SETTING = "";
+				PRODUCT_BUNDLE_IDENTIFIER = "TeamProject.Dine-Halal";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				XROS_DEPLOYMENT_TARGET = 2.2;
+			};
+			name = Debug;
+		};
+		848DA30B2D78951F00ED130D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Dine Halal/Dine_Halal.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Dine Halal/Preview Content\"";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Dine-Halal-Info.plist";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				NEW_SETTING = "";
+				PRODUCT_BUNDLE_IDENTIFIER = "TeamProject.Dine-Halal";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				XROS_DEPLOYMENT_TARGET = 2.2;
+			};
+			name = Release;
+		};
+		848DA30D2D78951F00ED130D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "TeamProject.Dine-HalalTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Dine Halal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Dine Halal";
+				XROS_DEPLOYMENT_TARGET = 2.2;
+			};
+			name = Debug;
+		};
+		848DA30E2D78951F00ED130D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "TeamProject.Dine-HalalTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Dine Halal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Dine Halal";
+				XROS_DEPLOYMENT_TARGET = 2.2;
+			};
+			name = Release;
+		};
+		848DA3102D78951F00ED130D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "TeamProject.Dine-HalalUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_TARGET_NAME = "Dine Halal";
+				XROS_DEPLOYMENT_TARGET = 2.2;
+			};
+			name = Debug;
+		};
+		848DA3112D78951F00ED130D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "TeamProject.Dine-HalalUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_TARGET_NAME = "Dine Halal";
+				XROS_DEPLOYMENT_TARGET = 2.2;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		848DA2DF2D78951E00ED130D /* Build configuration list for PBXProject "Dine Halal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				848DA3072D78951F00ED130D /* Debug */,
+				848DA3082D78951F00ED130D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		848DA3092D78951F00ED130D /* Build configuration list for PBXNativeTarget "Dine Halal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				848DA30A2D78951F00ED130D /* Debug */,
+				848DA30B2D78951F00ED130D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		848DA30C2D78951F00ED130D /* Build configuration list for PBXNativeTarget "Dine HalalTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				848DA30D2D78951F00ED130D /* Debug */,
+				848DA30E2D78951F00ED130D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		848DA30F2D78951F00ED130D /* Build configuration list for PBXNativeTarget "Dine HalalUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				848DA3102D78951F00ED130D /* Debug */,
+				848DA3112D78951F00ED130D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		84B9B8772D7896B30029C143 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.9.0;
+			};
+		};
+		84B9B87E2D78A47D0029C143 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		84B9B8782D7896B30029C143 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84B9B8772D7896B30029C143 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		84B9B87A2D7896B30029C143 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84B9B8772D7896B30029C143 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		84B9B87F2D78A47D0029C143 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84B9B87E2D78A47D0029C143 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		84B9B8812D78A47D0029C143 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84B9B87E2D78A47D0029C143 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 848DA2DC2D78951E00ED130D /* Project object */;
+}
