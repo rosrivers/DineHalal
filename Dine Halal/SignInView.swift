@@ -12,6 +12,7 @@ import Firebase
 struct SignInView: View {
     @State private var email: String = ""
     @State private var password: String = ""
+    @State private var isSignedIn = false  // Track sign-in state
 
     var body: some View {
         VStack {
@@ -135,6 +136,7 @@ struct SignInView: View {
                               print("Error signing in with Firebase: \(error.localizedDescription)")
                           } else {
                               print("Firebase sign-in successful!")
+                              isSignedIn = true  // Added this to trigger navigation
                           }
                       }
                   }
@@ -164,5 +166,8 @@ struct SignInView: View {
         .padding()
         .background(Color("AccentColor"))
         .ignoresSafeArea()
+        .fullScreenCover(isPresented: $isSignedIn) {  // ✅ Minimal way to navigate
+                    HomeScreen()
+                }
     }
 }
