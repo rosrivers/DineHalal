@@ -17,7 +17,7 @@ struct HomeScreen: View {
             VStack {
                 // Map and App Title
                 ZStack(alignment: .topTrailing) {
-                    //Image("map_background") // Replace with actual map image or MapKit
+                    //Image("map_background") // Replace with actual MapKit
                         //.resizable()
                        // .scaledToFit()
                         
