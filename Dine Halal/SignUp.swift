@@ -1,43 +1,44 @@
 //
-//  SignInView.swift
-//  DineHalal
+//  SignUp.swift
+//  Dine Halal
 //
-//  Created by Iman Ikram on 3/5/25.
+//  Created by Iman Ikram on 3/15/25.
 //
 
 import SwiftUI
-import GoogleSignIn
-import FirebaseAuth
-import Firebase
 
-struct SignInView: View {
+struct SignUp: View {
+    @State private var name: String = ""
     @State private var email: String = ""
     @State private var password: String = ""
-    @State private var isSignedIn = false  // Track sign-in state
-    @State private var path = NavigationPath()  // For NavigationStack
+    @State private var showSignIn = false  // Track navigation to Sign In
 
     var body: some View {
-        NavigationStack(path: $path) { // Use NavigationStack for modern navigation
+        NavigationView {
             VStack {
                 Spacer()
 
-                Image("Icon") // Logo on top
+                Image("Icon") // App logo
                     .resizable()
                     .scaledToFit()
                     .frame(width: 150, height: 150)
 
-                Text("DineHalal")
+                Text("Create Account")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundColor(Color.darkBrown)
 
-                Text("Halal dining made simple and reliable")
-                    .font(.subheadline)
-                    .foregroundColor(.darkBrown)
-
                 Spacer()
 
                 VStack(alignment: .leading, spacing: 10) {
+                    Text("Name")
+                        .font(.headline)
+                        .foregroundColor(.darkBrown)
+                    TextField("Enter your name", text: $name)
+                        .padding()
+                        .background(Color.accent.opacity(0.7))
+                        .cornerRadius(8)
+
                     Text("Email")
                         .font(.headline)
                         .foregroundColor(.darkBrown)
@@ -45,28 +46,19 @@ struct SignInView: View {
                         .padding()
                         .background(Color.accent.opacity(0.7))
                         .cornerRadius(8)
-                        .foregroundColor(.darkBrown.opacity(0.8))
 
                     Text("Password")
                         .font(.headline)
                         .foregroundColor(.darkBrown)
-                    SecureField("Password", text: $password)
+                    SecureField("Create a password", text: $password)
                         .padding()
                         .background(Color.accent.opacity(0.7))
                         .cornerRadius(8)
-                        .foregroundColor(.darkBrown.opacity(0.8))
-
-                    HStack {
-                        Spacer()
-                        Text("Forgot Password?")
-                            .font(.system(size: 16))
-                            .foregroundColor(.accent)
-                    }
 
                     Button(action: {
-                        // Handle sign-in action
+                        // Handle sign-up action
                     }) {
-                        Text("Next")
+                        Text("Create Account")
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -97,8 +89,7 @@ struct SignInView: View {
                 }
 
                 Button(action: {
-                    // Handle Google Sign-In action
-                    handleGoogleSignIn()
+                    // Handle Google Sign-Up
                 }) {
                     HStack(spacing: 12) {
                         Image("google_logo")
@@ -120,68 +111,32 @@ struct SignInView: View {
                 }
                 .padding()
 
-                NavigationLink(value: "SignUp") {
-                    HStack {
-                        Text("Don't have an account?")
-                            .foregroundColor(.or)
+                // Navigation to Sign In
+                HStack {
+                    Text("Already have an account?")
+                        .foregroundColor(.or)
 
-                        Text("Create one")
+                    Button(action: {
+                        showSignIn = true
+                    }) {
+                        Text("Sign In")
                             .foregroundColor(.mud)
                             .underline()
                     }
                 }
                 .padding(.bottom)
 
+                .navigationDestination(for: String.self) { value in
+                    if value == "SignInView" {
+                        SignInView()
+                    }
+                }
+
                 Spacer()
             }
             .padding()
             .background(Color("AccentColor"))
             .ignoresSafeArea()
-            .navigationDestination(for: String.self) { value in
-                if value == "SignUp" {
-                    //Text("Navigated to SignUp!")
-                    SignUp()
-                }
-            }
-            .fullScreenCover(isPresented: $isSignedIn) {
-                HomeScreen()
-            }
-        }
-    }
-
-    private func handleGoogleSignIn() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let presentingVC = windowScene.windows.first?.rootViewController else { return }
-
-        GIDSignIn.sharedInstance.signIn(withPresenting: presentingVC) { signInResult, error in
-            if let error = error {
-                print("Error signing in: \(error.localizedDescription)")
-                return
-            }
-
-            guard let user = signInResult?.user else {
-                print("Error: Failed to get user.")
-                return
-            }
-
-            let idToken = user.idToken?.tokenString ?? ""
-            let accessToken = user.accessToken.tokenString
-
-            guard !idToken.isEmpty else {
-                print("Error: Missing ID token.")
-                return
-            }
-
-            let credential = GoogleAuthProvider.credential(withIDToken: idToken,
-                                                            accessToken: accessToken)
-            Auth.auth().signIn(with: credential) { _, error in
-                if let error = error {
-                    print("Error signing in with Firebase: \(error.localizedDescription)")
-                } else {
-                    print("Firebase sign-in successful!")
-                    isSignedIn = true
-                }
-            }
         }
     }
 }
