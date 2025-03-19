@@ -9,14 +9,15 @@ import SwiftUI
 
 struct HomeScreen: View {
     @State private var searchText = ""
-  
+    @State private var showFilter = false  // Controls filter popup
+    
     var body: some View {
         NavigationStack {
             ZStack {
                 Color("AccentColor") // Background color
                     .ignoresSafeArea() // Extends to edges
                 VStack {
-                    // Map and App Title
+                    /// Map and App Title (to be done by Joana, actually tried map integration broke my code lol)
                     ZStack(alignment: .topTrailing) {
                         //Image("map_background") // Replace with actual MapKit
                         //.resizable()
@@ -40,7 +41,7 @@ struct HomeScreen: View {
                             .cornerRadius(10)
                         
                         Button(action: {
-                            // Implement filter action
+                            showFilter.toggle() // Show filter sheet
                         }) {
                             Label("Filter", systemImage: "slider.horizontal.3")
                                 .padding()
@@ -103,6 +104,8 @@ struct HomeScreen: View {
                     
                     Spacer()
                     
+                    
+                    
                     // Bottom Navigation Bar
                     HStack {
                         NavigationButton(icon: "house.fill", title: "Home", destination: HomeScreen())
@@ -115,59 +118,140 @@ struct HomeScreen: View {
                     .foregroundColor(.beige)
                 }
             }
+            
+            .sheet(isPresented: $showFilter) {  // Filter Sheet
+                FilterView()
+            }
         }
     }
+    
+    
+    //
+    
+    // Filter View (Popup)
+    struct FilterView: View {
+        @Environment(\.presentationMode) var presentationMode // To close the sheet
         
-        struct RestaurantCard: View {
-            let name: String
-            let rating: Int
-            
-            var body: some View {
-                VStack {
-                    Image("food_placeholder") // Replace with actual images from Yelp
-                        .resizable()
-                        .frame(width: 100, height: 100)
-                        .cornerRadius(10)
-                    
-                    Text(name)
-                        .font(.caption)
-                        .bold()
-                    
-                    HStack {
-                        ForEach(0..<5) { index in
-                            Image(systemName: index < rating ? "star.fill" : "star")
-                                .foregroundColor(.yellow)
-                        }
+        @State private var halalCertified = false
+        @State private var userVerified = false
+        @State private var thirdPartyVerified = false
+        @State private var nearMe = false
+        @State private var cityZip = ""
+        @State private var middleEastern = false
+        @State private var mediterranean = false
+        @State private var southAsian = false
+        @State private var american = false
+        @State private var rating: Double = 3
+        @State private var priceBudget = false
+        @State private var priceModerate = false
+        @State private var priceExpensive = false
+        
+        var body: some View {
+            VStack {
+                Text("Filter Restaurants")
+                    .font(.title2)
+                    .bold()
+                    .padding()
+                
+                Form {
+                    Section(header: Text("Halal Certification")) {
+                        Toggle("Certified by Authority", isOn: $halalCertified) // NYC Agriculture Website
+                        Toggle("User Verified", isOn: $userVerified) // Maybe?
+                        Toggle("Third-Party Verified", isOn: $thirdPartyVerified) // Yelp
                     }
+                    
+                    Section(header: Text("Location")) {
+                        Toggle("Near Me", isOn: $nearMe)
+                        TextField("Enter City/Zipcode", text: $cityZip)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                    }
+                    
+                    Section(header: Text("Cuisine")) {
+                        Toggle("Middle Eastern", isOn: $middleEastern)
+                        Toggle("Mediterranean", isOn: $mediterranean)
+                        Toggle("South Asian", isOn: $southAsian)
+                        Toggle("American", isOn: $american)
+                    }
+                    
+                    Section(header: Text("Rating")) {
+                        Slider(value: $rating, in: 1...5, step: 1)
+                        Text("Min Rating: \(Int(rating)) stars")
+                    }
+                    
+                    Section(header: Text("Price Range")) {
+                        Toggle("$ (Budget)", isOn: $priceBudget)
+                        Toggle("$$ (Moderate)", isOn: $priceModerate)
+                        Toggle("$$$ (Expensive)", isOn: $priceExpensive)
+                    }
+                }
+                
+                Button(action: {
+                    presentationMode.wrappedValue.dismiss() // Close the filter popup
+                }) {
+                    Text("Apply Filters")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.mud)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                 }
                 .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(10)
             }
         }
+    }
+    
+    
+    //
+    struct RestaurantCard: View {
+        let name: String
+        let rating: Int
         
-        struct NavigationButton<Destination: View>: View {
-            let icon: String
-            let title: String
-            let destination: Destination
-            
-            var body: some View {
-                NavigationLink(destination: destination) {
-                    VStack {
-                        Image(systemName: icon)
-                        Text(title)
-                            .font(.footnote)
+        var body: some View {
+            VStack {
+                Image("food_placeholder") // Replace with actual images from Yelp
+                    .resizable()
+                    .frame(width: 100, height: 100)
+                    .cornerRadius(10)
+                
+                Text(name)
+                    .font(.caption)
+                    .bold()
+                
+                HStack {
+                    ForEach(0..<5) { index in
+                        Image(systemName: index < rating ? "star.fill" : "star")
+                            .foregroundColor(.yellow)
                     }
-                    .padding()
                 }
             }
+            .padding()
+            .background(Color(.systemGray6))
+            .cornerRadius(10)
         }
+    }
+    
+    struct NavigationButton<Destination: View>: View {
+        let icon: String
+        let title: String
+        let destination: Destination
         
-        struct HomeView_Previews: PreviewProvider {
+        var body: some View {
+            NavigationLink(destination: destination) {
+                VStack {
+                    Image(systemName: icon)
+                    Text(title)
+                        .font(.footnote)
+                }
+                .padding()
+            }
+        }
+    }
+    
+        struct HomeScreen_Previews: PreviewProvider {
             static var previews: some View {
                 HomeScreen()
             }
         }
-        
-    }
-
+    
+}

@@ -1,7 +1,10 @@
 
-//  AppDelegate.swift
-//  Dine Halal
-//  Created by Joanne on 3/7/25.
+///  AppDelegate.swift
+///  Dine Halal
+///  Created by Joanne on 3/7/25.
+
+
+
 
 import UIKit
 import Firebase
@@ -29,4 +32,3 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         return false
     }
 }
-
