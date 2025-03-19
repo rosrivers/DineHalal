@@ -39,19 +39,19 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		848DA2E62D78951E00ED130D /* Dine Halal */ = {
+		848DA2E62D78951E00ED130D /* DineHalal */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Dine Halal";
+			path = DineHalal;
 			sourceTree = "<group>";
 		};
-		848DA2F82D78951F00ED130D /* Dine HalalTests */ = {
+		848DA2F82D78951F00ED130D /* DineHalalTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Dine HalalTests";
+			path = DineHalalTests;
 			sourceTree = "<group>";
 		};
-		848DA3022D78951F00ED130D /* Dine HalalUITests */ = {
+		848DA3022D78951F00ED130D /* DineHalalUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Dine HalalUITests";
+			path = DineHalalUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -89,9 +89,9 @@
 		848DA2DB2D78951E00ED130D = {
 			isa = PBXGroup;
 			children = (
-				848DA2E62D78951E00ED130D /* Dine Halal */,
-				848DA2F82D78951F00ED130D /* Dine HalalTests */,
-				848DA3022D78951F00ED130D /* Dine HalalUITests */,
+				848DA2E62D78951E00ED130D /* DineHalal */,
+				848DA2F82D78951F00ED130D /* DineHalalTests */,
+				848DA3022D78951F00ED130D /* DineHalalUITests */,
 				84A33F8C2D7B4C9700862E87 /* Frameworks */,
 				848DA2E52D78951E00ED130D /* Products */,
 			);
@@ -131,7 +131,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				848DA2E62D78951E00ED130D /* Dine Halal */,
+				848DA2E62D78951E00ED130D /* DineHalal */,
 			);
 			name = DineHalal;
 			packageProductDependencies = (
@@ -159,7 +159,7 @@
 				848DA2F72D78951F00ED130D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				848DA2F82D78951F00ED130D /* Dine HalalTests */,
+				848DA2F82D78951F00ED130D /* DineHalalTests */,
 			);
 			name = DineHalalTests;
 			productName = "Dine HalalTests";
@@ -180,7 +180,7 @@
 				848DA3012D78951F00ED130D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				848DA3022D78951F00ED130D /* Dine HalalUITests */,
+				848DA3022D78951F00ED130D /* DineHalalUITests */,
 			);
 			name = DineHalalUITests;
 			productName = "Dine HalalUITests";
