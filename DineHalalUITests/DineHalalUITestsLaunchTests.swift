@@ -7,7 +7,7 @@
 
 import XCTest
 
-final class Dine_HalalUITestsLaunchTests: XCTestCase {
+final class DineHalalUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
