@@ -25,7 +25,7 @@ struct Review: View {
                         .bold()
                         .foregroundColor(.darkBrown)
                         .padding(.top)
-
+ 
                     // Restaurant Name Input
                     TextField("Restaurant Name", text: $restaurantName)
                         .padding()
@@ -71,7 +71,7 @@ struct Review: View {
 
                     Spacer()
 
-                    //  Bottom Navigation Bar (Same across all pages)
+                    // Bottom Navigation Bar (Same across all pages)
                     HStack {
                         NavigationButton(icon: "house.fill", title: "Home", destination: HomeScreen())
                         NavigationButton(icon: "heart.fill", title: "Favorites", destination: UserProfile())
@@ -87,25 +87,7 @@ struct Review: View {
     }
 }
 
-//  Reusable Navigation Button Component
-struct NavigationButton<Destination: View>: View {
-    let icon: String
-    let title: String
-    let destination: Destination
-    
-    var body: some View {
-        NavigationLink(destination: destination) {
-            VStack {
-                Image(systemName: icon)
-                Text(title)
-                    .font(.footnote)
-            }
-            .padding()
-        }
-    }
-}
-
-//  Preview
+// Preview
 struct Review_Previews: PreviewProvider {
     static var previews: some View {
         Review()
