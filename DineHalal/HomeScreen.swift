@@ -10,14 +10,14 @@ import SwiftUI
 struct HomeScreen: View {
     @State private var searchText = ""
     @State private var showFilter = false  // Controls filter popup
-    
+  
     var body: some View {
         NavigationStack {
             ZStack {
                 Color("AccentColor") // Background color
                     .ignoresSafeArea() // Extends to edges
                 VStack {
-                    /// Map and App Title (to be done by Joana, actually tried map integration broke my code lol)
+                    // Map and App Title
                     ZStack(alignment: .topTrailing) {
                         //Image("map_background") // Replace with actual MapKit
                         //.resizable()
@@ -102,36 +102,23 @@ struct HomeScreen: View {
                         }
                     }
                     
-                    Spacer()
                     
-                    
-                    
+                    .sheet(isPresented: $showFilter) {  // Filter Sheet
+                                    FilterView()
+                                }
+                   
                     // Bottom Navigation Bar
-                    HStack {
-                        NavigationButton(icon: "house.fill", title: "Home", destination: HomeScreen())
-                        NavigationButton(icon: "heart.fill", title: "Favorites", destination: UserProfile())
-                        NavigationButton(icon: "plus.circle.fill", title: "Add Review", destination: Review())
-                    }
-                    .frame(maxWidth: .infinity) // Ensures it stretches across the screen
-                    .padding(.bottom)
-                    .background(.mud)
-                    .foregroundColor(.beige)
+                    HomeBar()
                 }
-            }
-            
-            .sheet(isPresented: $showFilter) {  // Filter Sheet
-                FilterView()
             }
         }
     }
     
     
-    //
-    
     // Filter View (Popup)
     struct FilterView: View {
         @Environment(\.presentationMode) var presentationMode // To close the sheet
-        
+
         @State private var halalCertified = false
         @State private var userVerified = false
         @State private var thirdPartyVerified = false
@@ -145,7 +132,7 @@ struct HomeScreen: View {
         @State private var priceBudget = false
         @State private var priceModerate = false
         @State private var priceExpensive = false
-        
+
         var body: some View {
             VStack {
                 Text("Filter Restaurants")
@@ -155,9 +142,9 @@ struct HomeScreen: View {
                 
                 Form {
                     Section(header: Text("Halal Certification")) {
-                        Toggle("Certified by Authority", isOn: $halalCertified) // NYC Agriculture Website
-                        Toggle("User Verified", isOn: $userVerified) // Maybe?
-                        Toggle("Third-Party Verified", isOn: $thirdPartyVerified) // Yelp
+                        Toggle("Certified by Authority", isOn: $halalCertified)
+                        Toggle("User Verified", isOn: $userVerified)
+                        Toggle("Third-Party Verified", isOn: $thirdPartyVerified)
                     }
                     
                     Section(header: Text("Location")) {
@@ -200,58 +187,41 @@ struct HomeScreen: View {
             }
         }
     }
-    
-    
-    //
-    struct RestaurantCard: View {
-        let name: String
-        let rating: Int
         
-        var body: some View {
-            VStack {
-                Image("food_placeholder") // Replace with actual images from Yelp
-                    .resizable()
-                    .frame(width: 100, height: 100)
-                    .cornerRadius(10)
-                
-                Text(name)
-                    .font(.caption)
-                    .bold()
-                
-                HStack {
-                    ForEach(0..<5) { index in
-                        Image(systemName: index < rating ? "star.fill" : "star")
-                            .foregroundColor(.yellow)
+        struct RestaurantCard: View {
+            let name: String
+            let rating: Int
+            
+            var body: some View {
+                VStack {
+                    Image("food_placeholder") // Replace with actual images from Yelp
+                        .resizable()
+                        .frame(width: 100, height: 100)
+                        .cornerRadius(10)
+                    
+                    Text(name)
+                        .font(.caption)
+                        .bold()
+                    
+                    HStack {
+                        ForEach(0..<5) { index in
+                            Image(systemName: index < rating ? "star.fill" : "star")
+                                .foregroundColor(.yellow)
+                        }
                     }
                 }
-            }
-            .padding()
-            .background(Color(.systemGray6))
-            .cornerRadius(10)
-        }
-    }
-    
-    struct NavigationButton<Destination: View>: View {
-        let icon: String
-        let title: String
-        let destination: Destination
-        
-        var body: some View {
-            NavigationLink(destination: destination) {
-                VStack {
-                    Image(systemName: icon)
-                    Text(title)
-                        .font(.footnote)
-                }
                 .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
             }
         }
-    }
-    
-        struct HomeScreen_Previews: PreviewProvider {
+        
+        
+        struct HomeView_Previews: PreviewProvider {
             static var previews: some View {
                 HomeScreen()
             }
         }
-    
-}
+        
+    }
+
