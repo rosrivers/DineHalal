@@ -1,7 +1,7 @@
 
-//  AuthView.swift
-//  Dine Halal
-//  Created by Joanne on 3/7/25.
+///  AuthView.swift
+///  Dine Halal
+///  Created by Joanne on 3/7/25.
 
 import SwiftUI
 import Firebase
@@ -20,7 +20,7 @@ struct LoginView: View {
                     
                     if success {
                         print("Successfully signed in: \(message ?? "")")
-                        // Navigate to your next screen or update app state
+                        /// Navigate to your next screen or update app state
                     } else {
                         errorMessage = message ?? "Unknown error"
                     }

@@ -8,7 +8,7 @@ import Firebase
 import GoogleSignIn
 
 @main
-struct Dine_HalalApp: App {
+struct DineHalalApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     init() {

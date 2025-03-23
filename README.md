@@ -62,4 +62,7 @@ After pulling the latest changes, follow these steps to set up Google Sign-In:
 Note: The Info.plist file contains the necessary Google Sign-In configuration, and this setup needs to be done only once after pulling these changes.
 
 ---
-Last updated: 2025-03-07 20:24:18 UTC. 
+## Verification System 🔍
+- **PDF Parser Integration** - Implemented a robust PDF parsing system to extract halal certification data.
+- **Restaurant Verification** - Built automated verification service that cross-references Yelp restaurant data with halal registration information.
+- **Data Model Layer** - structured models for HalalEstablishment and Restaurant to ensure reliable data handling.
