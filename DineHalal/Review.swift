@@ -69,18 +69,8 @@ struct Review: View {
                     }
                     .padding(.horizontal)
 
-                    Spacer()
 
-                    // Bottom Navigation Bar (Same across all pages)
-                    HStack {
-                        NavigationButton(icon: "house.fill", title: "Home", destination: HomeScreen())
-                        NavigationButton(icon: "heart.fill", title: "Favorites", destination: UserProfile())
-                        NavigationButton(icon: "plus.circle.fill", title: "Add Review", destination: Review())
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.bottom)
-                    .background(.mud)
-                    .foregroundColor(.beige)
+                    BottomNavBar()
                 }
             }
         }
