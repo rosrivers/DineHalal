@@ -102,22 +102,13 @@ struct HomeScreen: View {
                         }
                     }
                     
-                    Spacer()
                     
                     .sheet(isPresented: $showFilter) {  // Filter Sheet
                                     FilterView()
                                 }
-                    
+                   
                     // Bottom Navigation Bar
-                    HStack {
-                        NavigationButton(icon: "house.fill", title: "Home", destination: HomeScreen())
-                        NavigationButton(icon: "heart.fill", title: "Favorites", destination: UserProfile())
-                        NavigationButton(icon: "plus.circle.fill", title: "Add Review", destination: Review())
-                    }
-                    .frame(maxWidth: .infinity) // Ensures it stretches across the screen
-                    .padding(.bottom)
-                    .background(.mud)
-                    .foregroundColor(.beige)
+                    HomeBar()
                 }
             }
         }
@@ -225,22 +216,6 @@ struct HomeScreen: View {
             }
         }
         
-        struct NavigationButton<Destination: View>: View {
-            let icon: String
-            let title: String
-            let destination: Destination
-            
-            var body: some View {
-                NavigationLink(destination: destination) {
-                    VStack {
-                        Image(systemName: icon)
-                        Text(title)
-                            .font(.footnote)
-                    }
-                    .padding()
-                }
-            }
-        }
         
         struct HomeView_Previews: PreviewProvider {
             static var previews: some View {
