@@ -6,10 +6,46 @@
 //
 
 import SwiftUI
+import MapKit
+
+struct MapView: UIViewRepresentable {
+    @Binding var region: MKCoordinateRegion
+    var annotations: [MKPointAnnotation]
+    
+    func makeUIView(context: Context) -> MKMapView {
+        let mapView = MKMapView()
+        mapView.delegate = context.coordinator
+        return mapView
+    }
+    
+    func updateUIView(_ uiView: MKMapView, context: Context) {
+        uiView.setRegion(region, animated: true)
+        uiView.removeAnnotations(uiView.annotations)
+        uiView.addAnnotations(annotations)
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, MKMapViewDelegate {
+        var parent: MapView
+        
+        init(_ parent: MapView) {
+            self.parent = parent
+        }
+    }
+}
 
 struct HomeScreen: View {
+    @StateObject private var locationManager = LocationManager()
     @State private var searchText = ""
     @State private var showFilter = false  // Controls filter popup
+    @State private var region = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060), // Default to New York City
+            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+        )
+        @State private var annotations: [MKPointAnnotation] = []
   
     var body: some View {
         NavigationStack {
@@ -19,18 +55,11 @@ struct HomeScreen: View {
                 VStack {
                     // Map and App Title
                     ZStack(alignment: .topTrailing) {
-                        //Image("map_background") // Replace with actual MapKit
-                        //.resizable()
-                        // .scaledToFit()
+                        MapView(region: $region, annotations: annotations)
+                            .frame(height: UIScreen.main.bounds.height / 3)
+                
                         
-                        
-                        Text("DineHalal")
-                            .font(.largeTitle)
-                            .bold()
-                        //.padding()
-                            .foregroundColor(.darkBrown)
                     }
-                    
                     .frame(height: 180)
                     
                     // Search and Filter Section
@@ -54,7 +83,7 @@ struct HomeScreen: View {
                     
                     // "Near Me" Button
                     Button(action: {
-                        // Implement location search functionality
+                        findNearbyRestaurants()
                     }) {
                         HStack {
                             Image(systemName: "location.fill")
@@ -107,8 +136,6 @@ struct HomeScreen: View {
                                     FilterView()
                                 }
                    
-                    // Bottom Navigation Bar
-                    //HomeBar()
                 }
             }
         }
@@ -222,6 +249,63 @@ struct HomeScreen: View {
                 HomeScreen()
             }
         }
+    
+    func findNearbyRestaurants() {
+        // Request user's location
+        let locationManager = CLLocationManager()
+        locationManager.requestWhenInUseAuthorization()
+        
+        if let userLocation = locationManager.location?.coordinate {
+            region = MKCoordinateRegion(
+                center: userLocation,
+                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+            )
+            
+            // Fetch nearby restaurants (this is a placeholder, replace with actual data fetching logic)
+            let nearbyRestaurants = [
+                ("Restaurant A", userLocation.latitude + 0.01, userLocation.longitude + 0.01),
+                ("Restaurant B", userLocation.latitude - 0.01, userLocation.longitude - 0.01)
+            ]
+            
+            annotations = nearbyRestaurants.map { restaurant in
+                let annotation = MKPointAnnotation()
+                annotation.title = restaurant.0
+                annotation.coordinate = CLLocationCoordinate2D(latitude: restaurant.1, longitude: restaurant.2)
+                return annotation
+            }
+        }
+    }
         
     }
+
+
+// Permission to access Location
+
+import CoreLocation
+
+class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+    private let manager = CLLocationManager()
+
+    override init() {
+        super.init()
+        manager.delegate = self
+        manager.requestWhenInUseAuthorization()
+    }
+
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        switch status {
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+        case .restricted, .denied:
+            // Handle case where user denied location access
+            break
+        case .authorizedWhenInUse, .authorizedAlways:
+            manager.startUpdatingLocation()
+        @unknown default:
+            break
+        }
+    }
+}
+
+
 
