@@ -144,7 +144,8 @@ struct SignInView: View {
                 }
             }
             .fullScreenCover(isPresented: $isSignedIn) {
-                HomeScreen()
+                //HomeScreen()
+                ContentView()
             }
         }
     }
