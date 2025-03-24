@@ -108,7 +108,7 @@ struct HomeScreen: View {
                                 }
                    
                     // Bottom Navigation Bar
-                    HomeBar()
+                    //HomeBar()
                 }
             }
         }

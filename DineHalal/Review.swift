@@ -70,7 +70,7 @@ struct Review: View {
                     .padding(.horizontal)
 
 
-                    BottomNavBar()
+                    //BottomNavBar()
                 }
             }
         }

@@ -64,9 +64,9 @@ struct UserProfile: View {
             }
             .padding()
 
-            Spacer()
+            //Spacer()
             
-            BottomNavBar()
+            //BottomNavBar()
         }
         
     }
