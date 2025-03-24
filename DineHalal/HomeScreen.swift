@@ -7,34 +7,13 @@
 
 import SwiftUI
 import MapKit
+import CoreLocation
 
-struct MapView: UIViewRepresentable {
-    @Binding var region: MKCoordinateRegion
-    var annotations: [MKPointAnnotation]
-    
-    func makeUIView(context: Context) -> MKMapView {
-        let mapView = MKMapView()
-        mapView.delegate = context.coordinator
-        return mapView
-    }
-    
-    func updateUIView(_ uiView: MKMapView, context: Context) {
-        uiView.setRegion(region, animated: true)
-        uiView.removeAnnotations(uiView.annotations)
-        uiView.addAnnotations(annotations)
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, MKMapViewDelegate {
-        var parent: MapView
-        
-        init(_ parent: MapView) {
-            self.parent = parent
-        }
-    }
+struct Restaurantt: Identifiable {
+    let id = UUID()
+    let name: String
+    let latitude: Double
+    let longitude: Double
 }
 
 struct HomeScreen: View {
@@ -57,11 +36,8 @@ struct HomeScreen: View {
                     ZStack(alignment: .topTrailing) {
                         MapView(region: $region, annotations: annotations)
                             .frame(height: UIScreen.main.bounds.height / 3)
-                
-                        
                     }
                     .frame(height: 180)
-                    
                     // Search and Filter Section
                     HStack {
                         TextField("Search for halal restaurants...", text: $searchText)
@@ -130,91 +106,14 @@ struct HomeScreen: View {
                             .padding()
                         }
                     }
-                    
-                    
                     .sheet(isPresented: $showFilter) {  // Filter Sheet
                                     FilterView()
                                 }
-                   
                 }
             }
         }
     }
     
-    
-    // Filter View (Popup)
-    struct FilterView: View {
-        @Environment(\.presentationMode) var presentationMode // To close the sheet
-
-        @State private var halalCertified = false
-        @State private var userVerified = false
-        @State private var thirdPartyVerified = false
-        @State private var nearMe = false
-        @State private var cityZip = ""
-        @State private var middleEastern = false
-        @State private var mediterranean = false
-        @State private var southAsian = false
-        @State private var american = false
-        @State private var rating: Double = 3
-        @State private var priceBudget = false
-        @State private var priceModerate = false
-        @State private var priceExpensive = false
-
-        var body: some View {
-            VStack {
-                Text("Filter Restaurants")
-                    .font(.title2)
-                    .bold()
-                    .padding()
-                
-                Form {
-                    Section(header: Text("Halal Certification")) {
-                        Toggle("Certified by Authority", isOn: $halalCertified)
-                        Toggle("User Verified", isOn: $userVerified)
-                        Toggle("Third-Party Verified", isOn: $thirdPartyVerified)
-                    }
-                    
-                    Section(header: Text("Location")) {
-                        Toggle("Near Me", isOn: $nearMe)
-                        TextField("Enter City/Zipcode", text: $cityZip)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                    }
-                    
-                    Section(header: Text("Cuisine")) {
-                        Toggle("Middle Eastern", isOn: $middleEastern)
-                        Toggle("Mediterranean", isOn: $mediterranean)
-                        Toggle("South Asian", isOn: $southAsian)
-                        Toggle("American", isOn: $american)
-                    }
-                    
-                    Section(header: Text("Rating")) {
-                        Slider(value: $rating, in: 1...5, step: 1)
-                        Text("Min Rating: \(Int(rating)) stars")
-                    }
-                    
-                    Section(header: Text("Price Range")) {
-                        Toggle("$ (Budget)", isOn: $priceBudget)
-                        Toggle("$$ (Moderate)", isOn: $priceModerate)
-                        Toggle("$$$ (Expensive)", isOn: $priceExpensive)
-                    }
-                }
-                
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss() // Close the filter popup
-                }) {
-                    Text("Apply Filters")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.mud)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                .padding()
-            }
-        }
-    }
-        
         struct RestaurantCard: View {
             let name: String
             let rating: Int
@@ -242,70 +141,52 @@ struct HomeScreen: View {
                 .cornerRadius(10)
             }
         }
-        
-        
-        struct HomeView_Previews: PreviewProvider {
-            static var previews: some View {
-                HomeScreen()
-            }
-        }
+
     
     func findNearbyRestaurants() {
-        // Request user's location
-        let locationManager = CLLocationManager()
-        locationManager.requestWhenInUseAuthorization()
+        guard let userLocation = locationManager.manager.location?.coordinate
+        else {
+            print("Failed to get user location")
+            return
+        }
         
-        if let userLocation = locationManager.location?.coordinate {
-            region = MKCoordinateRegion(
-                center: userLocation,
-                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-            )
+        let apiKey = "GOOGE MAPS API KEY"
+        let urlString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=\(userLocation.latitude),\(userLocation.longitude)&radius=1500&type=restaurant&key=\(apiKey)"
+        
+        guard let url = URL(string: urlString) else {
+            print("Failed to create URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data, error == nil else { return }
             
-            // Fetch nearby restaurants (this is a placeholder, replace with actual data fetching logic)
-            let nearbyRestaurants = [
-                ("Restaurant A", userLocation.latitude + 0.01, userLocation.longitude + 0.01),
-                ("Restaurant B", userLocation.latitude - 0.01, userLocation.longitude - 0.01)
-            ]
-            
-            annotations = nearbyRestaurants.map { restaurant in
-                let annotation = MKPointAnnotation()
-                annotation.title = restaurant.0
-                annotation.coordinate = CLLocationCoordinate2D(latitude: restaurant.1, longitude: restaurant.2)
-                return annotation
+            do {
+                if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                   let results = json["results"] as? [[String: Any]] {
+                    let nearbyRestaurants = results.compactMap { result -> Restaurantt? in
+                        guard let name = result["name"] as? String,
+                              let geometry = result["geometry"] as? [String: Any],
+                              let location = geometry["location"] as? [String: Any],
+                              let latitude = location["lat"] as? Double,
+                              let longitude = location["lng"] as? Double else { return nil }
+                        return Restaurantt(name: name, latitude: latitude, longitude: longitude)
+                    }
+                    
+                    DispatchQueue.main.async {
+                        self.annotations = nearbyRestaurants.map { restaurant in
+                            let annotation = MKPointAnnotation()
+                            annotation.title = restaurant.name
+                            annotation.coordinate = CLLocationCoordinate2D(latitude: restaurant.latitude, longitude: restaurant.longitude)
+                            return annotation
+                        }
+                    }
+                }
+            } catch {
+                print("Failed to parse JSON: \(error)")
             }
-        }
-    }
-        
-    }
-
-
-// Permission to access Location
-
-import CoreLocation
-
-class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    private let manager = CLLocationManager()
-
-    override init() {
-        super.init()
-        manager.delegate = self
-        manager.requestWhenInUseAuthorization()
-    }
-
-    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        switch status {
-        case .notDetermined:
-            manager.requestWhenInUseAuthorization()
-        case .restricted, .denied:
-            // Handle case where user denied location access
-            break
-        case .authorizedWhenInUse, .authorizedAlways:
-            manager.startUpdatingLocation()
-        @unknown default:
-            break
-        }
+        }.resume()
     }
 }
-
 
 
