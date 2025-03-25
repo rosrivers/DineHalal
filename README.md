@@ -61,6 +61,24 @@ After pulling the latest changes, follow these steps to set up Google Sign-In:
 
 Note: The Info.plist file contains the necessary Google Sign-In configuration, and this setup needs to be done only once after pulling these changes.
 
+
+# DineHalal Map Integration and UI Updates 🗺️
+
+## Recent Updates (March 25, 2025) 
+- [x] Google Maps Integration
+- [x] User Login Display
+- [x] Basic Restaurant Location Display Structure (done relies on restaurant data not made yet)
+
+## Google Maps Setup Complete
+The app now includes:
+- Interactive map display
+- Location-based restaurant discovery (relies on restaurant data- not integrated yet)
+
+## Next Steps 
+- [ ] Restaurant API Integration
+- [ ] Real-time Location Updates
+
+Note: The Google Maps integration is now complete with the necessary API configuration.
 ---
 ## Verification System 🔍
 - **PDF Parser Integration** - Implemented a robust PDF parsing system to extract halal certification data.
