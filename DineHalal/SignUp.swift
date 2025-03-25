@@ -6,15 +6,22 @@
 //
 
 import SwiftUI
+import GoogleSignIn
+import FirebaseAuth
+import Firebase
 
 struct SignUp: View {
+    @Binding var path: NavigationPath  // Use binding for navigation
     @State private var name: String = ""
     @State private var email: String = ""
     @State private var password: String = ""
-    @State private var showSignIn = false  // Track navigation to Sign In
+    @State private var isSignedIn = false
+
+    
+
 
     var body: some View {
-        NavigationView {
+        
             VStack {
                 Spacer()
 
@@ -89,7 +96,7 @@ struct SignUp: View {
                 }
 
                 Button(action: {
-                    // Handle Google Sign-Up
+                    handleGoogleSignIn() // Handle Google Sign-Up
                 }) {
                     HStack(spacing: 12) {
                         Image("google_logo")
@@ -117,7 +124,7 @@ struct SignUp: View {
                         .foregroundColor(.or)
 
                     Button(action: {
-                        showSignIn = true
+                        path.removeLast()
                     }) {
                         Text("Sign In")
                             .foregroundColor(.mud)
@@ -126,17 +133,54 @@ struct SignUp: View {
                 }
                 .padding(.bottom)
 
-                .navigationDestination(for: String.self) { value in
-                    if value == "SignInView" {
-                        SignInView()
-                    }
-                }
-
                 Spacer()
             }
+            .fullScreenCover(isPresented: $isSignedIn) {
+                
+                ContentView()
+            }
+            
             .padding()
             .background(Color("AccentColor"))
             .ignoresSafeArea()
+        
+    }
+    private func handleGoogleSignIn() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let presentingVC = windowScene.windows.first?.rootViewController else { return }
+
+        GIDSignIn.sharedInstance.signIn(withPresenting: presentingVC) { signInResult, error in
+            if let error = error {
+                print("Error signing in: \(error.localizedDescription)")
+                return
+            }
+
+            guard let user = signInResult?.user else {
+                print("Error: Failed to get user.")
+                return
+            }
+
+            let idToken = user.idToken?.tokenString ?? ""
+            let accessToken = user.accessToken.tokenString
+
+            guard !idToken.isEmpty else {
+                print("Error: Missing ID token.")
+                return
+            }
+
+            let credential = GoogleAuthProvider.credential(withIDToken: idToken,
+                                                            accessToken: accessToken)
+            Auth.auth().signIn(with: credential) { _, error in
+                if let error = error {
+                    print("Error signing in with Firebase: \(error.localizedDescription)")
+                } else {
+                    print("Firebase sign-in successful!")
+                    isSignedIn = true
+                }
+            }
         }
     }
+
 }
+
+

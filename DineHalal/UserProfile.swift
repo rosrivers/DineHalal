@@ -86,7 +86,7 @@ struct UserProfile: View {
                             
                             if userFavorites.isEmpty {
                                 Text("No favorites yet")
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(.mud)
                                     .padding()
                             } else {
                                 ScrollView(.horizontal, showsIndicators: false) {
@@ -108,7 +108,7 @@ struct UserProfile: View {
                             
                             if userReviews.isEmpty {
                                 Text("No reviews yet")
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(.mud)
                                     .padding()
                             } else {
                                 ForEach(userReviews, id: \.restaurantName) { review in
