@@ -1,6 +1,9 @@
 # Firebase Configuration Files
 GoogleService-Info.plist
 
+# Google Maps API Configuration
+Dine-Halal-Info.plist
+
 # Xcode generated files
 *.xcuserstate
 *.xcworkspace
@@ -18,3 +21,21 @@ Secrets.swift
 
 # macOS system files
 .DS_Store
+
+# Xcode
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# Build generated
+build/
+DerivedData/
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
