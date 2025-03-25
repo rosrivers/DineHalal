@@ -9,6 +9,9 @@ struct Restaurant: Identifiable {
     let id: UUID
     let name: String
     let address: String
-    /// Add any other restaurant-related properties if needed 
+    let latitude: Double
+    let longitude: Double
+
+    /// Add any other restaurant-related properties if needed
 }
 

@@ -6,6 +6,7 @@
 //
 
 import CoreLocation
+import GoogleMaps
 
 // Permission to access Location
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
