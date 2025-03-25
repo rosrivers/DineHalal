@@ -34,7 +34,7 @@ struct HomeScreen: View {
                 VStack {
                     // Map and App Title
                     ZStack(alignment: .topTrailing) {
-                        MapView(region: $region, annotations: annotations)
+                        GoogleMapView(region: $region, annotations: annotations)
                             .frame(height: UIScreen.main.bounds.height / 3)
                     }
                     .frame(height: 180)

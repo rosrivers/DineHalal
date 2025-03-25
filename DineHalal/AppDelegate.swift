@@ -9,10 +9,13 @@
 import UIKit
 import Firebase
 import GoogleSignIn
+import GoogleMaps
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        // Initialize Google Maps
+        GMSServices.provideAPIKey("GOOGLE MAP API KEY")
         return true
     }
     
