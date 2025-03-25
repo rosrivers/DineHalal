@@ -8,32 +8,34 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import GoogleMaps
 
-struct MapView: UIViewRepresentable {
+
+struct GoogleMapView: UIViewRepresentable {
     @Binding var region: MKCoordinateRegion
     var annotations: [MKPointAnnotation]
-    
-    func makeUIView(context: Context) -> MKMapView {
-        let mapView = MKMapView()
-        mapView.delegate = context.coordinator
+
+    func makeUIView(context: Context) -> GMSMapView {
+        let camera = GMSCameraPosition.camera(
+            withLatitude: region.center.latitude,
+            longitude: region.center.longitude,
+            zoom: 10.0
+        )
+        let mapView = GMSMapView(frame: .zero)
+        mapView.camera = camera
         return mapView
     }
-    
-    func updateUIView(_ uiView: MKMapView, context: Context) {
-        uiView.setRegion(region, animated: true)
-        uiView.removeAnnotations(uiView.annotations)
-        uiView.addAnnotations(annotations)
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, MKMapViewDelegate {
-        var parent: MapView
-        
-        init(_ parent: MapView) {
-            self.parent = parent
+
+    func updateUIView(_ mapView: GMSMapView, context: Context) {
+        mapView.clear()
+        for annotation in annotations {
+            let marker = GMSMarker()
+            marker.position = CLLocationCoordinate2D(
+                latitude: annotation.coordinate.latitude,
+                longitude: annotation.coordinate.longitude
+            )
+            marker.title = annotation.title
+            marker.map = mapView
         }
     }
 }
