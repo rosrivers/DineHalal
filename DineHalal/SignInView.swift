@@ -14,10 +14,9 @@ struct SignInView: View {
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var isSignedIn = false  // Track sign-in state
-    @State private var path = NavigationPath()  // For NavigationStack
+    @Binding var path: NavigationPath  // Use binding to control navigation
 
     var body: some View {
-        NavigationStack(path: $path) { // Use NavigationStack for modern navigation
             VStack {
                 Spacer()
 
@@ -138,16 +137,14 @@ struct SignInView: View {
             .background(Color("AccentColor"))
             .ignoresSafeArea()
             .navigationDestination(for: String.self) { value in
-                if value == "SignUp" {
-                    //Text("Navigated to SignUp!")
-                    SignUp()
-                }
-            }
+                        if value == "SignUp" {
+                            SignUp(path: $path)
+                        }
+                    }
             .fullScreenCover(isPresented: $isSignedIn) {
-                //HomeScreen()
                 ContentView()
             }
-        }
+        
     }
 
     private func handleGoogleSignIn() {

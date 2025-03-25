@@ -9,28 +9,30 @@ import SwiftUI
 
 struct SplashScreenView: View {
     @State private var isActive = false
+    @State private var path = NavigationPath() // Maintain navigation state
     
     var body: some View {
-        if isActive {
-            SignInView() // Navigate to Sign-In Page after splash
-        } else {
-            VStack {
-                Image("Icon") // Assets.xcassets
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 200, height: 200)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color("AccentColor")) // Add this color in Assets
-            .ignoresSafeArea()
-            .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    withAnimation {
-                        isActive = true
+        NavigationStack(path: $path) {
+            if isActive {
+                SignInView(path: $path) // Pass navigation path
+            } else {
+                VStack {
+                    Image("Icon") // App Logo
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 200, height: 200)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color("AccentColor"))
+                .ignoresSafeArea()
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        withAnimation {
+                            isActive = true
+                        }
                     }
                 }
             }
         }
     }
 }
-
