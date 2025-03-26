@@ -13,7 +13,7 @@ struct FavoritesView: View {
     var body: some View {
         ZStack {
             Color(.accent)
-                .edgesIgnoringSafeArea(.all)
+                //.ignoresSafeArea()
             
             VStack(spacing: 20) {
                 Text("My Favorite Restaurants")

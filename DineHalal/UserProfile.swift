@@ -20,7 +20,7 @@ struct UserProfile: View {
         ZStack {
             // Background Color
             Color(.accent)
-                .edgesIgnoringSafeArea(.all)
+                //.ignoresSafeArea()
             
             if isLoading {
                 ProgressView()
@@ -28,6 +28,7 @@ struct UserProfile: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         // Profile Picture with Edit Button
+                        Spacer()
                         ZStack {
                             if let imageURL = profileImageURL {
                                 AsyncImage(url: imageURL) { image in
@@ -72,9 +73,9 @@ struct UserProfile: View {
                         /// User Name
                         VStack {
                             Text(userName)
-                                .font(.title2)
+                                .font(.title)
                                 .fontWeight(.bold)
-                                .foregroundColor(.mud)
+                                .foregroundColor(.darkBrown)
                             Text(userEmail)
                                 .foregroundColor(.or)
                         }
@@ -82,12 +83,14 @@ struct UserProfile: View {
                         /// Favorites Section
                         VStack(alignment: .leading) {
                             Text("My Favorites")
-                                .font(.headline)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.darkBrown)
                             
                             if userFavorites.isEmpty {
                                 Text("No favorites yet")
                                     .foregroundColor(.mud)
-                                    .padding()
+                                    //.padding()
                             } else {
                                 ScrollView(.horizontal, showsIndicators: false) {
                                     HStack(spacing: 15) {
@@ -104,12 +107,14 @@ struct UserProfile: View {
                         /// Reviews Section
                         VStack(alignment: .leading) {
                             Text("My Reviews")
-                                .font(.headline)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.darkBrown)
                             
                             if userReviews.isEmpty {
                                 Text("No reviews yet")
                                     .foregroundColor(.mud)
-                                    .padding()
+                                    //.padding()
                             } else {
                                 ForEach(userReviews, id: \.restaurantName) { review in
                                     ReviewItem(title: review.restaurantName,
