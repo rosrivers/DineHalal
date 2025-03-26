@@ -20,67 +20,94 @@ struct UserProfile: View {
         ZStack {
             // Background Color
             Color(.accent)
-                //.ignoresSafeArea()
             
             if isLoading {
                 ProgressView()
             } else {
                 ScrollView {
                     VStack(spacing: 20) {
-                        // Profile Picture with Edit Button
-                        Spacer()
-                        ZStack {
-                            if let imageURL = profileImageURL {
-                                AsyncImage(url: imageURL) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 100, height: 100)
-                                        .clipShape(Circle())
-                                } placeholder: {
-                                    Circle()
-                                        .frame(width: 100, height: 100)
-                                        .foregroundColor(.or)
-                                    Image(systemName: "person.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 60, height: 60)
-                                        .foregroundColor(.white)
+                        ZStack(alignment: .center) {
+                            // Background Image
+                            Image("profile_bg")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(height: 340)
+                                .scaleEffect(1.1)
+                                .clipped()
+                                .shadow(radius: 5, x: 0, y: 5)
+
+                            VStack(spacing: 8) {
+                                // Profile Picture
+                                ZStack {
+                                    if let imageURL = profileImageURL {
+                                        AsyncImage(url: imageURL) { image in
+                                            image
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 100, height: 100)
+                                                .clipShape(Circle())
+                                        } placeholder: {
+                                            Circle()
+                                                .frame(width: 100, height: 100)
+                                                .foregroundColor(.gray)
+                                            Image(systemName: "person.fill")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 60, height: 60)
+                                                .foregroundColor(.white)
+                                        }
+                                    } else {
+                                        Circle()
+                                            .frame(width: 100, height: 100)
+                                            .foregroundColor(.gray)
+                                        Image(systemName: "person.fill")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 60, height: 60)
+                                            .foregroundColor(.white)
+                                    }
+
+                                    Button(action: {
+                                        print("Edit Avatar")
+                                    }) {
+                                        Image(systemName: "pencil.circle.fill")
+                                            .resizable()
+                                            .frame(width: 30, height: 30)
+                                            .foregroundColor(.mud)
+                                            .background(Circle().fill(Color.white))
+                                    }
+                                    .offset(x: 35, y: 35)
                                 }
-                            } else {
-                                Circle()
-                                    .frame(width: 100, height: 100)
-                                    .foregroundColor(.or)
-                                Image(systemName: "person.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 60, height: 60)
-                                    .foregroundColor(.white)
-                            }
+                                .offset(y: -18)
+                                // User Name
+                                Text(userName)
+                                    .font(.title)
+                                    .fontWeight(.bold)
+                                    .padding(5)
+                                    .padding(.horizontal, 10)
+                                    .foregroundColor(.darkBrown)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 5)
+                                            .fill(Color.accent)
+                                            .shadow(radius: 5)
+                                            .padding(1)
+                                    )
 
-                            Button(action: {
-                                print("Edit Avatar")
-                            }) {
-                                Image(systemName: "pencil.circle.fill")
-                                    .resizable()
-                                    .frame(width: 30, height: 30)
-                                    .foregroundColor(.brown)
-                                    .background(Circle().fill(Color.white))
+                                Text(userEmail)
+                                    .foregroundColor(.darkBrown.opacity(0.8))
+                                    .padding(8)
+                                    .padding(.horizontal, 10)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 15)
+                                            .fill(Color.accent)
+                                            .shadow(radius: 3)
+                                            .padding(5)
+                                    )
                             }
-                            .offset(x: 35, y: 35)
+                            .padding(.top, 100) // Position elements within the background
                         }
 
-                        /// User Name
-                        VStack {
-                            Text(userName)
-                                .font(.title)
-                                .fontWeight(.bold)
-                                .foregroundColor(.darkBrown)
-                            Text(userEmail)
-                                .foregroundColor(.or)
-                        }
-
-                        /// Favorites Section
+                        // **Favorites Section**
                         VStack(alignment: .leading) {
                             Text("My Favorites")
                                 .font(.title2)
@@ -90,7 +117,6 @@ struct UserProfile: View {
                             if userFavorites.isEmpty {
                                 Text("No favorites yet")
                                     .foregroundColor(.mud)
-                                    //.padding()
                             } else {
                                 ScrollView(.horizontal, showsIndicators: false) {
                                     HStack(spacing: 15) {
@@ -104,7 +130,7 @@ struct UserProfile: View {
                         }
                         .padding()
 
-                        /// Reviews Section
+                        // **Reviews Section**
                         VStack(alignment: .leading) {
                             Text("My Reviews")
                                 .font(.title2)
@@ -114,7 +140,6 @@ struct UserProfile: View {
                             if userReviews.isEmpty {
                                 Text("No reviews yet")
                                     .foregroundColor(.mud)
-                                    //.padding()
                             } else {
                                 ForEach(userReviews, id: \.restaurantName) { review in
                                     ReviewItem(title: review.restaurantName,
@@ -135,7 +160,7 @@ struct UserProfile: View {
         }
     }
     
-    /// Updated function to load user data from Firebase
+    /// Load user data from Firebase
     private func loadUserData() {
         guard let user = Auth.auth().currentUser else {
             isLoading = false
@@ -150,7 +175,7 @@ struct UserProfile: View {
         
         let db = Firestore.firestore()
         
-        /// Load favorites (simple string array for now since restaurant fetching data is not available yet)
+        /// Load favorites
         db.collection("users").document(user.uid).collection("favorites")
             .getDocuments { snapshot, error in
                 if let error = error {
@@ -184,7 +209,7 @@ struct UserProfile: View {
     }
 }
 
-
+// **Favorite Item**
 struct FavoriteItem: View {
     var title: String
 
@@ -197,6 +222,7 @@ struct FavoriteItem: View {
     }
 }
 
+// **Review Item**
 struct ReviewItem: View {
     var title: String
     var rating: Int
@@ -222,6 +248,7 @@ struct ReviewItem: View {
     }
 }
 
+// **Preview**
 struct UserProfileView_Previews: PreviewProvider {
     static var previews: some View {
         UserProfile()
