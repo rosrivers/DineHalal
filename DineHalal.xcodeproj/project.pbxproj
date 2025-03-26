@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		84C43E962D92E9AF00D8554F /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 84C43E952D92E9AF00D8554F /* GoogleMaps */; };
 		84D0B4272D8B551300A0E341 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B4262D8B551300A0E341 /* GoogleSignIn */; };
 		84D0B4292D8B551300A0E341 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B4282D8B551300A0E341 /* GoogleSignInSwift */; };
 		84D0B42C2D8B554C00A0E341 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B42B2D8B554C00A0E341 /* FirebaseAuth */; };
@@ -66,7 +65,6 @@
 			files = (
 				84D0B4272D8B551300A0E341 /* GoogleSignIn in Frameworks */,
 				84D0B42E2D8B554C00A0E341 /* FirebaseFirestore in Frameworks */,
-				84C43E962D92E9AF00D8554F /* GoogleMaps in Frameworks */,
 				84D0B42C2D8B554C00A0E341 /* FirebaseAuth in Frameworks */,
 				84D0B4302D8B554C00A0E341 /* FirebaseStorage in Frameworks */,
 				84D0B4292D8B551300A0E341 /* GoogleSignInSwift in Frameworks */,
@@ -145,7 +143,6 @@
 				84D0B42B2D8B554C00A0E341 /* FirebaseAuth */,
 				84D0B42D2D8B554C00A0E341 /* FirebaseFirestore */,
 				84D0B42F2D8B554C00A0E341 /* FirebaseStorage */,
-				84C43E952D92E9AF00D8554F /* GoogleMaps */,
 			);
 			productName = "Dine Halal";
 			productReference = 848DA2E42D78951E00ED130D /* DineHalal.app */;
@@ -228,7 +225,6 @@
 			packageReferences = (
 				84D0B4252D8B551300A0E341 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				84D0B42A2D8B554C00A0E341 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
-				84C43E942D92E9AF00D8554F /* XCRemoteSwiftPackageReference "ios-maps-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 848DA2E52D78951E00ED130D /* Products */;
@@ -428,7 +424,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"DineHalal/Preview Content\"";
-				DEVELOPMENT_TEAM = 52KP577HS2;
+				DEVELOPMENT_TEAM = 6FUG4L6VF3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Dine-Halal-Info.plist";
@@ -471,7 +467,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"DineHalal/Preview Content\"";
-				DEVELOPMENT_TEAM = 52KP577HS2;
+				DEVELOPMENT_TEAM = 6FUG4L6VF3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Dine-Halal-Info.plist";
@@ -635,14 +631,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		84C43E942D92E9AF00D8554F /* XCRemoteSwiftPackageReference "ios-maps-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/googlemaps/ios-maps-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 9.4.0;
-			};
-		};
 		84D0B4252D8B551300A0E341 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
@@ -662,11 +650,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		84C43E952D92E9AF00D8554F /* GoogleMaps */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 84C43E942D92E9AF00D8554F /* XCRemoteSwiftPackageReference "ios-maps-sdk" */;
-			productName = GoogleMaps;
-		};
 		84D0B4262D8B551300A0E341 /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 84D0B4252D8B551300A0E341 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;

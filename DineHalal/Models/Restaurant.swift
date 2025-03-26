@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct Restaurant: Identifiable {
+struct restaurant : Identifiable {
     let id: UUID
     let name: String
     let address: String
@@ -13,5 +13,7 @@ struct Restaurant: Identifiable {
     let longitude: Double
 
     /// Add any other restaurant-related properties if needed
+    /// dummy
+    ///
 }
 
