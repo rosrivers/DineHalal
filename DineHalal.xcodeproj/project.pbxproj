@@ -13,6 +13,7 @@
 		84D0B42E2D8B554C00A0E341 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B42D2D8B554C00A0E341 /* FirebaseFirestore */; };
 		84D0B4302D8B554C00A0E341 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B42F2D8B554C00A0E341 /* FirebaseStorage */; };
 		9800DCC82D9099C300070B38 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9800DCC72D9099C300070B38 /* GoogleService-Info.plist */; };
+		98E8A3F02D94DADD009A2D05 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 98E8A3EF2D94DADD009A2D05 /* GoogleMaps */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,6 +66,7 @@
 			files = (
 				84D0B4272D8B551300A0E341 /* GoogleSignIn in Frameworks */,
 				84D0B42E2D8B554C00A0E341 /* FirebaseFirestore in Frameworks */,
+				98E8A3F02D94DADD009A2D05 /* GoogleMaps in Frameworks */,
 				84D0B42C2D8B554C00A0E341 /* FirebaseAuth in Frameworks */,
 				84D0B4302D8B554C00A0E341 /* FirebaseStorage in Frameworks */,
 				84D0B4292D8B551300A0E341 /* GoogleSignInSwift in Frameworks */,
@@ -143,6 +145,7 @@
 				84D0B42B2D8B554C00A0E341 /* FirebaseAuth */,
 				84D0B42D2D8B554C00A0E341 /* FirebaseFirestore */,
 				84D0B42F2D8B554C00A0E341 /* FirebaseStorage */,
+				98E8A3EF2D94DADD009A2D05 /* GoogleMaps */,
 			);
 			productName = "Dine Halal";
 			productReference = 848DA2E42D78951E00ED130D /* DineHalal.app */;
@@ -225,6 +228,7 @@
 			packageReferences = (
 				84D0B4252D8B551300A0E341 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				84D0B42A2D8B554C00A0E341 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				98E8A3EE2D94DADD009A2D05 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 848DA2E52D78951E00ED130D /* Products */;
@@ -647,6 +651,14 @@
 				minimumVersion = 11.10.0;
 			};
 		};
+		98E8A3EE2D94DADD009A2D05 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-maps-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.4.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -674,6 +686,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 84D0B42A2D8B554C00A0E341 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		98E8A3EF2D94DADD009A2D05 /* GoogleMaps */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 98E8A3EE2D94DADD009A2D05 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */;
+			productName = GoogleMaps;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
