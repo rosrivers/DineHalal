@@ -4,27 +4,25 @@
 //
 //  Created by Iman Ikram on 3/15/25.
 //
-
 import SwiftUI
-import GoogleSignIn
 import FirebaseAuth
 import Firebase
+import GoogleSignIn
 
 struct SignUp: View {
-    @Binding var path: NavigationPath  // Use binding for navigation
-    @State private var name: String = ""
+    @Binding var path: NavigationPath
+    @State private var firstName: String = ""
+    @State private var lastName: String = ""
     @State private var email: String = ""
     @State private var password: String = ""
+    @State private var reenterPassword: String = ""
     @State private var isSignedIn = false
-
-    
-
+    @State private var errorMessage: String?
 
     var body: some View {
-        
+        ScrollView {
             VStack {
                 Spacer()
-
                 Image("Icon") // App logo
                     .resizable()
                     .scaledToFit()
@@ -38,10 +36,18 @@ struct SignUp: View {
                 Spacer()
 
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Name")
+                    Text("First Name")
                         .font(.headline)
                         .foregroundColor(.darkBrown)
-                    TextField("Enter your name", text: $name)
+                    TextField("Enter your first name", text: $firstName)
+                        .padding()
+                        .background(Color.accent.opacity(0.7))
+                        .cornerRadius(8)
+
+                    Text("Last Name")
+                        .font(.headline)
+                        .foregroundColor(.darkBrown)
+                    TextField("Enter your last name", text: $lastName)
                         .padding()
                         .background(Color.accent.opacity(0.7))
                         .cornerRadius(8)
@@ -62,8 +68,22 @@ struct SignUp: View {
                         .background(Color.accent.opacity(0.7))
                         .cornerRadius(8)
 
+                    Text("Re-enter Password")
+                        .font(.headline)
+                        .foregroundColor(.darkBrown)
+                    SecureField("Re-enter your password", text: $reenterPassword)
+                        .padding()
+                        .background(Color.accent.opacity(0.7))
+                        .cornerRadius(8)
+
+                    if let errorMessage = errorMessage {
+                        Text(errorMessage)
+                            .foregroundColor(.red)
+                            .font(.caption)
+                    }
+
                     Button(action: {
-                        // Handle sign-up action
+                        handleSignUp()
                     }) {
                         Text("Create Account")
                             .font(.headline)
@@ -96,7 +116,7 @@ struct SignUp: View {
                 }
 
                 Button(action: {
-                    handleGoogleSignIn() // Handle Google Sign-Up
+                    handleGoogleSignIn()
                 }) {
                     HStack(spacing: 12) {
                         Image("google_logo")
@@ -136,15 +156,31 @@ struct SignUp: View {
                 Spacer()
             }
             .fullScreenCover(isPresented: $isSignedIn) {
-                
                 ContentView()
             }
-            
-            .padding()
-            .background(Color("AccentColor"))
-            .ignoresSafeArea()
-        
+        }
+        .padding()
+        .background(Color("AccentColor"))
+        .ignoresSafeArea()
     }
+
+    private func handleSignUp() {
+        if password == reenterPassword {
+            Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
+                if let error = error {
+                    self.errorMessage = "Error signing up: \(error.localizedDescription)"
+                    return
+                }
+
+                print("Account created successfully!")
+                // After successful sign up, sign the user in
+                self.isSignedIn = true
+            }
+        } else {
+            self.errorMessage = "Passwords do not match!"
+        }
+    }
+
     private func handleGoogleSignIn() {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let presentingVC = windowScene.windows.first?.rootViewController else { return }
@@ -175,12 +211,10 @@ struct SignUp: View {
                     print("Error signing in with Firebase: \(error.localizedDescription)")
                 } else {
                     print("Firebase sign-in successful!")
-                    isSignedIn = true
+                    self.isSignedIn = true
                 }
             }
         }
     }
-
 }
-
 
