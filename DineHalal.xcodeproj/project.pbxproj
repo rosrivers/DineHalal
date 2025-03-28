@@ -13,7 +13,6 @@
 		84D0B42C2D8B554C00A0E341 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B42B2D8B554C00A0E341 /* FirebaseAuth */; };
 		84D0B42E2D8B554C00A0E341 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B42D2D8B554C00A0E341 /* FirebaseFirestore */; };
 		84D0B4302D8B554C00A0E341 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B42F2D8B554C00A0E341 /* FirebaseStorage */; };
-		9800DCC82D9099C300070B38 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9800DCC72D9099C300070B38 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,7 +37,6 @@
 		848DA2F52D78951F00ED130D /* DineHalalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DineHalalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		848DA2FF2D78951F00ED130D /* DineHalalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DineHalalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		84A33F8D2D7B4C9700862E87 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.2.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
-		9800DCC72D9099C300070B38 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -93,7 +91,6 @@
 		848DA2DB2D78951E00ED130D = {
 			isa = PBXGroup;
 			children = (
-				9800DCC72D9099C300070B38 /* GoogleService-Info.plist */,
 				848DA2E62D78951E00ED130D /* DineHalal */,
 				848DA2F82D78951F00ED130D /* DineHalalTests */,
 				848DA3022D78951F00ED130D /* DineHalalUITests */,
@@ -247,7 +244,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9800DCC82D9099C300070B38 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -428,7 +424,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"DineHalal/Preview Content\"";
-				DEVELOPMENT_TEAM = 52KP577HS2;
+				DEVELOPMENT_TEAM = JH8A2QW2N4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Dine-Halal-Info.plist";
@@ -471,7 +467,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"DineHalal/Preview Content\"";
-				DEVELOPMENT_TEAM = 52KP577HS2;
+				DEVELOPMENT_TEAM = JH8A2QW2N4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Dine-Halal-Info.plist";
