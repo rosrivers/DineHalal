@@ -24,11 +24,13 @@ struct SignInView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 150, height: 150)
+                .padding(.top, 30)
 
             Text("DineHalal")
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .foregroundColor(Color.darkBrown)
+                
 
             Text("Halal dining made simple and reliable")
                 .font(.subheadline)
@@ -55,8 +57,9 @@ struct SignInView: View {
                     .cornerRadius(8)
                     .foregroundColor(.darkBrown.opacity(0.8))
 
-                HStack {
-                    Spacer()
+                Button(action: {
+                    sendPasswordReset()
+                }) {
                     Text("Forgot Password?")
                         .font(.system(size: 16))
                         .foregroundColor(.accent)
@@ -166,6 +169,19 @@ struct SignInView: View {
             // On successful login
             print("User signed in with Email/Password")
             isSignedIn = true  // Trigger the fullScreenCover to go to ContentView
+        }
+    }
+    
+    // Forgot Password 
+    private func sendPasswordReset() {
+        Auth.auth().sendPasswordReset(withEmail: email) { error in
+            if let error = error {
+                errorMessage = error.localizedDescription
+                print("Error sending password reset email: \(error.localizedDescription)")
+            } else {
+                errorMessage = "Password reset email sent successfully. Check your inbox."
+                print("Password reset email sent successfully.")
+            }
         }
     }
 

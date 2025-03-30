@@ -21,19 +21,20 @@ struct SignUp: View {
 
     var body: some View {
         ScrollView {
-            VStack {
-                Spacer()
-                Image("Icon") // App logo
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 150, height: 150)
+            VStack (spacing: 0.5){
+                //Spacer()
+                //Image("Icon") // App logo
+                    //.resizable()
+                    //.scaledToFit()
+                    //.frame(width: 150, height: 150)
 
                 Text("Create Account")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundColor(Color.darkBrown)
+                    .padding(.top, 30)
 
-                Spacer()
+                //Spacer()
 
                 VStack(alignment: .leading, spacing: 10) {
                     Text("First Name")
