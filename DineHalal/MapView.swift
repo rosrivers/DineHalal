@@ -42,7 +42,7 @@ struct GoogleMapView: UIViewRepresentable {
         )
         
         // Create map view with camera
-        let mapView = GMSMapView.map(withFrame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 0.4), camera: camera)
+        let mapView = GMSMapView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 0.4), camera: camera)
         
         // Configure map settings
         mapView.isMyLocationEnabled = false

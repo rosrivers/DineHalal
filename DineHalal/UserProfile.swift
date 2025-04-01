@@ -3,18 +3,21 @@
 ///  Dine Halal
 ///  Created by Iman Ikram on 3/11/25.
 /// Edited/ modified - Joana
-
+///Edited by Chelsea to add signout button
+///
 import FirebaseAuth
 import FirebaseFirestore
 import SwiftUI
 
 struct UserProfile: View {
+    @Binding var navigationPath: NavigationPath // Pass navigationPath as a binding
     @State private var userName: String = ""
     @State private var userEmail: String = ""
     @State private var profileImageURL: URL?
-    @State private var userFavorites: [String] = [] /// Just store restaurant names for now
-    @State private var userReviews: [(restaurantName: String, rating: Int, review: String)] = [] /// Simple tuple for reviews
+    @State private var userFavorites: [String] = [] // Just store restaurant names for now
+    @State private var userReviews: [(restaurantName: String, rating: Int, review: String)] = [] // Simple tuple for reviews
     @State private var isLoading = true
+    @State private var isSignedOut = false // Flag to navigate after sign-out
     
     var body: some View {
         ZStack {
@@ -79,6 +82,7 @@ struct UserProfile: View {
                                     .offset(x: 35, y: 35)
                                 }
                                 .offset(y: -18)
+
                                 // User Name
                                 Text(userName)
                                     .font(.title)
@@ -93,6 +97,7 @@ struct UserProfile: View {
                                             .padding(1)
                                     )
 
+                                // User Email
                                 Text(userEmail)
                                     .foregroundColor(.darkBrown.opacity(0.8))
                                     .padding(8)
@@ -150,6 +155,17 @@ struct UserProfile: View {
                         }
                         .padding()
 
+                        // **Sign-Out Button** placed at the bottom of the page
+                        Button(action: signOut) {
+                            Text("Sign Out")
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.red)
+                                .cornerRadius(10)
+                                .padding(.top)
+                        }
+                        .padding()
+
                         Spacer()
                     }
                 }
@@ -158,9 +174,24 @@ struct UserProfile: View {
         .onAppear {
             loadUserData()
         }
+        .fullScreenCover(isPresented: $isSignedOut) {
+            // Navigate back to the Sign-In screen after signing out, passing the navigationPath
+            SignInView(path: $navigationPath)
+        }
     }
-    
-    /// Load user data from Firebase
+
+    // Sign-Out Function
+    private func signOut() {
+        do {
+            try Auth.auth().signOut()
+            print("User signed out successfully.")
+            isSignedOut = true  // Trigger navigation to Sign-In view
+        } catch let error {
+            print("Error signing out: \(error.localizedDescription)")
+        }
+    }
+
+    // Load user data from Firebase
     private func loadUserData() {
         guard let user = Auth.auth().currentUser else {
             isLoading = false
@@ -175,7 +206,7 @@ struct UserProfile: View {
         
         let db = Firestore.firestore()
         
-        /// Load favorites
+        // Load favorites
         db.collection("users").document(user.uid).collection("favorites")
             .getDocuments { snapshot, error in
                 if let error = error {
@@ -186,7 +217,7 @@ struct UserProfile: View {
                     } ?? []
                 }
                 
-                /// Load reviews
+                // Load reviews
                 db.collection("users").document(user.uid).collection("reviews")
                     .getDocuments { snapshot, error in
                         if let error = error {
@@ -251,6 +282,6 @@ struct ReviewItem: View {
 // **Preview**
 struct UserProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        UserProfile()
+        UserProfile(navigationPath: .constant(NavigationPath()))
     }
 }

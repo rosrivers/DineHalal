@@ -16,7 +16,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         /// Initialize Google Maps
-        GMSServices.provideAPIKey("AIzaSyD0d33gYQ-n6wwJeCeUzPL1S4GjDD_GQbk")
+        GMSServices.provideAPIKey("AIzaSyCaAElzJ5HtVCuy0q7v3TnKWx8qFNXu9b0")
         return true
     }
     
