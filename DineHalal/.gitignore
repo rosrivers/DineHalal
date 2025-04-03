@@ -1,7 +1,7 @@
 # Firebase Configuration Files
 GoogleService-Info.plist
 
-# Google Maps API Configuration
+# Untrack although for public use.
 Dine-Halal-Info.plist
 
 # API Keys
@@ -12,19 +12,12 @@ Secrets.swift
 .DS_Store
 xcuserdata/
 *.xcuserstate
-*.xcworkspace
 DerivedData/
-*.moved-aside
-*.pbxuser
-!default.pbxuser
-*.mode1v3
-!default.mode1v3
-*.mode2v3
-!default.mode2v3
-*.perspectivev3
-!default.perspectivev3
+*.xcuserdatad/
 
-# CocoaPods
+# API Keys
+DineHalal/APIKEYS.swift
+# CocoaPods - if needed .
 Pods/
 Podfile.lock
 

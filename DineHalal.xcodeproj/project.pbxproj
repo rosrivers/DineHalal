@@ -40,23 +40,6 @@
 		84A33F8D2D7B4C9700862E87 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.2.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		844CACCF2D9C9324007CA33A /* Exceptions for "DineHalalTests" folder in "DineHalal" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				PlacesAPITest.swift,
-			);
-			target = 848DA2E32D78951E00ED130D /* DineHalal */;
-		};
-		844CACD02D9C9324007CA33A /* Exceptions for "DineHalalTests" folder in "DineHalalTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				PlacesAPITest.swift,
-			);
-			target = 848DA2F42D78951F00ED130D /* DineHalalTests */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		848DA2E62D78951E00ED130D /* DineHalal */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -65,10 +48,6 @@
 		};
 		848DA2F82D78951F00ED130D /* DineHalalTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				844CACCF2D9C9324007CA33A /* Exceptions for "DineHalalTests" folder in "DineHalal" target */,
-				844CACD02D9C9324007CA33A /* Exceptions for "DineHalalTests" folder in "DineHalalTests" target */,
-			);
 			path = DineHalalTests;
 			sourceTree = "<group>";
 		};
