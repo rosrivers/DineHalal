@@ -3,31 +3,43 @@
 //  DineHalal
 //
 //  Created by Iman Ikram on 3/24/25.
-//
+/// edited/updated - Joana 
+
 
 import CoreLocation
+///import Combine
 import GoogleMaps
 
-// Permission to access Location
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    let manager = CLLocationManager()
-
+    private let locationManager = CLLocationManager()
+    
+    @Published var userLocation: CLLocationCoordinate2D?
+    @Published var errorMessage: String?
+    
     override init() {
         super.init()
-        manager.delegate = self
-        manager.requestWhenInUseAuthorization()
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
     }
-    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        switch status {
-        case .notDetermined:
-            manager.requestWhenInUseAuthorization()
-        case .restricted, .denied:
-            // Handle case where user denied location access
-            break
-        case .authorizedWhenInUse, .authorizedAlways:
-            manager.startUpdatingLocation()
-        @unknown default:
-            break
+    
+    func requestLocationPermission() {
+        locationManager.requestWhenInUseAuthorization()
+    }
+    
+    func getLocation() {
+        locationManager.requestLocation()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.first else { return }
+        DispatchQueue.main.async {
+            self.userLocation = location.coordinate
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        DispatchQueue.main.async {
+            self.errorMessage = "Failed to get location: \(error.localizedDescription)"
         }
     }
 }

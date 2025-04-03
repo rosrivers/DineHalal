@@ -3,20 +3,27 @@
 ///  Dine Halal
 ///  Created by Joanne on 3/7/25.
 
-
-
-
 import UIKit
 import Firebase
-import FirebaseFirestore
 import GoogleSignIn
 import GoogleMaps
 
 class AppDelegate: NSObject, UIApplicationDelegate {
-    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-        /// Initialize Google Maps
-        GMSServices.provideAPIKey("AIzaSyCaAElzJ5HtVCuy0q7v3TnKWx8qFNXu9b0")
+        // Initialize Google Maps
+        GMSServices.provideAPIKey(APIKeys.mapsKey)
+        
+        //  Maps initialization
+        Thread.sleep(forTimeInterval: 0.1)
+        
+        // SThen Firebase
+        FirebaseApp.configure()
+        
+        //  Google Sign In
+        if let clientID = FirebaseApp.app()?.options.clientID {
+            GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
+        }
+        
         return true
     }
     
@@ -24,15 +31,5 @@ class AppDelegate: NSObject, UIApplicationDelegate {
                     open url: URL,
                     options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
         return GIDSignIn.sharedInstance.handle(url)
-    }
-    
-    /// Add support for universal links
-    func application(_ application: UIApplication,
-                    continue userActivity: NSUserActivity,
-                    restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
-        if let incomingURL = userActivity.webpageURL {
-            return GIDSignIn.sharedInstance.handle(incomingURL)
-        }
-        return false
     }
 }

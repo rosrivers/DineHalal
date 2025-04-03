@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		84CF13562D9CABCF00818065 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 84CF13552D9CABCF00818065 /* FirebaseCore */; };
 		84D0B4272D8B551300A0E341 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B4262D8B551300A0E341 /* GoogleSignIn */; };
 		84D0B4292D8B551300A0E341 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B4282D8B551300A0E341 /* GoogleSignInSwift */; };
 		84D0B42C2D8B554C00A0E341 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B42B2D8B554C00A0E341 /* FirebaseAuth */; };
 		84D0B42E2D8B554C00A0E341 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B42D2D8B554C00A0E341 /* FirebaseFirestore */; };
 		84D0B4302D8B554C00A0E341 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B42F2D8B554C00A0E341 /* FirebaseStorage */; };
-		9800DCC82D9099C300070B38 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9800DCC72D9099C300070B38 /* GoogleService-Info.plist */; };
 		98E8A3F02D94DADD009A2D05 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 98E8A3EF2D94DADD009A2D05 /* GoogleMaps */; };
 /* End PBXBuildFile section */
 
@@ -38,8 +38,24 @@
 		848DA2F52D78951F00ED130D /* DineHalalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DineHalalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		848DA2FF2D78951F00ED130D /* DineHalalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DineHalalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		84A33F8D2D7B4C9700862E87 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.2.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
-		9800DCC72D9099C300070B38 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		844CACCF2D9C9324007CA33A /* Exceptions for "DineHalalTests" folder in "DineHalal" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				PlacesAPITest.swift,
+			);
+			target = 848DA2E32D78951E00ED130D /* DineHalal */;
+		};
+		844CACD02D9C9324007CA33A /* Exceptions for "DineHalalTests" folder in "DineHalalTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				PlacesAPITest.swift,
+			);
+			target = 848DA2F42D78951F00ED130D /* DineHalalTests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		848DA2E62D78951E00ED130D /* DineHalal */ = {
@@ -49,6 +65,10 @@
 		};
 		848DA2F82D78951F00ED130D /* DineHalalTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				844CACCF2D9C9324007CA33A /* Exceptions for "DineHalalTests" folder in "DineHalal" target */,
+				844CACD02D9C9324007CA33A /* Exceptions for "DineHalalTests" folder in "DineHalalTests" target */,
+			);
 			path = DineHalalTests;
 			sourceTree = "<group>";
 		};
@@ -68,6 +88,7 @@
 				84D0B42E2D8B554C00A0E341 /* FirebaseFirestore in Frameworks */,
 				98E8A3F02D94DADD009A2D05 /* GoogleMaps in Frameworks */,
 				84D0B42C2D8B554C00A0E341 /* FirebaseAuth in Frameworks */,
+				84CF13562D9CABCF00818065 /* FirebaseCore in Frameworks */,
 				84D0B4302D8B554C00A0E341 /* FirebaseStorage in Frameworks */,
 				84D0B4292D8B551300A0E341 /* GoogleSignInSwift in Frameworks */,
 			);
@@ -93,7 +114,6 @@
 		848DA2DB2D78951E00ED130D = {
 			isa = PBXGroup;
 			children = (
-				9800DCC72D9099C300070B38 /* GoogleService-Info.plist */,
 				848DA2E62D78951E00ED130D /* DineHalal */,
 				848DA2F82D78951F00ED130D /* DineHalalTests */,
 				848DA3022D78951F00ED130D /* DineHalalUITests */,
@@ -146,6 +166,7 @@
 				84D0B42D2D8B554C00A0E341 /* FirebaseFirestore */,
 				84D0B42F2D8B554C00A0E341 /* FirebaseStorage */,
 				98E8A3EF2D94DADD009A2D05 /* GoogleMaps */,
+				84CF13552D9CABCF00818065 /* FirebaseCore */,
 			);
 			productName = "Dine Halal";
 			productReference = 848DA2E42D78951E00ED130D /* DineHalal.app */;
@@ -201,7 +222,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1620;
-				LastUpgradeCheck = 1620;
+				LastUpgradeCheck = 1630;
 				TargetAttributes = {
 					848DA2E32D78951E00ED130D = {
 						CreatedOnToolsVersion = 16.2;
@@ -247,7 +268,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9800DCC82D9099C300070B38 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -339,6 +359,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -400,6 +421,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -427,8 +449,9 @@
 				CODE_SIGN_ENTITLEMENTS = DineHalal/DineHalal.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"DineHalal/Preview Content\"";
-				DEVELOPMENT_TEAM = 6FUG4L6VF3;
+				DEVELOPMENT_TEAM = 52KP577HS2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Dine-Halal-Info.plist";
@@ -470,8 +493,9 @@
 				CODE_SIGN_ENTITLEMENTS = DineHalal/DineHalal.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"DineHalal/Preview Content\"";
-				DEVELOPMENT_TEAM = 6FUG4L6VF3;
+				DEVELOPMENT_TEAM = 52KP577HS2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Dine-Halal-Info.plist";
@@ -509,6 +533,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6FUG4L6VF3;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
@@ -532,6 +557,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6FUG4L6VF3;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
@@ -554,6 +580,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6FUG4L6VF3;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
@@ -576,6 +603,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6FUG4L6VF3;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
@@ -662,6 +690,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		84CF13552D9CABCF00818065 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84D0B42A2D8B554C00A0E341 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
 		84D0B4262D8B551300A0E341 /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 84D0B4252D8B551300A0E341 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;

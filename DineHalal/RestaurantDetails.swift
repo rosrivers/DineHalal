@@ -3,73 +3,165 @@
 ///  Dine Halal
 ///  Created by Iman Ikram and Joana on 3/11/25.
 ///
+
 import SwiftUI
+import MapKit
+import GoogleMaps
 
-
-/// View displaying the details of a restaurant, including halal certification status
 struct RestaurantDetails: View {
-    var restaurant: Restaurant
-    @State private var verificationResult: VerificationResult?
-    @Environment(\.dismiss) private var dismiss
+    let restaurant: Restaurant
+    @State private var region: MKCoordinateRegion
+    @State private var rating: Int = 0
+    @State private var review: String = ""
+    @StateObject private var placesService = PlacesService()
+   
+    init(restaurant: Restaurant) {
+        self.restaurant = restaurant
+        _region = State(initialValue: MKCoordinateRegion(
+            center: CLLocationCoordinate2D(
+                latitude: restaurant.latitude,
+                longitude: restaurant.longitude
+            ),
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        ))
+    }
     
     var body: some View {
-        VStack {
-            /// Display basic restaurant information
-            Text(restaurant.name)
-                .font(.largeTitle)
-            Text(restaurant.address)
-                .font(.subheadline)
-            
-            /// Display coordinates
-            Text("Location: \(String(format: "%.4f", restaurant.latitude)), \(String(format: "%.4f", restaurant.longitude))")
-                .font(.caption)
-                .foregroundColor(.gray)
-            
-            /// Display halal verification status
-            if let verificationResult = verificationResult {
-                Text(verificationResult.isVerified ? "Verified Halal" : "Not Verified")
-                    .font(.headline)
-                    .foregroundColor(verificationResult.isVerified ? .green : .red)
-            }
-        }
-        .padding()
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Done") {
-                    dismiss()
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Restaurant Image
+                if let photoReference = restaurant.photoReference {
+                    AsyncImage(url: getPhotoURL(photoReference: photoReference)) { phase in
+                        switch phase {
+                        case .empty:
+                            ProgressView()
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        case .failure:
+                            Image(systemName: "photo")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .foregroundColor(.gray)
+                        @unknown default:
+                            EmptyView()
+                        }
+                    }
+                    .frame(height: 200)
+                    .clipped()
                 }
+                
+                // Restaurant Info
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(restaurant.name)
+                        .font(.title)
+                        .fontWeight(.bold)
+                    
+                    HStack {
+                        ForEach(1...5, id: \.self) { index in
+                            Image(systemName: index <= Int(restaurant.rating) ? "star.fill" : "star")
+                                .foregroundColor(.yellow)
+                        }
+                        Text("(\(restaurant.numberOfRatings) reviews)")
+                            .foregroundColor(.gray)
+                    }
+                    
+                    Text(restaurant.vicinity)
+                        .foregroundColor(.gray)
+                    
+                    if restaurant.isOpenNow {
+                        Text("Open Now")
+                            .foregroundColor(.green)
+                    } else {
+                        Text("Closed")
+                            .foregroundColor(.red)
+                    }
+                }
+                .padding()
+                
+                // Map View
+                Map(coordinateRegion: $region, annotationItems: [restaurant]) { place in
+                    MapMarker(coordinate: CLLocationCoordinate2D(
+                        latitude: place.latitude,
+                        longitude: place.longitude
+                    ))
+                }
+                .frame(height: 200)
+                .cornerRadius(10)
+                
+                // Nearby Restaurants Section
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Nearby Halal Restaurants")
+                        .font(.headline)
+                        .padding(.leading)
+                    
+                    if placesService.isLoading {
+                        ProgressView("Fetching restaurants...")
+                    } else if let error = placesService.error {
+                        Text("Error: \(error.localizedDescription)")
+                            .foregroundColor(.red)
+                    } else {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack {
+                                ForEach(placesService.recommendedRestaurants) { nearbyRestaurant in
+                                    RestaurantCard(
+                                        name: nearbyRestaurant.name,
+                                        rating: nearbyRestaurant.rating,
+                                        photoReference: nearbyRestaurant.photoReference
+                                    )
+                                }
+                            }
+                            .padding()
+                        }
+                    }
+                }
+                
+                // Review Section
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Write a Review")
+                        .font(.headline)
+                    
+                    HStack {
+                        ForEach(1...5, id: \.self) { index in
+                            Image(systemName: index <= rating ? "star.fill" : "star")
+                                .foregroundColor(.yellow)
+                                .onTapGesture {
+                                    rating = index
+                                }
+                        }
+                    }
+                    
+                    TextEditor(text: $review)
+                        .frame(height: 100)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.3))
+                        )
+                    
+                    Button("Submit Review") {
+                        submitReview()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding()
             }
         }
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            Task {
-                await verifyRestaurant()
-            }
+            placesService.fetchNearbyRestaurants(
+                latitude: restaurant.latitude,
+                longitude: restaurant.longitude
+            )
         }
     }
     
-    /// Function to verify the restaurant using the VerificationService
-    func verifyRestaurant() async {
-        let verificationService = VerificationService()
-        // Pass all required parameters from the restaurant model
-        verificationResult = await verificationService.verifyRestaurant(
-            //id: restaurant.id,
-            name: restaurant.name,
-            address: restaurant.address
-        )
+    private func getPhotoURL(photoReference: String) -> URL? {
+        let urlString = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=\(photoReference)&key=\(APIKeys.placesKey)"
+        return URL(string: urlString)
     }
-}
-
-/// Preview for the RestaurantDetails view
-struct RestaurantDetails_Previews: PreviewProvider {
-    static var previews: some View {
-        let sampleRestaurant = Restaurant(
-            id: UUID(),
-            name: "Sample Restaurant",
-            address: "123 Sample Street",
-            latitude: 37.7749,
-            longitude: -122.4194
-        )
-        RestaurantDetails(restaurant: sampleRestaurant)
+    
+    private func submitReview() {
+        print("Submitting review: Rating: \(rating), Review: \(review)")
     }
 }

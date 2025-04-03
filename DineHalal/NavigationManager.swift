@@ -1,7 +1,6 @@
-//
+
 //  NavigationManager.swift
 ///  DineHalal
-//
 ///  Created by Joanne on 3/25/25.
 
 import SwiftUI
