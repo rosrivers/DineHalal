@@ -23,9 +23,7 @@ class PlacesService: ObservableObject {
         isLoading = true
         print("Fetching restaurants for coordinates: \(latitude), \(longitude)")
         
-        let urlString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=\(latitude),\(longitude)&radius=5000&type=restaurant&keyword=halal&key=\(APIKeys.placesKey)"
-        
-        guard let url = URL(string: urlString) else {
+        guard let url = GoogleMapConfig.getNearbyRestaurantsURL(userLocation: CLLocationCoordinate2D(latitude: latitude, longitude: longitude)) else {
             isLoading = false
             print("Invalid URL formed")
             return

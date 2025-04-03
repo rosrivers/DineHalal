@@ -157,8 +157,7 @@ struct RestaurantDetails: View {
     }
     
     private func getPhotoURL(photoReference: String) -> URL? {
-        let urlString = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=\(photoReference)&key=\(APIKeys.placesKey)"
-        return URL(string: urlString)
+        return GoogleMapConfig.getPhotoURL(photoReference: photoReference)
     }
     
     private func submitReview() {
