@@ -4,31 +4,15 @@ GoogleService-Info.plist
 # Google Maps API Configuration
 Dine-Halal-Info.plist
 
-# Xcode generated files
-*.xcuserstate
-*.xcworkspace
-DerivedData/
-
-# CocoaPods
-Pods/
-Podfile.lock
-
-# API Keys or Secrets (if stored in separate files)
+# API Keys
+APIKEYS.swift
 Secrets.swift
 
-# Environment files
-.env
-
-# macOS system files
-.DS_Store
-
 # Xcode
+.DS_Store
 xcuserdata/
-*.xcscmblueprint
-*.xccheckout
-
-# Build generated
-build/
+*.xcuserstate
+*.xcworkspace
 DerivedData/
 *.moved-aside
 *.pbxuser
@@ -39,3 +23,14 @@ DerivedData/
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Build generated
+build/
+DerivedData/
+
+# Environment files
+.env

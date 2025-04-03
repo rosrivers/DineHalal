@@ -3,27 +3,26 @@
 //  Dine Halal
 //
 //  Created by Iman Ikram on 3/11/25.
-///updated - Joana
+/// updated - Joana 
 
 
+import Foundation
 
-import Firebase
-import FirebaseFirestore
-
-struct Review: Codable, Identifiable {
-    @DocumentID var id: String?
-    let restaurantId: String
-    let userId: String
-    let rating: Int
-    let comment: String
-    let timestamp: Date
+struct Review: Identifiable, Decodable {
+    var id: UUID
+    var userId: String
+    var restaurantId: String
+    var rating: Int
+    var comment: String
+    var date: Date
     
+    /// Add CodingKeys enum if needed to map JSON keys to struct properties
     enum CodingKeys: String, CodingKey {
         case id
-        case restaurantId
         case userId
+        case restaurantId
         case rating
         case comment
-        case timestamp
+        case date
     }
 }
