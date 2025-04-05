@@ -176,8 +176,16 @@ struct SignUp: View {
                 }
 
                 print("Account created successfully!")
-                // NEW: Instead of setting isSignedIn, trigger email verification.
-                self.showEmailVerification = true
+                // NEW: After account creation, get the current user and send a verification email.
+                guard let user = Auth.auth().currentUser else { return }
+                user.sendEmailVerification { error in
+                    if let error = error {
+                        self.errorMessage = "Failed to send verification email: \(error.localizedDescription)"
+                    } else {
+                        print("Verification email sent!")
+                        self.showEmailVerification = true  // NEW: Trigger email verification screen.
+                    }
+                }
             }
         } else {
             self.errorMessage = "Passwords do not match!"
@@ -214,8 +222,16 @@ struct SignUp: View {
                     print("Error signing in with Firebase: \(error.localizedDescription)")
                 } else {
                     print("Firebase sign-in successful!")
-                    // NEW: After Google sign-in, show the email verification screen.
-                    self.showEmailVerification = true
+                    // NEW: After Google sign-in, send a verification email and show the verification screen.
+                    guard let user = Auth.auth().currentUser else { return }
+                    user.sendEmailVerification { error in
+                        if let error = error {
+                            print("Failed to send verification email: \(error.localizedDescription)")
+                        } else {
+                            print("Verification email sent!")
+                            self.showEmailVerification = true
+                        }
+                    }
                 }
             }
         }
