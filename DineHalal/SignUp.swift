@@ -1,9 +1,7 @@
-//
-//  SignUp.swift
-//  Dine Halal
-//
-//  Created by Iman Ikram on 3/15/25.
-//
+///  SignUp.swift
+///  Dine Halal
+///  Created by Iman Ikram on 3/15/25.
+
 import SwiftUI
 import FirebaseAuth
 import Firebase
@@ -18,6 +16,9 @@ struct SignUp: View {
     @State private var reenterPassword: String = ""
     @State private var isSignedIn = false
     @State private var errorMessage: String?
+    
+    // updated by rosa: state variable to control when the email verification view should be shown.
+    @State private var showEmailVerification = false  // NEW: Added to trigger email verification screen after registration.
 
     var body: some View {
         ScrollView {
@@ -90,13 +91,13 @@ struct SignUp: View {
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(.accent)
+                            .background(Color.accent)
                             .foregroundColor(.darkBrown)
                             .cornerRadius(10)
                     }
                 }
                 .padding()
-                .background(.mud)
+                .background(Color.mud)
                 .cornerRadius(10)
                 .padding(.all, 30)
 
@@ -130,7 +131,7 @@ struct SignUp: View {
                     }
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(.accent)
+                    .background(Color.accent)
                     .cornerRadius(10)
                     .overlay(
                         RoundedRectangle(cornerRadius: 30)
@@ -156,8 +157,9 @@ struct SignUp: View {
 
                 Spacer()
             }
-            .fullScreenCover(isPresented: $isSignedIn) {
-                ContentView()
+            // NEW: Present the EmailVerificationView full screen instead of ContentView when email verification is needed.
+            .fullScreenCover(isPresented: $showEmailVerification) {
+                EmailVerificationView()  // NEW: Email verification screen prompting user to click the link in their email.
             }
         }
         .padding()
@@ -174,8 +176,8 @@ struct SignUp: View {
                 }
 
                 print("Account created successfully!")
-                // After successful sign up, sign the user in
-                self.isSignedIn = true
+                // NEW: Instead of setting isSignedIn, trigger email verification.
+                self.showEmailVerification = true
             }
         } else {
             self.errorMessage = "Passwords do not match!"
@@ -212,10 +214,10 @@ struct SignUp: View {
                     print("Error signing in with Firebase: \(error.localizedDescription)")
                 } else {
                     print("Firebase sign-in successful!")
-                    self.isSignedIn = true
+                    // NEW: After Google sign-in, show the email verification screen.
+                    self.showEmailVerification = true
                 }
             }
         }
     }
 }
-
