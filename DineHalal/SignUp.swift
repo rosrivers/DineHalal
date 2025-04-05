@@ -1,6 +1,7 @@
 ///  SignUp.swift
 ///  Dine Halal
 ///  Created by Iman Ikram on 3/15/25.
+///  modified by rosa on 04/05/25.
 
 import SwiftUI
 import FirebaseAuth
@@ -157,14 +158,21 @@ struct SignUp: View {
 
                 Spacer()
             }
-            // NEW: Present the EmailVerificationView full screen instead of ContentView when email verification is needed.
+            // NEW: Present the EmailVerificationView full screen when email verification is needed.
             .fullScreenCover(isPresented: $showEmailVerification) {
-                EmailVerificationView()  // NEW: Email verification screen prompting user to click the link in their email.
+                EmailVerificationView(onVerified: {   // NEW: Pass the callback that triggers transition to HomeScreen.
+                    self.showEmailVerification = false
+                    self.isSignedIn = true  // NEW: When email is verified, set isSignedIn to true.
+                })
             }
         }
         .padding()
         .background(Color("AccentColor"))
         .ignoresSafeArea()
+        // NEW: When isSignedIn becomes true, present the HomeScreen.
+        .fullScreenCover(isPresented: $isSignedIn) {
+            HomeScreen()  // NEW: Changed destination to HomeScreen.
+        }
     }
 
     private func handleSignUp() {
@@ -176,7 +184,7 @@ struct SignUp: View {
                 }
 
                 print("Account created successfully!")
-                // NEW: After account creation, get the current user and send a verification email.
+                // NEW: After account creation, send a verification email.
                 guard let user = Auth.auth().currentUser else { return }
                 user.sendEmailVerification { error in
                     if let error = error {
@@ -222,7 +230,7 @@ struct SignUp: View {
                     print("Error signing in with Firebase: \(error.localizedDescription)")
                 } else {
                     print("Firebase sign-in successful!")
-                    // NEW: After Google sign-in, send a verification email and show the verification screen.
+                    // NEW: After Google sign-in, send verification email and show the verification screen.
                     guard let user = Auth.auth().currentUser else { return }
                     user.sendEmailVerification { error in
                         if let error = error {
@@ -235,5 +243,12 @@ struct SignUp: View {
                 }
             }
         }
+    }
+}
+
+// NEW: Preview for SignUp using a constant binding for NavigationPath.
+struct SignUp_Previews: PreviewProvider {
+    static var previews: some View {
+        SignUp(path: .constant(NavigationPath()))
     }
 }
