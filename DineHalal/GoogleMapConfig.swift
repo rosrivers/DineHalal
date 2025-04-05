@@ -9,7 +9,8 @@ import CoreLocation
 import GoogleMaps
 
 struct GoogleMapConfig {
-    static let apiKey = APIKeys.placesKey
+    static let apiKey = APIKeys.mapsKey
+    static let placesKey = APIKeys.placesKey
     
     static func getNearbyRestaurantsURL(userLocation: CLLocationCoordinate2D) -> URL? {
         let baseURLString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
@@ -20,7 +21,7 @@ struct GoogleMapConfig {
             URLQueryItem(name: "radius", value: "5000"),
             URLQueryItem(name: "type", value: "restaurant"),
             URLQueryItem(name: "keyword", value: "halal"),
-            URLQueryItem(name: "key", value: apiKey)
+            URLQueryItem(name: "key", value: placesKey)
         ]
         
         return components?.url
@@ -33,7 +34,7 @@ struct GoogleMapConfig {
         components?.queryItems = [
             URLQueryItem(name: "maxwidth", value: "\(maxWidth)"),
             URLQueryItem(name: "photo_reference", value: photoReference),
-            URLQueryItem(name: "key", value: apiKey)
+            URLQueryItem(name: "key", value: placesKey)
         ]
         
         return components?.url
