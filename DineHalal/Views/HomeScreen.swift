@@ -252,6 +252,31 @@ struct HomeScreen: View {
                                     .padding()
                                 }
                             }
+                            /// Load More Button
+                            if placesService.hasMorePages {
+                                Button(action: {
+                                    placesService.loadMoreRestaurants(
+                                        latitude: region.center.latitude,
+                                        longitude: region.center.longitude
+                                    )
+                                }) {
+                                    HStack {
+                                        if placesService.isLoadingMore {
+                                            ProgressView()
+                                                .padding(.trailing, 5)
+                                        }
+                                        Text("Load More Restaurants")
+                                    }
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(.mud.opacity(0.8))
+                                    .foregroundColor(.beige)
+                                    .cornerRadius(10)
+                                }
+                                .padding(.horizontal)
+                                .padding(.vertical, 10)
+                                .disabled(placesService.isLoadingMore)
+                            }
                         }
                     }
                 }
