@@ -86,7 +86,7 @@ struct HomeScreen: View {
     
     /// Map related states
     @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060), // New York coordinates
+        center: CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060), // NYC coordinates
         span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
     )
     @State private var annotations: [MKPointAnnotation] = []
@@ -156,10 +156,15 @@ struct HomeScreen: View {
                     }
                     
                     Button(action: {
-                        placesService.fetchNearbyRestaurants(
-                            latitude: region.center.latitude,
-                            longitude: region.center.longitude
-                        )
+                        Task {
+                            // 1) call your async fetch
+                            await placesService.fetchNearbyRestaurants(
+                              latitude: region.center.latitude,
+                              longitude: region.center.longitude
+                            )
+                            // 2) if you have another async call, await it here too
+                            // await fetchUserData()
+                          }
                     }) {
                         HStack {
                             Image(systemName: "location.fill")
@@ -265,11 +270,15 @@ struct HomeScreen: View {
                 }
             }
             .onAppear {
-                placesService.fetchNearbyRestaurants(
-                    latitude: region.center.latitude,
-                    longitude: region.center.longitude
-                )
-                fetchUserData()
+                Task {
+                    // await the async restaurants call
+                    await placesService.fetchNearbyRestaurants(
+                      latitude: region.center.latitude,
+                      longitude: region.center.longitude
+                    )
+                    // await your user‐data call 
+                    await fetchUserData()
+                  }
             }
             .alert("Error", isPresented: .constant(errorMessage != nil)) {
                 Button("OK") {

@@ -62,6 +62,28 @@ struct Restaurant: Identifiable, Codable, Hashable {
         }
     }
     
+    // JSON structs matching the API
+    struct GooglePlacesResponse: Decodable {
+      let results: [PlaceResult]
+    }
+    struct PlaceResult: Decodable {
+      let place_id: String
+      let name: String
+      let rating: Double?
+      let geometry: Geometry
+      let photos: [Photo]?
+    }
+    struct Geometry: Decodable {
+      let location: Location
+    }
+    struct Location: Decodable {
+      let lat: Double
+      let lng: Double
+    }
+    struct Photo: Decodable {
+      let photo_reference: String
+    }
+    
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         

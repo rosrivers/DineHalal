@@ -148,12 +148,13 @@ struct RestaurantDetails: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            placesService.fetchNearbyRestaurants(
+        .task {
+              // async call
+              await placesService.fetchNearbyRestaurants(
                 latitude: restaurant.latitude,
                 longitude: restaurant.longitude
-            )
-        }
+              )
+            }
     }
     
     private func getPhotoURL(photoReference: String) -> URL? {
