@@ -2,11 +2,11 @@
 //  PlacesService.swift
 //  DineHalal
 ///  Created by Joanne on 4/1/25.
+///  Edited by Chelsea on 4/5/25.
 
 import Foundation
 import CoreLocation
 
-// Define PlacesResponse structure
 struct PlacesResponse: Codable {
     let results: [Restaurant]
     let status: String
@@ -19,11 +19,14 @@ class PlacesService: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
     
-    func fetchNearbyRestaurants(latitude: Double, longitude: Double) {
+    func fetchNearbyRestaurants(latitude: Double, longitude: Double, filter: FilterCriteria?) {
         isLoading = true
-        print("Fetching restaurants for coordinates: \(latitude), \(longitude)")
+        print("Fetching restaurants for coordinates: \(latitude), \(longitude) with filter: \(String(describing: filter))")
         
-        guard let url = GoogleMapConfig.getNearbyRestaurantsURL(userLocation: CLLocationCoordinate2D(latitude: latitude, longitude: longitude)) else {
+        guard let url = GoogleMapConfig.getNearbyRestaurantsURL(
+            userLocation: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
+            filter: filter
+        ) else {
             isLoading = false
             print("Invalid URL formed")
             return
@@ -45,7 +48,7 @@ class PlacesService: ObservableObject {
                 }
                 
                 do {
-                    // Print raw response for debugging
+                    // Debug print of raw response
                     if let jsonString = String(data: data, encoding: .utf8) {
                         print("Raw API Response: \(jsonString)")
                     }
@@ -56,7 +59,6 @@ class PlacesService: ObservableObject {
                     let restaurants = response.results
                     print("Successfully decoded \(restaurants.count) restaurants")
                     
-                    // Split restaurants into different categories
                     self?.recommendedRestaurants = Array(restaurants.filter { $0.rating >= 4.5 }.prefix(5))
                     self?.popularRestaurants = Array(restaurants.filter { $0.numberOfRatings > 200 }.prefix(5))
                     self?.recentlyVerified = Array(restaurants.suffix(5))
@@ -66,22 +68,6 @@ class PlacesService: ObservableObject {
                 } catch {
                     self?.error = error
                     print("Decoding error: \(error)")
-                    
-                    // Print more detailed decoding error
-                    if let decodingError = error as? DecodingError {
-                        switch decodingError {
-                        case .dataCorrupted(let context):
-                            print("Data corrupted: \(context.debugDescription)")
-                        case .keyNotFound(let key, let context):
-                            print("Key '\(key)' not found: \(context.debugDescription)")
-                        case .valueNotFound(let type, let context):
-                            print("Value of type '\(type)' not found: \(context.debugDescription)")
-                        case .typeMismatch(let type, let context):
-                            print("Type '\(type)' mismatch: \(context.debugDescription)")
-                        @unknown default:
-                            print("Unknown decoding error")
-                        }
-                    }
                 }
             }
         }.resume()
