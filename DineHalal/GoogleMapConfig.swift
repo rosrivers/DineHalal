@@ -18,7 +18,7 @@ struct GoogleMapConfig {
         var components = URLComponents(string: baseURLString)
         components?.queryItems = [
             URLQueryItem(name: "location", value: "\(userLocation.latitude),\(userLocation.longitude)"),
-            URLQueryItem(name: "radius", value: "5000"),
+            URLQueryItem(name: "radius", value: "50000"),
             URLQueryItem(name: "type", value: "restaurant"),
             URLQueryItem(name: "keyword", value: "halal"),
             URLQueryItem(name: "key", value: placesKey)
@@ -39,4 +39,16 @@ struct GoogleMapConfig {
         
         return components?.url
     }
+    static func getNextPageURL(pageToken: String) -> URL? {
+        let baseURLString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+        
+        var components = URLComponents(string: baseURLString)
+        components?.queryItems = [
+            URLQueryItem(name: "pagetoken", value: pageToken),
+            URLQueryItem(name: "key", value: placesKey)
+        ]
+        
+        return components?.url
+    }
+    
 }
