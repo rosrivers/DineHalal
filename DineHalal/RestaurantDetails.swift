@@ -2,7 +2,7 @@
 ///  RestaurantDetails.swift
 ///  Dine Halal
 ///  Created by Iman Ikram and Joana on 3/11/25.
-/// Edited by Chelsea on 4/5/25.
+///
 
 import SwiftUI
 import MapKit
@@ -151,8 +151,7 @@ struct RestaurantDetails: View {
         .onAppear {
             placesService.fetchNearbyRestaurants(
                 latitude: restaurant.latitude,
-                longitude: restaurant.longitude,
-                filter: nil
+                longitude: restaurant.longitude
             )
         }
     }
