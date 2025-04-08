@@ -137,6 +137,7 @@ struct SignUp: View {
                             .stroke(Color.darkBrown, lineWidth: 2)
                     )
                 }
+                
                 .padding()
 
                 // Navigation to Sign In
