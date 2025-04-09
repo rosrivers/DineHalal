@@ -172,7 +172,7 @@ struct SignUp: View {
         .ignoresSafeArea()
         // NEW: When isSignedIn becomes true, present the HomeScreen.
         .fullScreenCover(isPresented: $isSignedIn) {
-            HomeScreen()  // NEW: Changed destination to HomeScreen.
+            ContentView()  // NEW: Changed destination to HomeScreen.
         }
     }
 
