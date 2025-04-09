@@ -5,7 +5,6 @@
 //  Created by Chelsea Bhuiyan on 4/5/25.
 //
 
-
 struct FilterCriteria {
     var halalCertified: Bool = false
     var userVerified: Bool = false
@@ -21,3 +20,4 @@ struct FilterCriteria {
     var priceModerate: Bool = false
     var priceExpensive: Bool = false
 }
+
