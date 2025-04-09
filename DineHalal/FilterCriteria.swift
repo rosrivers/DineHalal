@@ -21,3 +21,4 @@ struct FilterCriteria {
     var priceExpensive: Bool = false
 }
 
+
