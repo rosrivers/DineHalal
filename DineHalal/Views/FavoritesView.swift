@@ -5,7 +5,10 @@
 
 
 import SwiftUI
+
 struct FavoritesView: View {
+    @EnvironmentObject var favorites: Favorites
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -18,15 +21,31 @@ struct FavoritesView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.black)
                     
-                    Text("Coming Soon!")
-                        .foregroundColor(.gray)
+                    if favorites.favorites.isEmpty {
+                        VStack {
+                            Text("No favorite restaurants yet.")
+                                .foregroundColor(.gray)
+                            Text("Tap the heart icon on a restaurant to add it!")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
                         .padding()
-                    
-                    Text("Restaurant integration in progress")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                    } else {
+                        // subject to change: adjust the view so its more visually appealing
+                        List(favorites.favorites) { restaurant in
+                            HStack {
+                                Text(restaurant.name)
+                                Spacer()
+                                Image(systemName: "heart.fill")
+                                    .foregroundColor(.red)
+                            }
+                        }
+                        .listStyle(PlainListStyle())
+                    }
                 }
+                .padding()
             }
+            .navigationTitle("Favorites")
         }
     }
 }
