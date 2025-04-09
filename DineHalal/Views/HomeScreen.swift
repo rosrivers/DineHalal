@@ -3,6 +3,7 @@
 //
 //  Created by Iman Ikram on 3/10/25.
 /// Edited/Modified - Joana
+/// Edited by Chelsea 4/5/25
 
 import FirebaseFirestore
 import FirebaseCore
@@ -71,9 +72,8 @@ struct RestaurantCard: View {
     }
 }
 
-
 struct HomeScreen: View {
-    // MARK: - Properties
+   
     @StateObject private var locationManager = LocationManager()
     @StateObject private var placesService = PlacesService()
     @EnvironmentObject var navigationState: NavigationStateManager
@@ -91,7 +91,25 @@ struct HomeScreen: View {
     )
     @State private var annotations: [MKPointAnnotation] = []
     
-    // MARK: - Helper Methods
+    // New state for filter criteria
+    @State private var filterCriteria = FilterCriteria()
+    
+   
+    // Geocode the provided zip code into coordinates.
+    private func geocodeZipCode(_ zip: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
+        let geocoder = CLGeocoder()
+        geocoder.geocodeAddressString(zip) { placemarks, error in
+            if let error = error {
+                print("Geocoding error: \(error.localizedDescription)")
+                completion(nil)
+            } else if let location = placemarks?.first?.location {
+                completion(location.coordinate)
+            } else {
+                completion(nil)
+            }
+        }
+    }
+    
     private func fetchUserData() {
         guard let userId = Auth.auth().currentUser?.uid else {
             print("No authenticated user")
@@ -121,7 +139,7 @@ struct HomeScreen: View {
             }
     }
     
-    // MARK: - Body
+  
     var body: some View {
         NavigationStack {
             ZStack {
@@ -131,9 +149,9 @@ struct HomeScreen: View {
                 VStack(spacing: 0) {
                     ZStack {
                         GoogleMapView(region: $region, annotations: annotations)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: UIScreen.main.bounds.height * 0.4)
-                                    .edgesIgnoringSafeArea(.top)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: UIScreen.main.bounds.height * 0.4)
+                            .edgesIgnoringSafeArea(.top)
                         
                         VStack {
                             Spacer()
@@ -155,11 +173,32 @@ struct HomeScreen: View {
                         }
                     }
                     
+                    // "Near Me" Button: If a zip code is provided, use that coordinate.
                     Button(action: {
-                        placesService.fetchNearbyRestaurants(
-                            latitude: region.center.latitude,
-                            longitude: region.center.longitude
-                        )
+                        if !filterCriteria.cityZip.isEmpty {
+                            geocodeZipCode(filterCriteria.cityZip) { coordinate in
+                                if let coordinate = coordinate {
+                                    placesService.fetchNearbyRestaurants(
+                                        latitude: coordinate.latitude,
+                                        longitude: coordinate.longitude,
+                                        filter: filterCriteria
+                                    )
+                                } else {
+                                    // Fallback to current region if geocoding fails.
+                                    placesService.fetchNearbyRestaurants(
+                                        latitude: region.center.latitude,
+                                        longitude: region.center.longitude,
+                                        filter: filterCriteria
+                                    )
+                                }
+                            }
+                        } else {
+                            placesService.fetchNearbyRestaurants(
+                                latitude: region.center.latitude,
+                                longitude: region.center.longitude,
+                                filter: filterCriteria
+                            )
+                        }
                     }) {
                         HStack {
                             Image(systemName: "location.fill")
@@ -228,7 +267,7 @@ struct HomeScreen: View {
                                 }
                             }
                             
-                            /// Recently Verified Section -  hardcoded and subject to change.
+                            // Recently Verified Section
                             VStack(alignment: .leading) {
                                 Text("Recently Verified Halal Restaurants")
                                     .font(.headline)
@@ -257,7 +296,32 @@ struct HomeScreen: View {
                 }
             }
             .sheet(isPresented: $showFilter) {
-                FilterView()
+                // Present FilterView with binding to filterCriteria and apply closure.
+                FilterView(criteria: $filterCriteria) { criteria in
+                    if !criteria.cityZip.isEmpty {
+                        geocodeZipCode(criteria.cityZip) { coordinate in
+                            if let coordinate = coordinate {
+                                placesService.fetchNearbyRestaurants(
+                                    latitude: coordinate.latitude,
+                                    longitude: coordinate.longitude,
+                                    filter: criteria
+                                )
+                            } else {
+                                placesService.fetchNearbyRestaurants(
+                                    latitude: region.center.latitude,
+                                    longitude: region.center.longitude,
+                                    filter: criteria
+                                )
+                            }
+                        }
+                    } else {
+                        placesService.fetchNearbyRestaurants(
+                            latitude: region.center.latitude,
+                            longitude: region.center.longitude,
+                            filter: criteria
+                        )
+                    }
+                }
             }
             .sheet(isPresented: $navigationState.showingRestaurantDetail) {
                 if let restaurant = navigationState.selectedRestaurant {
@@ -265,10 +329,30 @@ struct HomeScreen: View {
                 }
             }
             .onAppear {
-                placesService.fetchNearbyRestaurants(
-                    latitude: region.center.latitude,
-                    longitude: region.center.longitude
-                )
+                // If a zip code was set earlier, use it; otherwise, use the current region.
+                if !filterCriteria.cityZip.isEmpty {
+                    geocodeZipCode(filterCriteria.cityZip) { coordinate in
+                        if let coordinate = coordinate {
+                            placesService.fetchNearbyRestaurants(
+                                latitude: coordinate.latitude,
+                                longitude: coordinate.longitude,
+                                filter: filterCriteria
+                            )
+                        } else {
+                            placesService.fetchNearbyRestaurants(
+                                latitude: region.center.latitude,
+                                longitude: region.center.longitude,
+                                filter: filterCriteria
+                            )
+                        }
+                    }
+                } else {
+                    placesService.fetchNearbyRestaurants(
+                        latitude: region.center.latitude,
+                        longitude: region.center.longitude,
+                        filter: filterCriteria
+                    )
+                }
                 fetchUserData()
             }
             .alert("Error", isPresented: .constant(errorMessage != nil)) {
