@@ -1,9 +1,8 @@
-
+//
 //  PlacesService.swift
 //  DineHalal
 ///  Created by Joanne on 4/1/25.
-
-///"When your application displays results to the user, you should also display any attribution included in the response. The next_page_token can be used to retrieve additional results." - Google Places API Documentation
+///  Edited by Chelsea on 4/5/25.
 
 import Foundation
 import CoreLocation
