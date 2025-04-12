@@ -4,6 +4,7 @@
 //  Created by Iman Ikram on 3/10/25.
 /// Edited/Modified - Joana
 /// Edited by Chelsea 4/5/25
+/// Edited / Modified : Rosa
 
 import FirebaseFirestore
 import FirebaseCore
@@ -94,7 +95,17 @@ struct HomeScreen: View {
     // New state for filter criteria
     @State private var filterCriteria = FilterCriteria()
     
-   
+    // Function to update map annotations from an array of Restaurant objects.
+    private func updateAnnotations(with restaurants: [Restaurant]) {
+        let newAnnotations = restaurants.map { restaurant -> MKPointAnnotation in
+            let annotation = MKPointAnnotation()
+            annotation.title = restaurant.name
+            annotation.coordinate = CLLocationCoordinate2D(latitude: restaurant.latitude, longitude: restaurant.longitude)
+            return annotation
+        }
+        self.annotations = newAnnotations
+    }
+    
     // Geocode the provided zip code into coordinates.
     private func geocodeZipCode(_ zip: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
         let geocoder = CLGeocoder()
@@ -139,7 +150,6 @@ struct HomeScreen: View {
             }
     }
     
-  
     var body: some View {
         NavigationStack {
             ZStack {
@@ -178,13 +188,41 @@ struct HomeScreen: View {
                         if !filterCriteria.cityZip.isEmpty {
                             geocodeZipCode(filterCriteria.cityZip) { coordinate in
                                 if let coordinate = coordinate {
+                                    DispatchQueue.main.async {
+                                        region.center = coordinate // update the region
+                                        print("Using geocoded zip coordinate: \(coordinate)")
+                                        placesService.fetchNearbyRestaurants(
+                                            latitude: coordinate.latitude,
+                                            longitude: coordinate.longitude,
+                                            filter: filterCriteria
+                                        )
+                                    }
+                                } else {
+                                    DispatchQueue.main.async {
+                                        print("Geocoding failed, defaulting to region center: \(region.center)")
+                                        placesService.fetchNearbyRestaurants(
+                                            latitude: region.center.latitude,
+                                            longitude: region.center.longitude,
+                                            filter: filterCriteria
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            // No zip provided, use the current location if available
+                            if let currentLocation = locationManager.userLocation {
+                                DispatchQueue.main.async {
+                                    region.center = currentLocation // update the region with current location
+                                    print("Using current location: \(currentLocation)")
                                     placesService.fetchNearbyRestaurants(
-                                        latitude: coordinate.latitude,
-                                        longitude: coordinate.longitude,
+                                        latitude: currentLocation.latitude,
+                                        longitude: currentLocation.longitude,
                                         filter: filterCriteria
                                     )
-                                } else {
-                                    // Fallback to current region if geocoding fails.
+                                }
+                            } else {
+                                DispatchQueue.main.async {
+                                    print("No user location available, using default region: \(region.center)")
                                     placesService.fetchNearbyRestaurants(
                                         latitude: region.center.latitude,
                                         longitude: region.center.longitude,
@@ -192,12 +230,6 @@ struct HomeScreen: View {
                                     )
                                 }
                             }
-                        } else {
-                            placesService.fetchNearbyRestaurants(
-                                latitude: region.center.latitude,
-                                longitude: region.center.longitude,
-                                filter: filterCriteria
-                            )
                         }
                     }) {
                         HStack {
@@ -329,16 +361,48 @@ struct HomeScreen: View {
                 }
             }
             .onAppear {
-                // If a zip code was set earlier, use it; otherwise, use the current region.
+                // Trigger the location permission prompt and request the user’s current location.
+                locationManager.requestLocationPermission()
+                locationManager.getLocation()
+                
+                // On appearance, fetch restaurants and user data.
                 if !filterCriteria.cityZip.isEmpty {
                     geocodeZipCode(filterCriteria.cityZip) { coordinate in
                         if let coordinate = coordinate {
+                            DispatchQueue.main.async {
+                                region.center = coordinate
+                                print("Using geocoded zip coordinate: \(coordinate)")
+                                placesService.fetchNearbyRestaurants(
+                                    latitude: coordinate.latitude,
+                                    longitude: coordinate.longitude,
+                                    filter: filterCriteria
+                                )
+                            }
+                        } else {
+                            DispatchQueue.main.async {
+                                print("Geocoding failed, using default region center: \(region.center)")
+                                placesService.fetchNearbyRestaurants(
+                                    latitude: region.center.latitude,
+                                    longitude: region.center.longitude,
+                                    filter: filterCriteria
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    if let currentLocation = locationManager.userLocation {
+                        DispatchQueue.main.async {
+                            region.center = currentLocation
+                            print("Using current location: \(currentLocation)")
                             placesService.fetchNearbyRestaurants(
-                                latitude: coordinate.latitude,
-                                longitude: coordinate.longitude,
+                                latitude: currentLocation.latitude,
+                                longitude: currentLocation.longitude,
                                 filter: filterCriteria
                             )
-                        } else {
+                        }
+                    } else {
+                        DispatchQueue.main.async {
+                            print("No user location available, using default region: \(region.center)")
                             placesService.fetchNearbyRestaurants(
                                 latitude: region.center.latitude,
                                 longitude: region.center.longitude,
@@ -346,14 +410,12 @@ struct HomeScreen: View {
                             )
                         }
                     }
-                } else {
-                    placesService.fetchNearbyRestaurants(
-                        latitude: region.center.latitude,
-                        longitude: region.center.longitude,
-                        filter: filterCriteria
-                    )
                 }
                 fetchUserData()
+            }
+            .onChange(of: placesService.popularRestaurants) { newRestaurants in
+                // Update map markers whenever the list of popular restaurants changes.
+                updateAnnotations(with: newRestaurants)
             }
             .alert("Error", isPresented: .constant(errorMessage != nil)) {
                 Button("OK") {
