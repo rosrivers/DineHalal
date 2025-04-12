@@ -26,13 +26,15 @@ class PlacesService: ObservableObject {
     private var nextPageToken: String?
     private var isFetchingNextPage = false
     
-    func fetchNearbyRestaurants(latitude: Double, longitude: Double) {
+    func fetchNearbyRestaurants(latitude: Double, longitude: Double, filter: FilterCriteria?) {
         isLoading = true
         /// Reset state for new search
         allRestaurants = []
         nextPageToken = nil
         
-        guard let url = GoogleMapConfig.getNearbyRestaurantsURL(userLocation: CLLocationCoordinate2D(latitude: latitude, longitude: longitude)) else {
+        guard let url = GoogleMapConfig.getNearbyRestaurantsURL(
+            userLocation: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
+            filter: filter) else {
             isLoading = false
             return
         }
