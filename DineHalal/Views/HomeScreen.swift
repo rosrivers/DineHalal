@@ -86,7 +86,7 @@ struct HomeScreen: View {
     
     /// Map related states
     @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060), // NYC coordinates
+        center: CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060), // New York coordinates
         span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
     )
     @State private var annotations: [MKPointAnnotation] = []
