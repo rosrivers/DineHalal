@@ -160,9 +160,8 @@ struct RestaurantDetails: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .task {
-              // async call
-              await placesService.fetchNearbyRestaurants(
+        .onAppear {
+            placesService.fetchNearbyRestaurants(
                 latitude: restaurant.latitude,
                 longitude: restaurant.longitude,
                 filter: nil
