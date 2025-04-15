@@ -61,6 +61,22 @@ struct RestaurantDetails: View {
                             .fontWeight(.bold)
                                             
                             Spacer()
+                        
+                        // Get Directions button
+                            Button(action: {
+                                openInGoogleMaps()
+                            }) {
+                                HStack {
+                                    Image(systemName: "location.fill")
+                                    Text("Get Directions")
+                                }
+                                .font(.caption)
+                                .padding(8)
+                                .background(Color.mud)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                            }
+                        
                         // favorites button added
                         Button(action: {
                             favorites.toggleFavorite(restaurant)
@@ -175,5 +191,12 @@ struct RestaurantDetails: View {
     
     private func submitReview() {
         print("Submitting review: Rating: \(rating), Review: \(review)")
+    }
+    
+    private func openInGoogleMaps() {
+        let destination = "\(restaurant.latitude),\(restaurant.longitude)"
+        if let url = URL(string: "https://www.google.com/maps/dir/?api=1&destination=\(destination)&travelmode=driving") {
+            UIApplication.shared.open(url)
+        }
     }
 }
