@@ -14,7 +14,8 @@ struct RestaurantDetails: View {
     @State private var rating: Int = 0
     @State private var review: String = ""
     @StateObject private var placesService = PlacesService()
-   
+    @EnvironmentObject var favorites: Favorites
+    
     init(restaurant: Restaurant) {
         self.restaurant = restaurant
         _region = State(initialValue: MKCoordinateRegion(
@@ -54,10 +55,21 @@ struct RestaurantDetails: View {
                 
                 // Restaurant Info
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(restaurant.name)
-                        .font(.title)
-                        .fontWeight(.bold)
-                    
+                    HStack {
+                        Text(restaurant.name)
+                            .font(.title)
+                            .fontWeight(.bold)
+                                            
+                            Spacer()
+                        // favorites button added
+                        Button(action: {
+                            favorites.toggleFavorite(restaurant)
+                        }) {
+                            Image(systemName: favorites.isFavorite(restaurant) ? "heart.fill" : "heart")
+                                .foregroundColor(favorites.isFavorite(restaurant) ? .red : .gray)
+                                .font(.title2)
+                            }
+                        }
                     HStack {
                         ForEach(1...5, id: \.self) { index in
                             Image(systemName: index <= Int(restaurant.rating) ? "star.fill" : "star")
