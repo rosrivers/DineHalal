@@ -15,11 +15,13 @@ import GoogleMaps
 struct DineHalalApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var navigationState = NavigationStateManager()
+    @StateObject private var favorites = Favorites()
     
     var body: some Scene {
         WindowGroup {
             SplashScreenView()
                 .environmentObject(navigationState)
+                .environmentObject(favorites)
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url)
                 }
