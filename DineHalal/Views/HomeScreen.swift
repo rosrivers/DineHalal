@@ -53,8 +53,10 @@ struct RestaurantCard: View {
                 Text(name)
                     .font(.caption)
                     .fontWeight(.medium)
-                    .lineLimit(2)
-                
+                    .lineLimit(1) // Keeps it to one line
+                    .truncationMode(.tail)
+                    .frame(height: 16, alignment: .leading)
+
                 HStack {
                     ForEach(0..<5) { index in
                         Image(systemName: index < Int(rating) ? "star.fill" : "star")
@@ -66,7 +68,9 @@ struct RestaurantCard: View {
             .frame(width: 100)
             .padding(.vertical, 4)
         }
-        .background(Color.white)
+        .frame(height: 155)
+        .frame(width: 118)
+        .background(Color.card)
         .cornerRadius(10)
         .shadow(radius: 2)
     }
@@ -145,10 +149,11 @@ struct HomeScreen: View {
                             .frame(height: UIScreen.main.bounds.height * 0.45)
                             .edgesIgnoringSafeArea(.top)
                             .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
+                            .padding(.bottom, -18)
                     }
 
                     // NEW: Buttons side by side
-                    HStack(spacing: 20) {
+                    HStack(spacing: 16) {
                         Button(action: {
                             if !filterCriteria.cityZip.isEmpty {
                                 geocodeZipCode(filterCriteria.cityZip) { coordinate in
@@ -178,11 +183,11 @@ struct HomeScreen: View {
                                 Image(systemName: "location.fill")
                                 Text("Near Me")
                             }
-                            .padding(.horizontal, 70) // Reduce horizontal padding for shorter width
-                            .padding(.vertical, 14)
-                            .background(.mud)
-                            .foregroundColor(.beige)
-                            .cornerRadius(10)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.mud)
+                            .foregroundColor(Color.beige)
+                            .cornerRadius(30)
                             .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
                         }
 
@@ -191,20 +196,19 @@ struct HomeScreen: View {
                         }) {
                             HStack {
                                 Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 36, height: 36)
-                                    .padding(4)
-                                    .background(Color.mud)
-                                    .foregroundColor(Color.beige)
-                                    .cornerRadius(30)
-                                    .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
-                            }
-                        }
+                                Text("Filter")
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.mud)
+                                .foregroundColor(Color.beige)
+                                .cornerRadius(30)
+                                .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
+                                }
                     }
+                    .frame(maxWidth: .infinity)
                     .padding(.horizontal)
-                    .padding(.bottom)
-                    .offset(y: -12)
+                    .padding(.bottom,20)
 
                     // Restaurant Sections
                     ScrollView {
