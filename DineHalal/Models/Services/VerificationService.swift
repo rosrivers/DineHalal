@@ -2,7 +2,7 @@
 ///  VerificationService.swift
 ///  Dine Halal
 ///  Created by Joanne on 3/19/25.
-
+///References: Core Data - https://developer.apple.com/documentation/foundation/userdefaults
 import Foundation
 import Combine
 import FirebaseFirestore
@@ -99,6 +99,7 @@ class VerificationService: ObservableObject {
         }
     }
     
+    
     /// Simple direct match check
     private func directTestMatch(restaurant: Restaurant) -> HalalEstablishment? {
         // Try direct name match first
@@ -108,15 +109,37 @@ class VerificationService: ObservableObject {
         })
     }
     
-    // ADDED: Function to update verification status in Firestore
-    private func updateFirestoreVerification(restaurantID: String, isVerified: Bool) {
-        db.collection("restaurants").document(restaurantID).updateData([
-            "isVerified": isVerified
-        ]) { error in
+    /// MARK: Enhanced function to update verification status in Firestore
+    private func updateFirestoreVerification(restaurantID: String, isVerified: Bool, source: VerificationSource, confidence: MatchConfidence? = nil) {
+        var data: [String: Any] = ["isVerified": isVerified]
+        
+        /// Add source information - proof
+        data["verificationSource"] = source == .officialRegistry ? "official" : "community"
+        
+        // Add confidence level if available (for official verifications)
+        if let confidence = confidence {
+            var confidenceString = "low"
+            switch confidence {
+                case .high: confidenceString = "high"
+                case .medium: confidenceString = "medium"
+                case .low: confidenceString = "low"
+            }
+            data["verificationConfidence"] = confidenceString
+        }
+        
+        db.collection("restaurants").document(restaurantID).updateData(data) { error in
             if let error = error {
                 print("Error updating Firestore verification: \(error)")
             } else {
-                print("Successfully updated verification status for \(restaurantID) to \(isVerified)")
+                var confidenceString = "N/A"
+                if let confidence = confidence {
+                    switch confidence {
+                        case .high: confidenceString = "high"
+                        case .medium: confidenceString = "medium"
+                        case .low: confidenceString = "low"
+                    }
+                }
+                print("Successfully updated verification status for \(restaurantID) to \(isVerified), source: \(source), confidence: \(confidenceString)")
             }
         }
     }
@@ -125,13 +148,13 @@ class VerificationService: ObservableObject {
     func verifyRestaurant(_ restaurant: Restaurant) -> VerificationResult {
         matchAttemptCount += 1
         
-        // First try direct match for test establishments
+        /// First try direct match for test establishments
         if let directMatch = directTestMatch(restaurant: restaurant) {
             successfulMatchCount += 1
             print("DIRECT MATCH FOUND: \(restaurant.name) matches \(directMatch.name)")
             
             //MARK: Update Firestore when direct match is found
-            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true)
+            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true, source: .officialRegistry, confidence: .high)
             
             return VerificationResult(
                 isVerified: true,
@@ -141,14 +164,12 @@ class VerificationService: ObservableObject {
             )
         }
         
-        // Find best match using new algorithm
+        // Find best match using new algorithm - confidence algo 2x
         let (bestMatch, confidence, reason) = findBestMatch(for: restaurant)
         
-        // If we have a good match
-        if let establishment = bestMatch, confidence >= 0.15 { // SUPER OPTIMIZED: Lowered to 0.15 for more matches - threshold is how strict I want the matching capabilities of both data sources to be before deciding it is verified.
-            successfulMatchCount += 1
-            
-            // Optimized: Better tiered confidence system
+        // If we have a match
+        if let establishment = bestMatch, confidence >= 0.15 { // We detect matches at 0.15, but don't necessarily verify them
+            // Determine the confidence level
             let matchConfidence: MatchConfidence
             if confidence >= 0.5 {
                 matchConfidence = .high
@@ -158,29 +179,43 @@ class VerificationService: ObservableObject {
                 matchConfidence = .low
             }
             
-            print("MATCH FOUND: \(restaurant.name) matches \(establishment.name) with \(Int(confidence * 100))% confidence")
-            print("Reason: \(reason)")
-            
-            //MARK: Update Firestore when fuzzy match is found
-            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true)
-            
-            return VerificationResult(
-                isVerified: true,
-                establishment: establishment,
-                source: .officialRegistry,
-                matchConfidence: matchConfidence
-            )
-        }
-        
-        // Store failed match info for debugging
-        if lastFailedMatches.count < 5 {
-            lastFailedMatches.append((name: restaurant.name, address: restaurant.vicinity))
+            // IMPORTANT CHANGE: Only consider medium and high confidence as officially verified
+            if confidence >= 0.3 { // Only medium or high confidence counts as verified
+                successfulMatchCount += 1
+                
+                print("MATCH FOUND: \(restaurant.name) matches \(establishment.name) with \(Int(confidence * 100))% confidence")
+                print("Reason: \(reason)")
+                
+                //MARK: Update Firestore when a good match is found
+                updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true, source: .officialRegistry, confidence: matchConfidence)
+                
+                return VerificationResult(
+                    isVerified: true,
+                    establishment: establishment,
+                    source: .officialRegistry,
+                    matchConfidence: matchConfidence
+                )
+            } else {
+                // Low confidence matches are NOT considered verified
+                print("LOW CONFIDENCE MATCH: \(restaurant.name) has a weak match with \(establishment.name) (\(Int(confidence * 100))%). Leaving to community verification.")
+                
+                // Store as a failed match for debugging
+                if lastFailedMatches.count < 5 {
+                    lastFailedMatches.append((name: restaurant.name, address: restaurant.vicinity))
+                }
+            }
+        } else {
+            // No match found at all
+            // Store failed match info for debugging
+            if lastFailedMatches.count < 5 {
+                lastFailedMatches.append((name: restaurant.name, address: restaurant.vicinity))
+            }
         }
         
         // Check community verification
         if let voteData = restaurantVotes[restaurant.id], voteData.isConsideredVerified() {
             //MARK: Update Firestore when community verification threshold is met
-            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true)
+            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true, source: .communityVerified)
             
             return VerificationResult(
                 isVerified: true,
@@ -218,7 +253,7 @@ class VerificationService: ObservableObject {
         }
     }
     
-    /// Enhanced name similarity check
+    /// Enhanced name similarity check - make thresholds strict to make sure name matches exactly??? maybe just maybe
     private func isSimilarName(_ name1: String, _ name2: String, threshold: Double = 0.15) -> Bool { // SUPER OPTIMIZED: Consistent threshold
         // Clean and normalize names
         let cleanName1 = normalizeEstablishmentName(name1)
@@ -234,8 +269,8 @@ class VerificationService: ObservableObject {
             return true
         }
         
-        // SUPER OPTIMIZED: Special case for borough matches
-        let boroughs = ["brooklyn", "queens", "bronx", "manhattan", "staten island"]
+        /// SUPER OPTIMIZED: Special case for borough matches
+        let boroughs = ["brooklyn", "queens", "bronx", "manhattan", "staten island",]
         for borough in boroughs {
             if cleanName1.contains(borough) && cleanName2.contains(borough) {
                 if (cleanName1.contains(cleanName2.replacingOccurrences(of: borough, with: "").trimmingCharacters(in: .whitespacesAndNewlines)) ||
@@ -245,11 +280,11 @@ class VerificationService: ObservableObject {
             }
         }
         
-        // Word overlap check - this handles things like word order differences
+        /// Word overlap check - this handles things like word order differences
         let words1 = Set(cleanName1.components(separatedBy: " "))
         let words2 = Set(cleanName2.components(separatedBy: " "))
         
-        // SUPER OPTIMIZED: First-word matching for halal restaurants if not common term
+        /// SUPER OPTIMIZED: First-word matching for halal restaurants if not common term
         let commonTerms = ["halal", "restaurant", "food", "kitchen", "grill", "cafe", "deli", "the", "and", "of", "inc", "corp", "llc"]
         
         if let firstWord1 = words1.first?.lowercased(),
@@ -260,7 +295,7 @@ class VerificationService: ObservableObject {
             return true
         }
         
-        // OPTIMIZED: Special case for single-word restaurant names
+        /// OPTIMIZED: Special case for single-word restaurant names
         if (words1.count == 1 || words2.count == 1) &&
            calculateSimilarity(cleanName1, cleanName2) > 0.5 {
             return true
@@ -583,7 +618,8 @@ class VerificationService: ObservableObject {
         })
     }
     
-    /// Significantly improved matching with detailed logging
+    
+    /// Enhanced matching with better thresholds for both name and address - Subject to change for testing.
     func findBestMatch(for restaurant: Restaurant) -> (HalalEstablishment?, Double, String) {
         let restaurantName = normalizeEstablishmentName(restaurant.name)
         let restaurantAddr = normalizeAddress(restaurant.vicinity)
@@ -604,8 +640,14 @@ class VerificationService: ObservableObject {
             // Calculate address similarity
             let addressSimilarity = calculateAddressSimilarity(restaurantAddr, establishmentAddr)
             
-            // SUPER OPTIMIZED: More weight on name matching (85/15)
-            let score = (nameSimilarity * 0.85) + (addressSimilarity * 0.15)
+            // Require BOTH name and address to meet minimum thresholds
+            if nameSimilarity < 0.3 || addressSimilarity < 0.2 {
+                continue // Skip this match if either falls below minimum
+            }
+          
+            
+            // SUPER OPTIMIZED: More weight on name matching (85/20)-make address similarity more strictier
+            let score = (nameSimilarity * 0.85) + (addressSimilarity * 0.2)
             
             // If this is our best match so far
             if score > bestScore && score > 0.15 { // SUPER OPTIMIZED: Consistent threshold
@@ -683,7 +725,7 @@ class VerificationService: ObservableObject {
         
         // ADDED: Check if the restaurant now meets verification threshold
         if currentVotes.isConsideredVerified() {
-            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true)
+            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true, source: .communityVerified)
         }
     }
     
@@ -697,11 +739,11 @@ class VerificationService: ObservableObject {
         // ADDED: Check if verification status needs to be revised
         if let oldVotes = restaurantVotes[restaurant.id],
            oldVotes.isConsideredVerified() && !currentVotes.isConsideredVerified() {
-            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: false)
+            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: false, source: .communityVerified)
         }
     }
     
-    /// Save votes to UserDefaults
+    /// Save votes to UserDefaults - Userdefaults: a class that allows you to store small amounts of data persistently across app launches. eg: user preferences.
     private func saveVotes() {
         let encodedData = try? JSONEncoder().encode(restaurantVotes)
         UserDefaults.standard.set(encodedData, forKey: "restaurantHalalVotes")
@@ -717,17 +759,19 @@ class VerificationService: ObservableObject {
     }
 }
 
+
 /// Data structure for storing votes
 struct VoteData: Codable {
     var upvotes: Int = 0
     var downvotes: Int = 0
     
     func isConsideredVerified() -> Bool {
-        /// Require at least 3 votes total and 70% upvotes to be considered verified
+        /// Stricter verification: Require at least 5 votes total and 75% upvotes
         let totalVotes = upvotes + downvotes
-        return totalVotes >= 3 && Double(upvotes) / Double(totalVotes) >= 0.7
+        return totalVotes >= 5 && Double(upvotes) / Double(totalVotes) >= 0.75
     }
 }
+
 
 /// Result of the verification process
 struct VerificationResult {
@@ -755,7 +799,7 @@ enum VerificationSource {
 
 /// Confidence level of the match
 enum MatchConfidence {
-    case high    /// Direct match
+    case high    /// Direct match for pdf
     case medium  /// Name match but address differences
-    case low     /// Partial match
+    case low     /// Partial match - needed tweeking
 }

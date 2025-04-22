@@ -424,7 +424,7 @@ class PDFParserService {
             address = extractAddressFromText(pageContent) ?? "New York"
         }
         
-        // If we found a name, create an establishment
+        /// If we found a name, create an establishment
         if let name = name, !name.isEmpty {
             return HalalEstablishment(
                 id: UUID(),
