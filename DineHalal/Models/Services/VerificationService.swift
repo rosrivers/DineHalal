@@ -311,7 +311,9 @@ class VerificationService: ObservableObject {
             return true
         }
         
-        // Levenshtein similarity as last resort
+        /// Levenshtein similarity as last resort
+        /// - references: https://stackoverflow.com/questions/30365621/check-similarity-between-two-string-expressions-in-swift
+        /// - references: https://www.geeksforgeeks.org/introduction-to-levenshtein-distance/
         let similarity = calculateSimilarity(cleanName1, cleanName2)
         return similarity >= threshold
     }
