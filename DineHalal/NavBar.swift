@@ -1,21 +1,19 @@
-//
 //  NavBar.swift
 //  Dine Halal
 //
 //  Created by Iman Ikram on 3/23/25.
-//
+// Updated by Rosa to include Map
 import SwiftUI
 
-// BottomNavBar Component (bottom navigation bar with Home, Favorites, Profile)
+// BottomNavBar Component (bottom navigation bar with Home, Map, Favorites, Profile)
 struct BottomNavBar: View {
     @Binding var navigationPath: NavigationPath // Pass navigationPath as a binding
 
     var body: some View {
         HStack {
             NavigationButton(icon: "house.fill", title: "Home", destination: HomeScreen())
-            // Pass the navigationPath to UserProfile
+            NavigationButton(icon: "mappin.and.ellipse", title: "Map", destination: MapPageView()) // changed: added Map
             NavigationButton(icon: "heart.fill", title: "Favorites", destination: UserProfile(navigationPath: $navigationPath))
-            // Pass the navigationPath to UserProfile
             NavigationButton(icon: "person.fill", title: "Profile", destination: UserProfile(navigationPath: $navigationPath))
         }
         .frame(maxWidth: 300, minHeight: 50, maxHeight: 55)
@@ -27,7 +25,7 @@ struct BottomNavBar: View {
     }
 }
 
-// HomeBar Component (top navigation bar with Home, Favorites, Profile)
+// HomeBar Component (top navigation bar with Home, Map, Favorites, Profile)
 struct HomeBar: View {
     @Binding var navigationPath: NavigationPath // Pass navigationPath as a binding
 
@@ -43,10 +41,9 @@ struct HomeBar: View {
             }
             .foregroundColor(.beige)
 
-            // Navigation Buttons for other pages
-            // Pass the navigationPath to UserProfile
+            NavigationButton(icon: "mappin.and.ellipse", title: "Map", destination: MapPageView()) // changed: added Map
+
             NavigationButton(icon: "heart.fill", title: "Favorites", destination: UserProfile(navigationPath: $navigationPath))
-            // Pass the navigationPath to UserProfile
             NavigationButton(icon: "person.fill", title: "Profile", destination: UserProfile(navigationPath: $navigationPath))
         }
         .frame(maxWidth: 300, minHeight: 50, maxHeight: 55)
@@ -61,7 +58,7 @@ struct HomeBar: View {
 // Main NavBar View that includes both the HomeBar and BottomNavBar
 struct NavBar: View {
     @Binding var navigationPath: NavigationPath // Pass navigationPath as a binding
-    
+
     var body: some View {
         VStack {
             HomeBar(navigationPath: $navigationPath) // Pass navigationPath to HomeBar

@@ -1,10 +1,9 @@
-
-///  ContentView.swift
-///  Dine Halal
-///  Created by Joanne on 3/5/25.
-///  Edited by Chelsea to add signout button on 3/28/25
-///
-
+//  ContentView.swift
+//  Dine Halal
+//
+//  Created by Joanne on 3/5/25.
+//  Edited by Chelsea to add signout button on 3/28/25
+//  Edited/Modified - Rosa
 
 import SwiftUI
 import GoogleSignIn
@@ -22,17 +21,23 @@ struct ContentView: View {
                     Text("Home")
                 }
             
-            /// Pass navigationPath to UserProfile here
+            MapPageView()                               // changed: added Map tab
+                .tabItem {
+                    Image(systemName: "mappin.and.ellipse")
+                    Text("Map")
+                }
+
+            FavoritesView()
+                .tabItem {
+                    Image(systemName: "heart.fill")
+                    Text("Favorites")
+                }
+
+            // Pass navigationPath to UserProfile here
             UserProfile(navigationPath: $navigationPath)
                 .tabItem {
                     Image(systemName: "person.fill")
                     Text("Profile")
-                }
-            
-            FavoritesView()  
-                .tabItem {
-                    Image(systemName: "heart.fill")
-                    Text("Favorites")
                 }
         }
     }
