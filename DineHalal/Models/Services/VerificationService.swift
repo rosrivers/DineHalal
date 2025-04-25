@@ -3,6 +3,7 @@
 ///  Dine Halal
 ///  Created by Joanne on 3/19/25.
 ///References: Core Data - https://developer.apple.com/documentation/foundation/userdefaults
+
 import Foundation
 import Combine
 import FirebaseFirestore
@@ -44,10 +45,6 @@ class VerificationService: ObservableObject {
                 await MainActor.run {
                     self.halalData = data
                     self.isLoading = false
-                    print("Loaded \(data.count) halal establishments from registry")
-                    
-                    /// Print sample data for debugging
-                    self.printSampleEstablishmentData()
                     
                     // Add test establishments for testing matching
                     self.addTestEstablishments()
@@ -56,57 +53,9 @@ class VerificationService: ObservableObject {
                 await MainActor.run {
                     self.error = error
                     self.isLoading = false
-                    print("Error loading halal data: \(error)")
                 }
             }
         }
-    }
-    
-    /// Print sample establishment data for debugging
-    private func printSampleEstablishmentData() {
-        guard !halalData.isEmpty else { return }
-        
-        print("===== SAMPLE HALAL ESTABLISHMENTS FROM REGISTRY =====")
-        for i in 0..<min(5, halalData.count) {
-            let establishment = halalData[i]
-            print("- Name: \"\(establishment.name)\"")
-            print("  Address: \"\(establishment.address)\"")
-            print("  RegNum: \(establishment.registrationNumber)")
-            print("---")
-        }
-    }
-    
-    /// Print matching statistics for debugging
-    func printMatchingStats() {
-        print("===== HALAL VERIFICATION MATCHING STATS =====")
-        print("Total restaurants checked: \(matchAttemptCount)")
-        print("Successfully matched: \(successfulMatchCount) (\(successfulMatchCount > 0 ? Double(successfulMatchCount) / Double(matchAttemptCount) * 100 : 0)%)")
-        
-        if successfulMatchCount == 0 && !lastFailedMatches.isEmpty {
-            print("=== Sample of unmatched restaurants ===")
-            for restaurant in lastFailedMatches {
-                print("- \"\(restaurant.name)\" at \"\(restaurant.address)\"")
-            }
-            
-            // Print sample of establishments
-            if !halalData.isEmpty {
-                print("=== Sample of registry establishments ===")
-                for i in 0..<min(3, halalData.count) {
-                    let establishment = halalData[i]
-                    print("- \"\(establishment.name)\" at \"\(establishment.address)\"")
-                }
-            }
-        }
-    }
-    
-    
-    /// Simple direct match check
-    private func directTestMatch(restaurant: Restaurant) -> HalalEstablishment? {
-        // Try direct name match first
-        return halalData.first(where: {
-            $0.name.lowercased() == restaurant.name.lowercased() ||
-            ($0.name.contains(restaurant.name) || restaurant.name.contains($0.name))
-        })
     }
     
     /// MARK: Enhanced function to update verification status in Firestore
@@ -127,19 +76,22 @@ class VerificationService: ObservableObject {
             data["verificationConfidence"] = confidenceString
         }
         
-        db.collection("restaurants").document(restaurantID).updateData(data) { error in
-            if let error = error {
-                print("Error updating Firestore verification: \(error)")
+        // Add timestamp
+        data["lastUpdated"] = FieldValue.serverTimestamp()
+        
+        // Get document reference
+        let documentRef = db.collection("restaurants").document(restaurantID)
+        
+        // Check if document exists before updating
+        documentRef.getDocument { (document, error) in
+            if let document = document, document.exists {
+                // Document exists, update it
+                documentRef.updateData(data) { _ in }
             } else {
-                var confidenceString = "N/A"
-                if let confidence = confidence {
-                    switch confidence {
-                        case .high: confidenceString = "high"
-                        case .medium: confidenceString = "medium"
-                        case .low: confidenceString = "low"
-                    }
-                }
-                print("Successfully updated verification status for \(restaurantID) to \(isVerified), source: \(source), confidence: \(confidenceString)")
+                // Document doesn't exist, create it
+                var newData = data
+                newData["createdAt"] = FieldValue.serverTimestamp()
+                documentRef.setData(newData) { _ in }
             }
         }
     }
@@ -151,7 +103,6 @@ class VerificationService: ObservableObject {
         /// First try direct match for test establishments
         if let directMatch = directTestMatch(restaurant: restaurant) {
             successfulMatchCount += 1
-            print("DIRECT MATCH FOUND: \(restaurant.name) matches \(directMatch.name)")
             
             //MARK: Update Firestore when direct match is found
             updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true, source: .officialRegistry, confidence: .high)
@@ -165,7 +116,7 @@ class VerificationService: ObservableObject {
         }
         
         // Find best match using new algorithm - confidence algo 2x
-        let (bestMatch, confidence, reason) = findBestMatch(for: restaurant)
+        let (bestMatch, confidence, _) = findBestMatch(for: restaurant)
         
         // If we have a match
         if let establishment = bestMatch, confidence >= 0.15 { // We detect matches at 0.15, but don't necessarily verify them
@@ -179,12 +130,9 @@ class VerificationService: ObservableObject {
                 matchConfidence = .low
             }
             
-            // IMPORTANT CHANGE: Only consider medium and high confidence as officially verified
-            if confidence >= 0.3 { // Only medium or high confidence counts as verified
+            // Only consider medium and high confidence as officially verified
+            if confidence >= 0.3 {
                 successfulMatchCount += 1
-                
-                print("MATCH FOUND: \(restaurant.name) matches \(establishment.name) with \(Int(confidence * 100))% confidence")
-                print("Reason: \(reason)")
                 
                 //MARK: Update Firestore when a good match is found
                 updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true, source: .officialRegistry, confidence: matchConfidence)
@@ -197,8 +145,6 @@ class VerificationService: ObservableObject {
                 )
             } else {
                 // Low confidence matches are NOT considered verified
-                print("LOW CONFIDENCE MATCH: \(restaurant.name) has a weak match with \(establishment.name) (\(Int(confidence * 100))%). Leaving to community verification.")
-                
                 // Store as a failed match for debugging
                 if lastFailedMatches.count < 5 {
                     lastFailedMatches.append((name: restaurant.name, address: restaurant.vicinity))
@@ -223,11 +169,6 @@ class VerificationService: ObservableObject {
                 source: .communityVerified,
                 voteData: voteData
             )
-        }
-        
-        // Print debug info after checking a batch of restaurants
-        if matchAttemptCount % 10 == 0 {
-            printMatchingStats()
         }
         
         return VerificationResult(
@@ -312,8 +253,6 @@ class VerificationService: ObservableObject {
         }
         
         /// Levenshtein similarity as last resort
-        /// - references: https://stackoverflow.com/questions/30365621/check-similarity-between-two-string-expressions-in-swift
-        /// - references: https://www.geeksforgeeks.org/introduction-to-levenshtein-distance/
         let similarity = calculateSimilarity(cleanName1, cleanName2)
         return similarity >= threshold
     }
@@ -626,8 +565,6 @@ class VerificationService: ObservableObject {
         let restaurantName = normalizeEstablishmentName(restaurant.name)
         let restaurantAddr = normalizeAddress(restaurant.vicinity)
         
-        print("Looking for match: \"\(restaurantName)\" at \"\(restaurantAddr)\"")
-        
         var bestMatch: HalalEstablishment? = nil
         var bestScore = 0.0
         var matchReason = ""
@@ -659,18 +596,19 @@ class VerificationService: ObservableObject {
                 let namePercent = Int(nameSimilarity * 100)
                 let addrPercent = Int(addressSimilarity * 100)
                 matchReason = "Name match: \(namePercent)%, Address match: \(addrPercent)%"
-                
-                // Debug high-scoring matches
-                if score > 0.5 { // SUPER OPTIMIZED: Lowered from 0.6
-                    print("Potential match:")
-                    print("  Registry: \"\(establishment.name)\" at \"\(establishment.address)\"")
-                    print("  Google: \"\(restaurant.name)\" at \"\(restaurant.vicinity)\"")
-                    print("  Score: \(Int(score * 100))%, Reason: \(matchReason)")
-                }
             }
         }
         
         return (bestMatch, bestScore, matchReason)
+    }
+    
+    /// Simple direct match check
+    private func directTestMatch(restaurant: Restaurant) -> HalalEstablishment? {
+        // Try direct name match first
+        return halalData.first(where: {
+            $0.name.lowercased() == restaurant.name.lowercased() ||
+            ($0.name.contains(restaurant.name) || restaurant.name.contains($0.name))
+        })
     }
     
     /// Add test establishments for debugging
@@ -712,8 +650,6 @@ class VerificationService: ObservableObject {
         
         // Add to existing data
         halalData.append(contentsOf: testEstablishments)
-        
-        print("Added \(testEstablishments.count) exact-match test establishments")
     }
     
     // MARK: - Community Verification Methods

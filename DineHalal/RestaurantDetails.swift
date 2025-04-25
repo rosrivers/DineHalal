@@ -43,35 +43,10 @@ struct RestaurantDetails: View {
                 
                 // Restaurant info
                 VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text(restaurant.name)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                        Spacer()
-                        
-                        // Verification badge
-                        if let result = verificationResult, result.isVerified {
-                            Button(action: {
-                                showingVerificationDetails = true
-                            }) {
-                                HStack {
-                                    Image(systemName: "checkmark.seal.fill")
-                                        .foregroundColor(.green)
-                                    Text("Verified")
-                                        .font(.subheadline)
-                                        .foregroundColor(.green)
-                                }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(Color.green.opacity(0.1))
-                                .cornerRadius(8)
-                            }
-                            .sheet(isPresented: $showingVerificationDetails) {
-                                VerificationDetailsSheet(result: result, restaurant: restaurant)
-                            }
-                        }
-                    }
+                    // Name (without verification badge in top right)
+                    Text(restaurant.name)
+                        .font(.title2)
+                        .fontWeight(.bold)
                     
                     // Rating
                     HStack {
@@ -82,13 +57,37 @@ struct RestaurantDetails: View {
                             .foregroundColor(.gray)
                     }
                     
-                    // Price level
-                    if let priceLevel = restaurant.priceLevel {
-                        Text(String(repeating: "$", count: priceLevel))
-                            .foregroundColor(.gray)
+                    // Verification badge - MOVED HERE (replacing $$ signs)
+                    // This is where the $ price indicator used to be
+                    if let result = verificationResult, result.isVerified {
+                        Button(action: {
+                            showingVerificationDetails = true
+                        }) {
+                            HStack(spacing: 4) {
+                                if result.source == .communityVerified {
+                                    // Orange for community verification
+                                    Image(systemName: "person.2.fill")
+                                        .foregroundColor(.orange)
+                                    Text("Community Verified")
+                                        .font(.subheadline)
+                                        .foregroundColor(.orange)
+                                } else {
+                                    // Green for official verification
+                                    Image(systemName: "checkmark.seal.fill")
+                                        .foregroundColor(.green)
+                                    Text("Verified Halal")
+                                        .font(.subheadline)
+                                        .foregroundColor(.green)
+                                }
+                            }
+                            .padding(.vertical, 2)
+                        }
+                        .sheet(isPresented: $showingVerificationDetails) {
+                            VerificationDetailsSheet(result: result, restaurant: restaurant)
+                        }
                     }
                     
-                    // Address
+                    // Address with icon
                     HStack {
                         Image(systemName: "mappin.circle.fill")
                             .foregroundColor(.red)
@@ -96,7 +95,7 @@ struct RestaurantDetails: View {
                             .foregroundColor(.gray)
                     }
                     
-                    // Add more details as needed
+                    // Opening hours with icon
                     HStack {
                         Image(systemName: "clock.fill")
                             .foregroundColor(.blue)
@@ -117,7 +116,7 @@ struct RestaurantDetails: View {
                         .frame(height: 200)
                         .cornerRadius(12)
                     
-                    // Verification section
+                    /// Verification section
                     if let result = verificationResult {
                         Divider()
                         
@@ -126,18 +125,24 @@ struct RestaurantDetails: View {
                         
                         if result.isVerified {
                             HStack {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .foregroundColor(.green)
-                                VStack(alignment: .leading) {
-                                    Text("This restaurant is halal verified")
-                                        .foregroundColor(.green)
-                                    
-                                    if result.source == .officialRegistry {
-                                        Text("Verified by official registry")
+                                // Use different icon and color based on verification source
+                                if result.source == .communityVerified {
+                                    Image(systemName: "person.2.fill")
+                                        .foregroundColor(.orange)
+                                    VStack(alignment: .leading) {
+                                        Text("This restaurant is halal verified")
+                                            .foregroundColor(.orange)
+                                        Text("Verified by community votes")
                                             .font(.caption)
                                             .foregroundColor(.gray)
-                                    } else if result.source == .communityVerified {
-                                        Text("Verified by community votes")
+                                    }
+                                } else {
+                                    Image(systemName: "checkmark.seal.fill")
+                                        .foregroundColor(.green)
+                                    VStack(alignment: .leading) {
+                                        Text("This restaurant is halal verified")
+                                            .foregroundColor(.green)
+                                        Text("Verified by official registry")
                                             .font(.caption)
                                             .foregroundColor(.gray)
                                     }
@@ -213,6 +218,9 @@ struct RestaurantDetails: View {
     }
 }
 
+// Rest of the code remains the same...
+// (VerificationDetailsSheet, StarRatingView, RestaurantMapView, GooglePlaceImage)
+
 // Renamed to avoid conflict with existing VerificationDetailsView
 struct VerificationDetailsSheet: View {
     let result: VerificationResult
@@ -225,10 +233,18 @@ struct VerificationDetailsSheet: View {
             
             if result.isVerified {
                 HStack {
-                    Image(systemName: "checkmark.seal.fill")
-                        .foregroundColor(.green)
-                    Text("\(restaurant.name) is verified as halal")
-                        .foregroundColor(.green)
+                    // Use different icon and color based on verification source
+                    if result.source == .communityVerified {
+                        Image(systemName: "person.2.fill")
+                            .foregroundColor(.orange)
+                        Text("\(restaurant.name) is community verified as halal")
+                            .foregroundColor(.orange)
+                    } else {
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundColor(.green)
+                        Text("\(restaurant.name) is verified as halal")
+                            .foregroundColor(.green)
+                    }
                 }
                 
                 Divider()
@@ -266,6 +282,7 @@ struct VerificationDetailsSheet: View {
                         Text("Community Verification")
                             .font(.subheadline)
                             .fontWeight(.bold)
+                            .foregroundColor(.orange)
                         
                         Text("This restaurant has been verified as halal by community votes")
                         

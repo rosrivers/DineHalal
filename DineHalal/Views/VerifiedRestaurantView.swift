@@ -84,7 +84,8 @@ struct VerifiedRestaurantsView: View {
     }
 }
 
-// Helper Views for various states with updated colors
+
+/// Helper Views for various states with updated colors
 
 struct LocationErrorView: View {
     let retryAction: () -> Void
@@ -117,6 +118,7 @@ struct LocationErrorView: View {
         .frame(maxWidth: .infinity)
     }
 }
+
 
 struct RequestLocationView: View {
     let requestAction: () -> Void

@@ -17,7 +17,7 @@ struct VotingView: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
             
-            Text("Help other Muslims find halal food by verifying this restaurant.")
+            Text("Help others find halal food by verifying this restaurant.")
                 .font(.caption)
                 .foregroundColor(.secondary)
             

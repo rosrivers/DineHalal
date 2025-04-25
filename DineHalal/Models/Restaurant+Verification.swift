@@ -5,21 +5,34 @@
 
 
 import Foundation
-import ObjectiveC
 
-/// Extension to add verification support to the Restaurant model
+// Apply the same pattern for Restaurant extensions
 extension Restaurant {
-    /// Property to store verification result
-    private struct AssociatedKeys {
-        static var verificationResultKey = "verificationResult"
-    }
+    // Create a private storage for associated values
+    private static var verificationResultsMap = [String: VerificationResult]()
+    private static let lock = NSLock()
     
     var verificationResult: VerificationResult? {
         get {
-            return objc_getAssociatedObject(self, &AssociatedKeys.verificationResultKey) as? VerificationResult
+            Restaurant.lock.lock()
+            defer { Restaurant.lock.unlock() }
+            return Restaurant.verificationResultsMap[self.id]
         }
         set {
-            objc_setAssociatedObject(self, &AssociatedKeys.verificationResultKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            Restaurant.lock.lock()
+            if let newValue = newValue {
+                Restaurant.verificationResultsMap[self.id] = newValue
+            } else {
+                Restaurant.verificationResultsMap.removeValue(forKey: self.id)
+            }
+            Restaurant.lock.unlock()
         }
+    }
+    
+    // Clean up when no longer needed - optional - still
+    func clearVerificationResult() {
+        Restaurant.lock.lock()
+        Restaurant.verificationResultsMap.removeValue(forKey: self.id)
+        Restaurant.lock.unlock()
     }
 }
