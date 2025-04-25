@@ -4,7 +4,7 @@
 //
 //  Created by Iman Ikram on 3/24/25.
 //
-// Edited by Chelsea on 4/5/25
+// Edited by Chelsea on 4/25/25
 import SwiftUI
 
 struct FilterView: View {
@@ -28,7 +28,7 @@ struct FilterView: View {
                 }
                 
                 Section(header: Text("Location")) {
-                    Toggle("Near Me", isOn: $criteria.nearMe)
+                    //Toggle("Near Me", isOn: $criteria.nearMe)
                     TextField("Enter City/Zipcode", text: $criteria.cityZip)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                 }

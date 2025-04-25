@@ -3,7 +3,7 @@
 //
 //  Created by Iman Ikram on 3/10/25.
 /// Edited/Modified - Joana
-/// Edited by Chelsea 4/5/25
+/// Edited by Chelsea 4/25/25
 
 import FirebaseFirestore
 import FirebaseCore
@@ -154,6 +154,7 @@ struct HomeScreen: View {
 
                     // NEW: Buttons side by side
                     HStack(spacing: 16) {
+                        /*
                         Button(action: {
                             if !filterCriteria.cityZip.isEmpty {
                                 geocodeZipCode(filterCriteria.cityZip) { coordinate in
@@ -190,6 +191,7 @@ struct HomeScreen: View {
                             .cornerRadius(30)
                             .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
                         }
+                        */
 
                         Button(action: {
                             showFilter.toggle()
@@ -197,14 +199,14 @@ struct HomeScreen: View {
                             HStack {
                                 Image(systemName: "line.3.horizontal.decrease.circle.fill")
                                 Text("Filter")
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.mud)
-                                .foregroundColor(Color.beige)
-                                .cornerRadius(30)
-                                .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
-                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.mud)
+                            .foregroundColor(Color.beige)
+                            .cornerRadius(30)
+                            .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
+                        }
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal)
