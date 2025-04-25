@@ -177,6 +177,22 @@ struct HomeScreen: View {
                     .padding(.bottom, 35)
 
                     Spacer()
+                    // Filter button
+                    Button(action: {
+                             showFilter.toggle()
+                         }) {
+                             HStack {
+                                 Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                                 Text("Filter")
+                                 }
+                                 .frame(maxWidth: .infinity)
+                                 .padding()
+                                 .background(Color.mud)
+                                 .foregroundColor(Color.beige)
+                                 .cornerRadius(30)
+                                 .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
+                                 }
+                         .padding(.horizontal)
                     // Popular Restaurants
                     if !placesService.popularRestaurants.isEmpty {
                         VStack(alignment: .leading) {
