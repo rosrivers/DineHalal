@@ -4,6 +4,7 @@
 //  Created by Iman Ikram on 3/10/25.
 /// Edited/Modified - Joana
 /// Edited by Chelsea 4/5/25
+/// Edidted by Iman 4/24/25 for removing map and improving layout
 
 import FirebaseFirestore
 import FirebaseCore
@@ -81,18 +82,19 @@ struct HomeScreen: View {
     @StateObject private var placesService = PlacesService()
     @EnvironmentObject var navigationState: NavigationStateManager
     @State private var showFilter = false
-
+    
     @State private var userFavorites: [String] = []
     @State private var userReviews: [Review] = []
     @State private var errorMessage: String?
-
+    @State private var userName: String = "User"
+    
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060),
         span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
     )
     @State private var annotations: [MKPointAnnotation] = []
     @State private var filterCriteria = FilterCriteria()
-
+    
     private func geocodeZipCode(_ zip: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
         let geocoder = CLGeocoder()
         geocoder.geocodeAddressString(zip) { placemarks, error in
@@ -106,15 +108,20 @@ struct HomeScreen: View {
             }
         }
     }
-
+    
     private func fetchUserData() {
         guard let userId = Auth.auth().currentUser?.uid else {
             print("No authenticated user")
             return
         }
-
+        guard let user = Auth.auth().currentUser else {
+            print("No authenticated user")
+            return
+        }
+        userName = user.displayName ?? "User"
+        
         let db = Firestore.firestore()
-
+        
         db.collection("users").document(userId).collection("favorites")
             .addSnapshotListener { snapshot, error in
                 if let error = error {
@@ -123,7 +130,7 @@ struct HomeScreen: View {
                 }
                 self.userFavorites = snapshot?.documents.compactMap { $0.documentID } ?? []
             }
-
+        
         db.collection("users").document(userId).collection("reviews")
             .addSnapshotListener { snapshot, error in
                 if let error = error {
@@ -135,161 +142,126 @@ struct HomeScreen: View {
                 } ?? []
             }
     }
-
+    
     var body: some View {
         NavigationStack {
-            ZStack {
-                Color("AccentColor")
-                    .ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Header Section
+                    ZStack(alignment: .top) {
+                       
+                        Color("Beige")
+                            .ignoresSafeArea()
+                            .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
 
-                VStack(spacing: 0) {
-                    ZStack {
-                        GoogleMapView(region: $region, annotations: annotations)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: UIScreen.main.bounds.height * 0.45)
-                            .edgesIgnoringSafeArea(.top)
-                            .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
-                            .padding(.bottom, -18)
-                    }
+                        VStack(spacing: 16) {
+                            Spacer().frame(height: 75)
 
-                    // NEW: Buttons side by side
-                    HStack(spacing: 16) {
-                        Button(action: {
-                            if !filterCriteria.cityZip.isEmpty {
-                                geocodeZipCode(filterCriteria.cityZip) { coordinate in
-                                    if let coordinate = coordinate {
-                                        placesService.fetchNearbyRestaurants(
-                                            latitude: coordinate.latitude,
-                                            longitude: coordinate.longitude,
-                                            filter: filterCriteria
-                                        )
-                                    } else {
-                                        placesService.fetchNearbyRestaurants(
-                                            latitude: region.center.latitude,
-                                            longitude: region.center.longitude,
-                                            filter: filterCriteria
-                                        )
-                                    }
-                                }
-                            } else {
-                                placesService.fetchNearbyRestaurants(
-                                    latitude: region.center.latitude,
-                                    longitude: region.center.longitude,
-                                    filter: filterCriteria
-                                )
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: "location.fill")
-                                Text("Near Me")
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.mud)
-                            .foregroundColor(Color.beige)
-                            .cornerRadius(30)
-                            .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
+                            Image("Icon")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 120, height: 120)
+
+                            Text("DineHalal")
+                                .font(.largeTitle)
+                                .fontWeight(.bold)
+                                .foregroundColor(Color("DarkBrown"))
+
+                            Text("Hello \(userName)")
+                                .font(.headline)
+                                .foregroundColor(Color("Green"))
                         }
-
-                        Button(action: {
-                            showFilter.toggle()
-                        }) {
-                            HStack {
-                                Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                                Text("Filter")
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.mud)
-                                .foregroundColor(Color.beige)
-                                .cornerRadius(30)
-                                .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
-                                }
+                        .padding(.bottom, 20)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal)
-                    .padding(.bottom,20)
+                    .frame(height: 220)
+                    .padding(.bottom, 35)
 
-                    // Restaurant Sections
-                    ScrollView {
-                        VStack(spacing: 20) {
-                            VStack(alignment: .leading) {
-                                Text("Popular Halal Restaurants")
-                                    .font(.headline)
-                                    .padding(.leading)
-                                    .foregroundStyle(.darkBrown)
+                    Spacer()
+                    // Popular Restaurants
+                    if !placesService.popularRestaurants.isEmpty {
+                        VStack(alignment: .leading) {
+                            Text("Popular Halal Restaurants")
+                                .font(.headline)
+                                .padding(.leading)
+                                .foregroundStyle(.darkBrown)
 
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack {
-                                        ForEach(placesService.popularRestaurants) { restaurant in
-                                            RestaurantCard(
-                                                name: restaurant.name,
-                                                rating: restaurant.rating,
-                                                photoReference: restaurant.photoReference
-                                            )
-                                            .onTapGesture {
-                                                navigationState.selectedRestaurant = restaurant
-                                                navigationState.showingRestaurantDetail = true
-                                            }
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack {
+                                    ForEach(placesService.popularRestaurants) { restaurant in
+                                        RestaurantCard(
+                                            name: restaurant.name,
+                                            rating: restaurant.rating,
+                                            photoReference: restaurant.photoReference
+                                        )
+                                        .onTapGesture {
+                                            navigationState.selectedRestaurant = restaurant
+                                            navigationState.showingRestaurantDetail = true
                                         }
                                     }
-                                    .padding()
                                 }
-                            }
-
-                            if !placesService.recommendedRestaurants.isEmpty {
-                                VStack(alignment: .leading) {
-                                    Text("Recommended for You")
-                                        .font(.headline)
-                                        .padding(.leading)
-                                        .foregroundStyle(.darkBrown)
-
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        HStack {
-                                            ForEach(placesService.recommendedRestaurants) { restaurant in
-                                                RestaurantCard(
-                                                    name: restaurant.name,
-                                                    rating: restaurant.rating,
-                                                    photoReference: restaurant.photoReference
-                                                )
-                                                .onTapGesture {
-                                                    navigationState.selectedRestaurant = restaurant
-                                                    navigationState.showingRestaurantDetail = true
-                                                }
-                                            }
-                                        }
-                                        .padding()
-                                    }
-                                }
-                            }
-
-                            VStack(alignment: .leading) {
-                                Text("Recently Verified Halal Restaurants")
-                                    .font(.headline)
-                                    .padding(.leading)
-                                    .foregroundStyle(.darkBrown)
-
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack {
-                                        ForEach(placesService.recentlyVerified) { restaurant in
-                                            RestaurantCard(
-                                                name: restaurant.name,
-                                                rating: restaurant.rating,
-                                                photoReference: restaurant.photoReference
-                                            )
-                                            .onTapGesture {
-                                                navigationState.selectedRestaurant = restaurant
-                                                navigationState.showingRestaurantDetail = true
-                                            }
-                                        }
-                                    }
-                                    .padding()
-                                }
+                                .padding(.horizontal)
                             }
                         }
                     }
-                }
-            }
+
+                    // Recommended
+                    if !placesService.recommendedRestaurants.isEmpty {
+                        VStack(alignment: .leading) {
+                            Text("Recommended for You")
+                                .font(.headline)
+                                .padding(.leading)
+                                .foregroundStyle(.darkBrown)
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack {
+                                    ForEach(placesService.recommendedRestaurants) { restaurant in
+                                        RestaurantCard(
+                                            name: restaurant.name,
+                                            rating: restaurant.rating,
+                                            photoReference: restaurant.photoReference
+                                        )
+                                        .onTapGesture {
+                                            navigationState.selectedRestaurant = restaurant
+                                            navigationState.showingRestaurantDetail = true
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                        }
+                    }
+
+                    // Recently Verified
+                    VStack(alignment: .leading) {
+                        Text("Recently Verified Halal Restaurants")
+                            .font(.headline)
+                            .padding(.leading)
+                            .foregroundStyle(.darkBrown)
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack {
+                                ForEach(placesService.recentlyVerified) { restaurant in
+                                    RestaurantCard(
+                                        name: restaurant.name,
+                                        rating: restaurant.rating,
+                                        photoReference: restaurant.photoReference
+                                    )
+                                    .onTapGesture {
+                                        navigationState.selectedRestaurant = restaurant
+                                        navigationState.showingRestaurantDetail = true
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                    }
+
+                } // VStack
+                .padding(.bottom, 80) // So bottom nav isn’t covered
+            } // ScrollView
+            .background(Color("AccentColor").ignoresSafeArea())
+            .onAppear { fetchUserData() }
+        }
             .sheet(isPresented: $showFilter) {
                 FilterView(criteria: $filterCriteria) { criteria in
                     if !criteria.cityZip.isEmpty {
@@ -359,11 +331,12 @@ struct HomeScreen: View {
             }
         }
     }
-}
-
-struct HomeScreen_Previews: PreviewProvider {
-    static var previews: some View {
-        HomeScreen()
-            .environmentObject(NavigationStateManager())
+    
+    
+    struct HomeScreen_Previews: PreviewProvider {
+        static var previews: some View {
+            HomeScreen()
+                .environmentObject(NavigationStateManager())
+        }
     }
-}
+
