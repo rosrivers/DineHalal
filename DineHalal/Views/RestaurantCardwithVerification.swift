@@ -3,13 +3,12 @@
 ///  DineHalal
 ///  Created by Joanne on 4/20/25.
 
-
 import SwiftUI
 
 
 struct RestaurantCardWithVerification: View {
     let restaurant: Restaurant
-    let verificationResult: VerificationResult 
+    let verificationResult: VerificationResult
     
     
     var body: some View {

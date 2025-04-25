@@ -4,7 +4,6 @@
 ///  Created by Joanne on 4/1/25.
 ///"When your application displays results to the user, you should also display any attribution included in the response. The next_page_token can be used to retrieve additional results." - Google Places API Documentation
 
-
 import Foundation
 import CoreLocation
 import ObjectiveC
@@ -16,14 +15,13 @@ struct PlacesResponse: Codable {
     let nextPageToken: String?
 }
 
-// Create a class-level key that both class and extension can access
-private var verificationServiceKey: UInt8 = 0
 
 class PlacesService: ObservableObject {
+    static var verificationServiceKey: UInt8 = 0
     @Published var recommendedRestaurants: [Restaurant] = []
     @Published var popularRestaurants: [Restaurant] = []
     @Published var recentlyVerified: [Restaurant] = []
-    @Published var allRestaurants: [Restaurant] = [] 
+    @Published var allRestaurants: [Restaurant] = []
     @Published var isLoading = false
     @Published var error: Error?
     
@@ -47,14 +45,12 @@ class PlacesService: ObservableObject {
         // Load any previously verified restaurants from UserDefaults
         if let savedIDs = UserDefaults.standard.stringArray(forKey: "verifiedRestaurantIDs") {
             verifiedRestaurantIDs = Set(savedIDs)
-            print("Loaded \(verifiedRestaurantIDs.count) verified restaurant IDs from storage")
         }
         
         if let service = verificationService {
-            // Use the address of the key variable as the key
-            objc_setAssociatedObject(self, &PlacesService.verificationServiceKey, service, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        }
-        // Otherwise your extension creates verificationService on demand
+              objc_setAssociatedObject(self, &PlacesService.verificationServiceKey, service, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+          }
+        /// Otherwise your extension creates verificationService on demand
     }
     
     func fetchNearbyRestaurants(latitude: Double, longitude: Double) {
@@ -146,38 +142,45 @@ class PlacesService: ObservableObject {
     }
     
     /// Find verified restaurants - updated for persistence
+   
     private func findVerifiedRestaurants(from restaurants: [Restaurant]) {
         Task {
-            var verifiedRestaurants: [Restaurant] = []
-            
-            // First add previously verified restaurants that still exist in the current results
-            for restaurant in restaurants {
-                if verifiedRestaurantIDs.contains(restaurant.id) {
-                    verifiedRestaurants.append(restaurant)
-                }
-            }
-            
-            // Then check new restaurants
-            for restaurant in restaurants {
-                if !verifiedRestaurantIDs.contains(restaurant.id) {
-                    // Access verificationService from the extension directly
-                    let result = verificationService.verifyRestaurant(restaurant)
-                    if result.isVerified {
-                        verifiedRestaurants.append(restaurant)
-                        verifiedRestaurantIDs.insert(restaurant.id)
-                        
-                        // Save verified IDs to UserDefaults right away
-                        UserDefaults.standard.set(Array(verifiedRestaurantIDs), forKey: "verifiedRestaurantIDs")
-                    }
-                }
-            }
+            let verifiedRestaurantsLocal = await findVerifiedRestaurantsAsync(from: restaurants)
             
             // Update the UI on main thread
             await MainActor.run {
-                self.recentlyVerified = verifiedRestaurants
-                print("Found \(verifiedRestaurants.count) verified restaurants")
+                self.recentlyVerified = verifiedRestaurantsLocal
             }
         }
+    }
+
+    // Add this helper method to handle the concurrent execution
+    private func findVerifiedRestaurantsAsync(from restaurants: [Restaurant]) async -> [Restaurant] {
+        var verifiedRestaurants: [Restaurant] = []
+        
+        // First add previously verified restaurants that still exist in the current results
+        for restaurant in restaurants {
+            if verifiedRestaurantIDs.contains(restaurant.id) {
+                verifiedRestaurants.append(restaurant)
+            }
+        }
+        
+        // Then check new restaurants
+        for restaurant in restaurants {
+            if !verifiedRestaurantIDs.contains(restaurant.id) {
+                // Access verificationService from the extension directly
+                let result = verificationService.verifyRestaurant(restaurant)
+                if result.isVerified {
+                    verifiedRestaurants.append(restaurant)
+                    verifiedRestaurantIDs.insert(restaurant.id)
+                    
+                    // Save verified IDs to UserDefaults right away
+                    UserDefaults.standard.set(Array(verifiedRestaurantIDs), forKey: "verifiedRestaurantIDs")
+                }
+            }
+        }
+        
+        return verifiedRestaurants
     }
     
     // Add this method to manually verify a restaurant

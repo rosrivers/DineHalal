@@ -47,39 +47,38 @@ struct VerificationBadge: View {
                 if let result = effectiveResult, result.isVerified {
                     switch result.source {
                     case .officialRegistry:
+                        // Official verification badge is green
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundColor(.green)
+                        
                         // Tiered display based on confidence level
                         switch result.matchConfidence {
                         case .high:
-                            Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(.green)
                             Text("Officially Verified")
                                 .font(.caption)
                                 .bold()
                                 .foregroundColor(.green)
                         case .medium:
-                            Image(systemName: "checkmark.seal")
-                                .foregroundColor(.orange)
                             Text("Likely Halal")
                                 .font(.caption)
                                 .bold()
-                                .foregroundColor(.orange)
+                                .foregroundColor(.green)
                         case .low:
-                            Image(systemName: "checkmark")
-                                .foregroundColor(.yellow)
                             Text("Partially Matched")
                                 .font(.caption)
                                 .bold()
-                                .foregroundColor(.yellow)
+                                .foregroundColor(.green)
                         }
                         
                     case .communityVerified:
-                        Image(systemName: "hand.thumbsup.fill")
-                            .foregroundColor(.blue)
+                        // Community verification badge is ORANGE (fixed)
+                        Image(systemName: "person.2.fill")
+                            .foregroundColor(.orange)
                         
                         Text("Community Verified")
                             .font(.caption)
                             .bold()
-                            .foregroundColor(.blue)
+                            .foregroundColor(.orange)
                         
                     default:
                         EmptyView()

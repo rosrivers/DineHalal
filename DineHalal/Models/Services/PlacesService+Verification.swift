@@ -9,18 +9,21 @@ import Combine
 import SwiftUI
 import ObjectiveC
 
-// Extension to add verification support to PlacesService
+
 extension PlacesService {
-    // Add the verification service
-    static var verificationServiceKey = "verificationService"
+    // Use static computed properties that return the address of a static variable
+    // This prevents the "exposes internal representation" warnings
+    private static var verificationServiceAssociationKey = 0
+    private static var cancellablesAssociationKey = 0
+    private static var verificationResultsAssociationKey = 0
     
     var verificationService: VerificationService {
-        if let existingService = objc_getAssociatedObject(self, &PlacesService.verificationServiceKey) as? VerificationService {
+        if let existingService = objc_getAssociatedObject(self, &PlacesService.verificationServiceAssociationKey) as? VerificationService {
             return existingService
         }
         
         let newService = VerificationService()
-        objc_setAssociatedObject(self, &PlacesService.verificationServiceKey, newService, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        objc_setAssociatedObject(self, &PlacesService.verificationServiceAssociationKey, newService, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         
         // Subscribe to changes in verification data
         newService.objectWillChange.sink { [weak self] _ in
@@ -32,19 +35,17 @@ extension PlacesService {
     }
     
     // Add storage for cancellables
-    private static var cancellablesKey = "cancellables"
-    
     private var cancellables: Set<AnyCancellable> {
         get {
-            if let existing = objc_getAssociatedObject(self, &PlacesService.cancellablesKey) as? Set<AnyCancellable> {
+            if let existing = objc_getAssociatedObject(self, &PlacesService.cancellablesAssociationKey) as? Set<AnyCancellable> {
                 return existing
             }
             let new = Set<AnyCancellable>()
-            objc_setAssociatedObject(self, &PlacesService.cancellablesKey, new, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            objc_setAssociatedObject(self, &PlacesService.cancellablesAssociationKey, new, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
             return new
         }
         set {
-            objc_setAssociatedObject(self, &PlacesService.cancellablesKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            objc_setAssociatedObject(self, &PlacesService.cancellablesAssociationKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
     }
     
@@ -67,14 +68,12 @@ extension PlacesService {
     }
     
     // Store verification results using associated objects
-    private static var verificationResultsKey = "verificationResults"
-    
     private func storeVerificationResults(_ results: [String: VerificationResult]) {
-        objc_setAssociatedObject(self, &PlacesService.verificationResultsKey, results, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        objc_setAssociatedObject(self, &PlacesService.verificationResultsAssociationKey, results, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
     
     private func getVerificationResults() -> [String: VerificationResult] {
-        return objc_getAssociatedObject(self, &PlacesService.verificationResultsKey) as? [String: VerificationResult] ?? [:]
+        return objc_getAssociatedObject(self, &PlacesService.verificationResultsAssociationKey) as? [String: VerificationResult] ?? [:]
     }
     
     // Add functions to upvote and downvote

@@ -10,23 +10,34 @@ struct VerificationDetailsView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Halal Verification Details")
+            Text("Halal Verification")
                 .font(.headline)
                 .padding(.bottom, 4)
             
             if let result = restaurant.verificationResult, result.isVerified {
+                HStack(spacing: 4) {
+                    // Verification icon varies by source
+                    switch result.source {
+                    case .officialRegistry:
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundColor(.green)
+                    case .communityVerified:
+                        Image(systemName: "person.2.fill")
+                            .foregroundColor(.orange)
+                    default:
+                        EmptyView()
+                    }
+                    
+                    // Verification text
+                    Text("This restaurant is halal verified")
+                        .font(.subheadline)
+                        .foregroundColor(result.source == .officialRegistry ? .green : .orange)
+                }
+                
                 switch result.source {
                 case .officialRegistry:
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.green)
-                            Text("Verified in Official NY State Halal Registry")
-                                .font(.subheadline)
-                                .foregroundColor(.green)
-                        }
-                        
-                        if let establishment = result.establishment {
+                    if let establishment = result.establishment {
+                        VStack(alignment: .leading, spacing: 6) {
                             Text("Certificate Type: \(establishment.certificationType)")
                                 .font(.caption)
                             
@@ -39,33 +50,21 @@ struct VerificationDetailsView: View {
                                     UIApplication.shared.open(url)
                                 }
                             }) {
-                                HStack {
-                                    Image(systemName: "doc.text")
-                                    Text("View Registry Document")
-                                }
-                                .font(.caption)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.green.opacity(0.1))
-                                .cornerRadius(4)
+                                Text("Details")
+                                    .font(.caption)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(Color.gray.opacity(0.1))
+                                    .cornerRadius(8)
                             }
                             .padding(.top, 4)
                         }
                     }
                 case .communityVerified:
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Image(systemName: "person.2.fill")
-                                .foregroundColor(.green)
-                            Text("Verified by Community Members")
-                                .font(.subheadline)
-                                .foregroundColor(.green)
-                        }
-                        
-                        if let voteData = result.voteData {
-                            Text("\(voteData.upvotes) out of \(voteData.upvotes + voteData.downvotes) users have confirmed seeing a Halal certificate at this restaurant.")
-                                .font(.caption)
-                        }
+                    if let voteData = result.voteData {
+                        Text("\(voteData.upvotes) out of \(voteData.upvotes + voteData.downvotes) users have confirmed seeing a Halal certificate at this restaurant.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 default:
                     EmptyView()
@@ -73,10 +72,10 @@ struct VerificationDetailsView: View {
             } else {
                 HStack {
                     Image(systemName: "exclamationmark.circle")
-                        .foregroundColor(.orange)
+                        .foregroundColor(.red)
                     Text("Not Verified")
                         .font(.subheadline)
-                        .foregroundColor(.orange)
+                        .foregroundColor(.red)
                 }
                 
                 Text("This restaurant has not been verified in the official NY State Halal registry or by enough community members.")
@@ -89,4 +88,3 @@ struct VerificationDetailsView: View {
         .cornerRadius(10)
     }
 }
-

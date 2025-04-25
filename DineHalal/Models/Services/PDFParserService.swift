@@ -21,7 +21,6 @@ class PDFParserService {
         /// Try to load from local file first
         if let localPath = Bundle.main.path(forResource: "halalestablishmentregistrations", ofType: "pdf"),
            let localData = try? Data(contentsOf: URL(fileURLWithPath: localPath)) {
-            print("Using local PDF file")
             return localData
         }
         
@@ -30,7 +29,6 @@ class PDFParserService {
             throw URLError(.badURL)
         }
         
-        print("Downloading PDF from URL")
         let (data, _) = try await URLSession.shared.data(from: url)
         return data
     }
@@ -39,11 +37,8 @@ class PDFParserService {
         var establishments: [HalalEstablishment] = []
         
         guard let pdfDocument = PDFDocument(data: pdfData) else {
-            print("Failed to create PDF document")
             return establishments
         }
-        
-        print("Processing PDF with \(pdfDocument.pageCount) pages")
         
         // Process each page in the PDF
         for pageIndex in 0..<pdfDocument.pageCount {
@@ -57,14 +52,9 @@ class PDFParserService {
                 // Extract establishments from this page
                 let pageEstablishments = extractEstablishmentsFromFormPage(pageContent)
                 establishments.append(contentsOf: pageEstablishments)
-                
-                if !pageEstablishments.isEmpty {
-                    print("Found \(pageEstablishments.count) establishment(s) on page \(pageIndex + 1)")
-                }
             }
         }
         
-        print("Extracted \(establishments.count) establishments from PDF")
         return establishments
     }
     
@@ -98,7 +88,7 @@ class PDFParserService {
         let namePattern = "Name of Establishment:\\s*([^\\n]+)"
         let addressPattern = "Street Address of the Establishment:\\s*([^\\n]+)"
         let cityStatePattern = "City\\s+([^\\s]+)\\s+State\\s+([^\\s]+)\\s+Zip\\s+([^\\s]+)"
-        let phonePattern = "Phone Number of Establishment(?:[^:]*):(?:\\s*\\(Optional\\))?\\s*([^\\n]+)"
+        //let phonePattern = "Phone Number of Establishment(?:[^:]*):(?:\\s*\\(Optional\\))?\\s*([^\\n]+)"
         
         // Extract name
         var name: String? = nil
@@ -138,13 +128,13 @@ class PDFParserService {
         }
         
         // Extract phone number
-        var phone: String? = nil
-        if let regex = try? NSRegularExpression(pattern: phonePattern),
-           let match = regex.firstMatch(in: pageContent, range: NSRange(pageContent.startIndex..., in: pageContent)),
-           match.numberOfRanges > 1,
-           let phoneRange = Range(match.range(at: 1), in: pageContent) {
-            phone = String(pageContent[phoneRange]).trimmingCharacters(in: .whitespacesAndNewlines)
-        }
+//        var phone: String? = nil
+//        if let regex = try? NSRegularExpression(pattern: phonePattern),
+//           let match = regex.firstMatch(in: pageContent, range: NSRange(pageContent.startIndex..., in: pageContent)),
+//           match.numberOfRanges > 1,
+//           let phoneRange = Range(match.range(at: 1), in: pageContent) {
+//            phone = String(pageContent[phoneRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+//        }
         
         // If we found a name, construct the establishment
         guard let name = name, !name.isEmpty else {
