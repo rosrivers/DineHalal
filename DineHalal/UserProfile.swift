@@ -4,7 +4,7 @@
 ///  Created by Iman Ikram on 3/11/25.
 /// Edited/ modified - Joana
 ///Edited by Chelsea to add signout button
-///
+/// Modified by Victoria
 import FirebaseAuth
 import FirebaseFirestore
 import SwiftUI
@@ -18,6 +18,7 @@ struct UserProfile: View {
     @State private var userReviews: [(restaurantName: String, rating: Int, review: String)] = [] // Simple tuple for reviews
     @State private var isLoading = true
     @State private var isSignedOut = false // Flag to navigate after sign-out
+    @EnvironmentObject var favorites: Favorites
     
     var body: some View {
         ZStack {
@@ -113,20 +114,64 @@ struct UserProfile: View {
                         }
 
                         // **Favorites Section**
-                        VStack(alignment: .leading) {
+                        VStack(alignment: .leading, spacing: 10) {
                             Text("My Favorites")
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.darkBrown)
-                            
-                            if userFavorites.isEmpty {
+
+                            if favorites.favorites.isEmpty {
                                 Text("No favorites yet")
                                     .foregroundColor(.mud)
                             } else {
                                 ScrollView(.horizontal, showsIndicators: false) {
                                     HStack(spacing: 15) {
-                                        ForEach(userFavorites, id: \.self) { restaurantName in
-                                            FavoriteItem(title: restaurantName)
+                                        ForEach(favorites.favorites) { restaurant in
+                                            NavigationLink {
+                                                RestaurantDetails(restaurant: restaurant)
+                                                    .environmentObject(favorites)
+                                            } label: {
+                                                VStack(spacing: 8) {
+                                                    // Thumbnail
+                                                    if let photoReference = restaurant.photoReference,
+                                                       let url = GoogleMapConfig.getPhotoURL(photoReference: photoReference) {
+                                                        AsyncImage(url: url) { phase in
+                                                            switch phase {
+                                                            case .empty:
+                                                                ProgressView()
+                                                                    .frame(width: 100, height: 100)
+                                                            case .success(let image):
+                                                                image
+                                                                    .resizable()
+                                                                    .scaledToFill()
+                                                                    .frame(width: 100, height: 100)
+                                                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                                            case .failure:
+                                                                Image(systemName: "photo")
+                                                                    .resizable()
+                                                                    .frame(width: 100, height: 100)
+                                                                    .foregroundColor(.gray)
+                                                            @unknown default:
+                                                                EmptyView()
+                                                            }
+                                                        }
+                                                    } else {
+                                                        Image(systemName: "photo")
+                                                            .resizable()
+                                                            .frame(width: 100, height: 100)
+                                                            .foregroundColor(.gray)
+                                                    }
+
+                                                    // Name
+                                                    Text(restaurant.name)
+                                                        .font(.caption)
+                                                        .multilineTextAlignment(.center)
+                                                        .frame(width: 100)
+                                                        .foregroundColor(.primary)
+                                                }
+                                                .frame(width: 100)
+                                            }
+                                            .buttonStyle(PlainButtonStyle())
                                         }
                                     }
                                     .padding(.horizontal)
