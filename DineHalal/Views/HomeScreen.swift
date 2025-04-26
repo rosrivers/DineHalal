@@ -6,6 +6,7 @@
 /// Edited by Chelsea 4/5/25
 /// Edidted by Iman 4/24/25 for removing map and improving layout
 
+
 import FirebaseFirestore
 import FirebaseCore
 import FirebaseAuth
@@ -193,6 +194,7 @@ struct HomeScreen: View {
                                  .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
                                  }
                          .padding(.horizontal)
+                    
                     // Popular Restaurants
                     if !placesService.popularRestaurants.isEmpty {
                         VStack(alignment: .leading) {
@@ -220,7 +222,7 @@ struct HomeScreen: View {
                         }
                     }
 
-                    // Recommended
+                    // Recommended Restaurants
                     if !placesService.recommendedRestaurants.isEmpty {
                         VStack(alignment: .leading) {
                             Text("Recommended for You")
@@ -247,33 +249,35 @@ struct HomeScreen: View {
                         }
                     }
 
-                    // Recently Verified
-                    VStack(alignment: .leading) {
-                        Text("Recently Verified Halal Restaurants")
-                            .font(.headline)
-                            .padding(.leading)
-                            .foregroundStyle(.darkBrown)
+                    // Recently Verified Restaurants
+                    if !placesService.recentlyVerified.isEmpty {
+                        VStack(alignment: .leading) {
+                            Text("Recently Verified Halal Restaurants")
+                                .font(.headline)
+                                .padding(.leading)
+                                .foregroundStyle(.darkBrown)
 
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack {
-                                ForEach(placesService.recentlyVerified) { restaurant in
-                                    RestaurantCard(
-                                        name: restaurant.name,
-                                        rating: restaurant.rating,
-                                        photoReference: restaurant.photoReference
-                                    )
-                                    .onTapGesture {
-                                        navigationState.selectedRestaurant = restaurant
-                                        navigationState.showingRestaurantDetail = true
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack {
+                                    ForEach(placesService.recentlyVerified) { restaurant in
+                                        RestaurantCard(
+                                            name: restaurant.name,
+                                            rating: restaurant.rating,
+                                            photoReference: restaurant.photoReference
+                                        )
+                                        .onTapGesture {
+                                            navigationState.selectedRestaurant = restaurant
+                                            navigationState.showingRestaurantDetail = true
+                                        }
                                     }
                                 }
+                                .padding(.horizontal)
                             }
-                            .padding(.horizontal)
                         }
                     }
 
                 } // VStack
-                .padding(.bottom, 80) // So bottom nav isn’t covered
+                .padding(.bottom, 80) // So bottom nav isn't covered
             } // ScrollView
             .background(Color("AccentColor").ignoresSafeArea())
             .onAppear { fetchUserData() }
@@ -307,7 +311,10 @@ struct HomeScreen: View {
             }
             .sheet(isPresented: $navigationState.showingRestaurantDetail) {
                 if let restaurant = navigationState.selectedRestaurant {
-                    RestaurantDetails(restaurant: restaurant)
+                    RestaurantDetails(
+                        restaurant: restaurant,
+                        verificationService: placesService.verificationService
+                    )
                 }
             }
             .onAppear {
@@ -355,5 +362,3 @@ struct HomeScreen: View {
                 .environmentObject(NavigationStateManager())
         }
     }
-
-
