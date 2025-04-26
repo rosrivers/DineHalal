@@ -6,7 +6,6 @@
 ///  Edited by Iman to add map icon for navigation to map 4/24/2025
 ///
 
-
 import SwiftUI
 import GoogleSignIn
 import FirebaseAuth
@@ -14,6 +13,8 @@ import Firebase
 
 struct ContentView: View {
     @State private var navigationPath = NavigationPath() /// Keep track of the navigation path
+    @StateObject private var placesService = PlacesService() // Shared PlacesService
+    @StateObject private var locationManager = LocationManager() // Use your existing LocationManager
     
     var body: some View {
         TabView {
@@ -23,6 +24,16 @@ struct ContentView: View {
                     Text("Home")
                 }
             
+            // New Verified Restaurants tab
+            NavigationStack {
+                VerifiedRestaurantsView(placesService: placesService)
+                    .navigationTitle("Verified Halal")
+            }
+            .tabItem {
+                Image(systemName: "checkmark.seal.fill")
+                Text("Verified")
+            }
+            
             /// Pass navigationPath to UserProfile here
             UserProfile(navigationPath: $navigationPath)
                 .tabItem {
@@ -30,7 +41,7 @@ struct ContentView: View {
                     Text("Profile")
                 }
             
-            FavoritesView()  
+            FavoritesView()
                 .tabItem {
                     Image(systemName: "heart.fill")
                     Text("Favorites")
@@ -41,6 +52,22 @@ struct ContentView: View {
                     Image(systemName: "map.fill")
                     Text("Map")
                 }
+        }
+        .onAppear {
+            // Request location permission when the app appears
+            locationManager.requestLocationPermission()
+            locationManager.getLocation()
+            
+            // Set up location monitoring
+            // Instead of using onChange which requires Equatable
+            NotificationCenter.default.addObserver(forName: NSNotification.Name("LocationUpdated"), object: nil, queue: .main) { _ in
+                if let location = locationManager.userLocation {
+                    placesService.fetchNearbyRestaurants(
+                        latitude: location.latitude,
+                        longitude: location.longitude
+                    )
+                }
+            }
         }
     }
 }
