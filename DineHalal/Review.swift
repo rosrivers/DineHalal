@@ -5,11 +5,11 @@
 //  Created by Iman Ikram on 3/11/25.
 /// updated - Joana 
 
-
+///Updated by Chelsea Bhuiyan 04/27/2025
+///
 import Foundation
-
 struct Review: Identifiable, Decodable {
-    var id: UUID
+    var id: String //Changed to match what Firebase is storing
     var userId: String
     var restaurantId: String
     var rating: Int
@@ -26,3 +26,6 @@ struct Review: Identifiable, Decodable {
         case date
     }
 }
+
+
+

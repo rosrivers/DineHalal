@@ -3,12 +3,11 @@
 ///  Dine Halal
 ///  Created by Iman Ikram on 3/11/25.
 /// Edited/ modified - Joana
-///Edited by Chelsea to add signout button
-/// Modified by Victoria
+///Edited by Chelsea to add signout button and edited on 4/27/25 to add reviews to display on user profile
+///
 import FirebaseAuth
 import FirebaseFirestore
 import SwiftUI
-
 struct UserProfile: View {
     @Binding var navigationPath: NavigationPath // Pass navigationPath as a binding
     @State private var userName: String = ""
@@ -39,7 +38,6 @@ struct UserProfile: View {
                                 .scaleEffect(1.1)
                                 .clipped()
                                 .shadow(radius: 5, x: 0, y: 5)
-
                             VStack(spacing: 8) {
                                 // Profile Picture
                                 ZStack {
@@ -70,7 +68,6 @@ struct UserProfile: View {
                                             .frame(width: 60, height: 60)
                                             .foregroundColor(.white)
                                     }
-
                                     Button(action: {
                                         print("Edit Avatar")
                                     }) {
@@ -83,7 +80,6 @@ struct UserProfile: View {
                                     .offset(x: 35, y: 35)
                                 }
                                 .offset(y: -18)
-
                                 // User Name
                                 Text(userName)
                                     .font(.title)
@@ -97,7 +93,6 @@ struct UserProfile: View {
                                             .shadow(radius: 5)
                                             .padding(1)
                                     )
-
                                 // User Email
                                 Text(userEmail)
                                     .foregroundColor(.darkBrown.opacity(0.8))
@@ -112,7 +107,6 @@ struct UserProfile: View {
                             }
                             .padding(.top, 100) // Position elements within the background
                         }
-
                         // **Favorites Section**
                         VStack(alignment: .leading, spacing: 10) {
                             Text("My Favorites")
@@ -179,7 +173,6 @@ struct UserProfile: View {
                             }
                         }
                         .padding()
-
                         // **Reviews Section**
                         VStack(alignment: .leading) {
                             Text("My Reviews")
@@ -199,7 +192,6 @@ struct UserProfile: View {
                             }
                         }
                         .padding()
-
                         // **Sign-Out Button** placed at the bottom of the page
                         Button(action: signOut) {
                             Text("Sign Out")
@@ -210,7 +202,6 @@ struct UserProfile: View {
                                 .padding(.top)
                         }
                         .padding()
-
                         Spacer()
                     }
                 }
@@ -224,7 +215,6 @@ struct UserProfile: View {
             SignInView(path: $navigationPath)
         }
     }
-
     // Sign-Out Function
     private func signOut() {
         do {
@@ -235,7 +225,6 @@ struct UserProfile: View {
             print("Error signing out: \(error.localizedDescription)")
         }
     }
-
     // Load user data from Firebase
     private func loadUserData() {
         guard let user = Auth.auth().currentUser else {
@@ -272,7 +261,7 @@ struct UserProfile: View {
                                 let data = doc.data()
                                 guard let restaurantName = data["restaurantName"] as? String,
                                       let rating = data["rating"] as? Int,
-                                      let review = data["reviewText"] as? String else {
+                                      let review = data["comment"] as? String else {
                                     return nil
                                 }
                                 return (restaurantName, rating, review)
@@ -284,11 +273,9 @@ struct UserProfile: View {
             }
     }
 }
-
 // **Favorite Item**
 struct FavoriteItem: View {
     var title: String
-
     var body: some View {
         Text(title)
             .frame(width: 120)
@@ -297,36 +284,34 @@ struct FavoriteItem: View {
             .cornerRadius(12)
     }
 }
-
 // **Review Item**
 struct ReviewItem: View {
     var title: String
     var rating: Int
     var review: String
-
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(title)
+                .font(.headline)
                 .fontWeight(.bold)
-            HStack {
-                ForEach(0..<5) { index in
-                    Image(systemName: index < rating ? "star.fill" : "star")
+                .foregroundColor(.primary)
+            HStack(spacing: 2) {
+                ForEach(1...5, id: \.self) { index in
+                    Image(systemName: index <= rating ? "star.fill" : "star")
                         .foregroundColor(.yellow)
                 }
             }
             Text(review)
-                .font(.footnote)
-                .foregroundColor(.black)
+                .font(.body)
+                .foregroundColor(.secondary)
+                .padding(.top, 2)
         }
         .padding()
-        .background(Color.gray.opacity(0.2))
+        .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .padding(.vertical, 4)
     }
 }
 
-// **Preview**
-struct UserProfileView_Previews: PreviewProvider {
-    static var previews: some View {
-        UserProfile(navigationPath: .constant(NavigationPath()))
-    }
-}
+

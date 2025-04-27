@@ -4,7 +4,7 @@
 //
 //  Created by Iman Ikram on 3/24/25.
 //
-// Edited by Chelsea on 4/5/25
+// Edited by Chelsea on 4/25/25
 import SwiftUI
 
 struct FilterView: View {
@@ -28,7 +28,7 @@ struct FilterView: View {
                 }
                 
                 Section(header: Text("Location")) {
-                    Toggle("Near Me", isOn: $criteria.nearMe)
+                    //Toggle("Near Me", isOn: $criteria.nearMe)
                     TextField("Enter City/Zipcode", text: $criteria.cityZip)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                 }
@@ -41,8 +41,11 @@ struct FilterView: View {
                 }
                 
                 Section(header: Text("Rating")) {
-                    Slider(value: $criteria.rating, in: 1...5, step: 1)
-                    Text("Min Rating: \(Int(criteria.rating)) stars")
+                    HStack {
+                        Text("Minimum Rating: \(String(format: "%.1f", criteria.rating)) ")
+                        Spacer()
+                    }
+                    Slider(value: $criteria.rating, in: 1...5, step: 0.5)
                 }
                 
                 Section(header: Text("Price Range")) {
