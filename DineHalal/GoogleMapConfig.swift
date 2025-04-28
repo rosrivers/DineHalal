@@ -59,4 +59,18 @@ struct GoogleMapConfig {
         
         return components?.url
     }
+    
+    // For Google Reviews
+    static func getPlaceDetailsURL(placeId: String) -> URL? {
+        let baseURL = "https://maps.googleapis.com/maps/api/place/details/json"
+        
+        var components = URLComponents(string: baseURL)
+        components?.queryItems = [
+            URLQueryItem(name: "placeid", value: placeId),
+    URLQueryItem(name: "key", value: placesKey)
+        ]
+        
+        return components?.url
+    }
+
 }
