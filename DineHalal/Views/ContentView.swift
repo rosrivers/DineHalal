@@ -1,9 +1,10 @@
-//  ContentView.swift
-//  Dine Halal
-//
-//  Created by Joanne on 3/5/25.
-//  Edited by Chelsea to add signout button on 3/28/25
-//  Edited/Modified - Rosa
+
+///  ContentView.swift
+///  Dine Halal
+///  Created by Joanne on 3/5/25.
+///  Edited by Chelsea to add signout button on 3/28/25
+///  Edited by Iman to add map icon for navigation to map 4/24/2025
+///
 
 import SwiftUI
 import GoogleSignIn
@@ -12,6 +13,8 @@ import Firebase
 
 struct ContentView: View {
     @State private var navigationPath = NavigationPath() /// Keep track of the navigation path
+    @StateObject private var placesService = PlacesService() // Shared PlacesService
+    @StateObject private var locationManager = LocationManager() // Use your existing LocationManager
     
     var body: some View {
         TabView {
@@ -21,24 +24,50 @@ struct ContentView: View {
                     Text("Home")
                 }
             
-            MapPageView()                               // changed: added Map tab
-                .tabItem {
-                    Image(systemName: "mappin.and.ellipse")
-                    Text("Map")
-                }
-
-            FavoritesView()
-                .tabItem {
-                    Image(systemName: "heart.fill")
-                    Text("Favorites")
-                }
-
-            // Pass navigationPath to UserProfile here
+            // New Verified Restaurants tab
+            NavigationStack {
+                VerifiedRestaurantsView(placesService: placesService)
+                    .navigationTitle("Verified Halal")
+            }
+            .tabItem {
+                Image(systemName: "checkmark.seal.fill")
+                Text("Verified")
+            }
+            
+            /// Pass navigationPath to UserProfile here
             UserProfile(navigationPath: $navigationPath)
                 .tabItem {
                     Image(systemName: "person.fill")
                     Text("Profile")
                 }
+            
+            FavoritesView()
+                .tabItem {
+                    Image(systemName: "heart.fill")
+                    Text("Favorites")
+                }
+            
+            HomeScreen() //MapPageView()
+                .tabItem {
+                    Image(systemName: "map.fill")
+                    Text("Map")
+                }
+        }
+        .onAppear {
+            // Request location permission when the app appears
+            locationManager.requestLocationPermission()
+            locationManager.getLocation()
+            
+            // Set up location monitoring
+            // Instead of using onChange which requires Equatable
+            NotificationCenter.default.addObserver(forName: NSNotification.Name("LocationUpdated"), object: nil, queue: .main) { _ in
+                if let location = locationManager.userLocation {
+                    placesService.fetchNearbyRestaurants(
+                        latitude: location.latitude,
+                        longitude: location.longitude
+                    )
+                }
+            }
         }
     }
 }
