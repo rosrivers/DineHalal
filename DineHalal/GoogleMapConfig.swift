@@ -1,20 +1,19 @@
-
-///  GoogleMapConfig.swift
-///  DineHalal
-///  Maps API configuration is done here securely  and removed from homescreen.
-/// Created by Joanne on 3/25/25.
-/// Edited by Chelsea on 4/5/25.
+//
+//  GoogleMapConfig.swift
+//  DineHalal
+//
+//  Created by Joanne on 3/25/25.
+//
 
 import Foundation
 import CoreLocation
-import GoogleMaps
 
 struct GoogleMapConfig {
     static let apiKey = APIKeys.mapsKey
     static let placesKey = APIKeys.placesKey
     
     static func getNearbyRestaurantsURL(userLocation: CLLocationCoordinate2D, filter: FilterCriteria?) -> URL? {
-        let baseURLString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+        let baseURL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
         
         var queryItems: [URLQueryItem] = [
             URLQueryItem(name: "location", value: "\(userLocation.latitude),\(userLocation.longitude)"),
@@ -23,7 +22,6 @@ struct GoogleMapConfig {
             URLQueryItem(name: "key", value: placesKey)
         ]
         
-        // Build keyword starting with "halal" then add additional cuisine filters if enabled.
         var keyword = "halal"
         if let filter = filter {
             if filter.middleEastern { keyword += " middle eastern" }
@@ -33,7 +31,6 @@ struct GoogleMapConfig {
         }
         queryItems.append(URLQueryItem(name: "keyword", value: keyword))
         
-        // Example: Price filtering using Places API parameters
         if let filter = filter {
             if filter.priceBudget && !filter.priceModerate && !filter.priceExpensive {
                 queryItems.append(URLQueryItem(name: "maxprice", value: "1"))
@@ -45,15 +42,15 @@ struct GoogleMapConfig {
             }
         }
         
-        var components = URLComponents(string: baseURLString)
+        var components = URLComponents(string: baseURL)
         components?.queryItems = queryItems
         return components?.url
     }
     
     static func getPhotoURL(photoReference: String, maxWidth: Int = 400) -> URL? {
-        let baseURLString = "https://maps.googleapis.com/maps/api/place/photo"
+        let baseURL = "https://maps.googleapis.com/maps/api/place/photo"
         
-        var components = URLComponents(string: baseURLString)
+        var components = URLComponents(string: baseURL)
         components?.queryItems = [
             URLQueryItem(name: "maxwidth", value: "\(maxWidth)"),
             URLQueryItem(name: "photo_reference", value: photoReference),
