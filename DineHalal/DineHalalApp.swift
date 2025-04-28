@@ -23,6 +23,12 @@ struct DineHalalApp: App {
     
     // Initialize with proper setup
     init() {
+        
+        // Set consistent tab bar color
+            let tabBarAppearance = UITabBar.appearance()
+            tabBarAppearance.backgroundColor = UIColor.systemBackground
+            tabBarAppearance.barTintColor = UIColor.systemBackground
+        
         // Use _placesService to set the wrapped value, referencing the existing verificationService
         _placesService = StateObject(wrappedValue:
             PlacesService(verificationService: VerificationService()))
