@@ -27,6 +27,7 @@ struct FilterView: View {
                 }
                 
                 Section(header: Text("Location")) {
+                    //Toggle("Near Me", isOn: $criteria.nearMe)
                     TextField("Enter City/Zipcode", text: $criteria.cityZip)
                         .keyboardType(.numberPad)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -40,8 +41,11 @@ struct FilterView: View {
                 }
                 
                 Section(header: Text("Rating")) {
-                    Slider(value: $criteria.rating, in: 1...5, step: 1)
-                    Text("Min Rating: \(Int(criteria.rating)) stars")
+                    HStack {
+                        Text("Minimum Rating: \(String(format: "%.1f", criteria.rating)) ")
+                        Spacer()
+                    }
+                    Slider(value: $criteria.rating, in: 1...5, step: 0.5)
                 }
                 
                 Section(header: Text("Price Range")) {

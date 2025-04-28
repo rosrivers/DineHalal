@@ -8,6 +8,7 @@ import Firebase
 import GoogleSignIn
 import GoogleMaps
 
+
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         // Initialize Google Maps
@@ -16,8 +17,16 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         //  Maps initialization
         Thread.sleep(forTimeInterval: 0.1)
         
-        // SThen Firebase
+        // Then Firebase
         FirebaseApp.configure()
+        
+        // Configure Firestore to reduce logging in production builds
+        let db = Firestore.firestore()
+        let settings = db.settings
+        #if !DEBUG
+        settings.loggingEnabled = false
+        #endif
+        db.settings = settings
         
         //  Google Sign In
         if let clientID = FirebaseApp.app()?.options.clientID {
