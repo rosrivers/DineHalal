@@ -20,20 +20,22 @@ struct RestaurantReviewView: View {
     @State private var showDeleteAlert = false
     @State private var reviewToDelete: Review?
     @State private var googleReviews: [PlacesService.GoogleReview] = []  // Google reviews
-    
+
     var body: some View {
         NavigationView {
             VStack {
                 if isLoading {
                     ProgressView("Loading reviews...")
-                } else if reviews.isEmpty {
-                    Text("No reviews yet. Be the first to leave one!")
-                        .foregroundColor(.gray)
-                        .padding()
                 } else {
                     List {
                         // User Reviews Section
-                        if !reviews.isEmpty {
+                        if reviews.isEmpty {
+                            Section(header: Text("User Reviews").font(.headline)) {
+                                Text("No reviews yet. Be the first to leave one!")
+                                    .foregroundColor(.gray)
+                                    .padding()
+                            }
+                        } else {
                             Section(header: Text("User Reviews").font(.headline)) {
                                 ForEach(reviews) { review in
                                     VStack(alignment: .leading, spacing: 8) {
@@ -65,7 +67,13 @@ struct RestaurantReviewView: View {
                         }
                         
                         // Google Reviews Section
-                        if !googleReviews.isEmpty {
+                        if googleReviews.isEmpty {
+                            Section(header: Text("Google Reviews").font(.headline)) {
+                                Text("No Google reviews available.")
+                                    .foregroundColor(.gray)
+                                    .padding()
+                            }
+                        } else {
                             Section(header: Text("Google Reviews").font(.headline)) {
                                 ForEach(googleReviews) { review in
                                     VStack(alignment: .leading, spacing: 8) {
@@ -75,6 +83,8 @@ struct RestaurantReviewView: View {
                                                     .foregroundColor(.yellow)
                                             }
                                         }
+                                        Text(review.authorName)
+                                            .font(.caption)
                                         Text(review.text)
                                             .font(.body)
                                         Text(review.relativeTimeDescription ?? "")
@@ -112,9 +122,7 @@ struct RestaurantReviewView: View {
             }
         }
     }
-    private func dismiss() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
+    
     private func loadReviews() {
         FirebaseService.shared.fetchRestaurantReviews(restaurantId: restaurantId) { reviews, error in
             if let reviews = reviews {
@@ -123,13 +131,13 @@ struct RestaurantReviewView: View {
             isLoading = false
         }
     }
+
     private func deleteReview(_ review: Review) {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         FirebaseService.shared.deleteReview(restaurantId: restaurantId, reviewId: review.id, userId: userId)
         reviews.removeAll { $0.id == review.id }
     }
-    
-    // Fetches Google Reviews 
+
     private func fetchGoogleReviews() {
         let placesService = PlacesService()
         placesService.fetchGoogleReviews(for: restaurantId) { result in
@@ -144,3 +152,4 @@ struct RestaurantReviewView: View {
         }
     }
 }
+
