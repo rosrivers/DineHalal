@@ -47,7 +47,7 @@ struct ContentView: View {
                     Text("Favorites")
                 }
             
-            HomeScreen() //MapPageView()
+            MapPageView() //MapPageView()
                 .tabItem {
                     Image(systemName: "map.fill")
                     Text("Map")
