@@ -28,23 +28,22 @@ struct GoogleMapView: UIViewRepresentable {
         }
         
         func mapView(_ mapView: GMSMapView, didTap marker: GMSMarker) -> Bool {
-            print("Tapped marker: \(marker.title ?? "")")
+            print("Tapped restaurant: \(marker.title ?? "")")
             return true
         }
     }
 
     func makeUIView(context: Context) -> GMSMapView {
-        // Create camera position with initial location
         let camera = GMSCameraPosition(
             latitude: region.center.latitude,
             longitude: region.center.longitude,
-            zoom: 15
+            zoom: 14
         )
         
-        // Create map view with camera
-        let mapView = GMSMapView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 0.4), camera: camera)
+        let mapView = GMSMapView(frame: .zero, camera: camera)
+        mapView.delegate = context.coordinator
+        context.coordinator.mapView = mapView
         
-        // Configure map settings
         mapView.isMyLocationEnabled = false
         mapView.settings.myLocationButton = false
         mapView.settings.compassButton = false
@@ -53,45 +52,41 @@ struct GoogleMapView: UIViewRepresentable {
         mapView.settings.rotateGestures = true
         mapView.settings.tiltGestures = false
         
-        // Set delegate
-        mapView.delegate = context.coordinator
-        context.coordinator.mapView = mapView
-        
         return mapView
     }
 
     func updateUIView(_ mapView: GMSMapView, context: Context) {
-        // Only update if there's a significant change
-        let currentPosition = mapView.camera.target
-        let newPosition = CLLocationCoordinate2D(
+        print("Updating UIView with", annotations.count, "annotations")
+        
+        let currentCenter = mapView.camera.target
+        let newCenter = CLLocationCoordinate2D(
             latitude: region.center.latitude,
             longitude: region.center.longitude
         )
         
-        if abs(currentPosition.latitude - newPosition.latitude) > 0.000001 ||
-           abs(currentPosition.longitude - newPosition.longitude) > 0.000001 {
-            let camera = GMSCameraPosition(
-                target: newPosition,
-                zoom: mapView.camera.zoom
-            )
+        if abs(currentCenter.latitude - newCenter.latitude) > 0.000001 ||
+            abs(currentCenter.longitude - newCenter.longitude) > 0.000001 {
+            let camera = GMSCameraPosition(target: newCenter, zoom: mapView.camera.zoom)
             mapView.animate(to: camera)
         }
         
-        // Update markers only if they've changed
         updateMarkers(mapView: mapView)
     }
+
     
     private func updateMarkers(mapView: GMSMapView) {
-        // Remove existing markers
+        print("Updating markers...")
         mapView.clear()
         
-        // Add new markers
         for annotation in annotations {
             let marker = GMSMarker(position: annotation.coordinate)
             marker.title = annotation.title ?? ""
             marker.snippet = annotation.subtitle ?? ""
-            marker.icon = GMSMarker.markerImage(with: .systemRed)
+            marker.icon = UIImage(named: "halal_pin") ?? GMSMarker.markerImage(with: .systemRed)
+            marker.appearAnimation = .pop
             marker.map = mapView
+            print("Added marker:", marker.title ?? "", "at", marker.position)
         }
     }
+
 }
