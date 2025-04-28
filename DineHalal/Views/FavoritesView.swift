@@ -9,6 +9,7 @@ import SwiftUI
 
 struct FavoritesView: View {
     @EnvironmentObject var favorites: Favorites
+    @EnvironmentObject var verificationService: VerificationService
     
     var body: some View {
         NavigationView {
@@ -54,13 +55,13 @@ struct FavoritesEmptyState: View {
 
 struct FavoritesList: View {
     @EnvironmentObject var favorites: Favorites
+    @EnvironmentObject var verificationService: VerificationService
 
     var body: some View {
         LazyVStack(spacing: 16) {
             ForEach(favorites.favorites) { restaurant in
-                NavigationLink(destination: RestaurantDetails(restaurant: restaurant).environmentObject(favorites)) {
+                NavigationLink(destination: RestaurantDetails(restaurant: restaurant, verificationService: verificationService).environmentObject(favorites)) {
                     FavoriteTile(restaurant: restaurant)
-                    // RestaurantCard(restaurant: restaurant) <- alternate to come back to
                 }
                 .buttonStyle(PlainButtonStyle())
             }

@@ -108,70 +108,71 @@ struct UserProfile: View {
                             .padding(.top, 100) // Position elements within the background
                         }
                         // **Favorites Section**
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("My Favorites")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.darkBrown)
-
-                            if favorites.favorites.isEmpty {
-                                Text("No favorites yet")
-                                    .foregroundColor(.mud)
-                            } else {
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 15) {
-                                        ForEach(favorites.favorites) { restaurant in
-                                            NavigationLink {
-                                                RestaurantDetails(restaurant: restaurant)
-                                                    .environmentObject(favorites)
-                                            } label: {
-                                                VStack(spacing: 8) {
-                                                    // Thumbnail
-                                                    if let photoReference = restaurant.photoReference,
-                                                       let url = GoogleMapConfig.getPhotoURL(photoReference: photoReference) {
-                                                        AsyncImage(url: url) { phase in
-                                                            switch phase {
-                                                            case .empty:
-                                                                ProgressView()
-                                                                    .frame(width: 100, height: 100)
-                                                            case .success(let image):
-                                                                image
-                                                                    .resizable()
-                                                                    .scaledToFill()
-                                                                    .frame(width: 100, height: 100)
-                                                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                                                            case .failure:
-                                                                Image(systemName: "photo")
-                                                                    .resizable()
-                                                                    .frame(width: 100, height: 100)
-                                                                    .foregroundColor(.gray)
-                                                            @unknown default:
-                                                                EmptyView()
-                                                            }
-                                                        }
-                                                    } else {
-                                                        Image(systemName: "photo")
-                                                            .resizable()
-                                                            .frame(width: 100, height: 100)
-                                                            .foregroundColor(.gray)
-                                                    }
-
-                                                    // Name
-                                                    Text(restaurant.name)
-                                                        .font(.caption)
-                                                        .multilineTextAlignment(.center)
-                                                        .frame(width: 100)
-                                                        .foregroundColor(.primary)
-                                                }
-                                                .frame(width: 100)
-                                            }
-                                            .buttonStyle(PlainButtonStyle())
-                                        }
-                                    }
-                                    .padding(.horizontal)
-                                }
-                            }
-                        }
+                        // NO MORE FAVORITES 
+//                        VStack(alignment: .leading, spacing: 10) {
+//                            Text("My Favorites")
+//                                .font(.title2)
+//                                .fontWeight(.bold)
+//                                .foregroundColor(.darkBrown)
+//
+//                            if favorites.favorites.isEmpty {
+//                                Text("No favorites yet")
+//                                    .foregroundColor(.mud)
+//                            } else {
+//                                ScrollView(.horizontal, showsIndicators: false) {
+//                                    HStack(spacing: 15) {
+//                                        ForEach(favorites.favorites) { restaurant in
+//                                            NavigationLink {
+//                                                RestaurantDetails(restaurant: restaurant)
+//                                                    .environmentObject(favorites)
+//                                            } label: {
+//                                                VStack(spacing: 8) {
+//                                                    // Thumbnail
+//                                                    if let photoReference = restaurant.photoReference,
+//                                                       let url = GoogleMapConfig.getPhotoURL(photoReference: photoReference) {
+//                                                        AsyncImage(url: url) { phase in
+//                                                            switch phase {
+//                                                            case .empty:
+//                                                                ProgressView()
+//                                                                    .frame(width: 100, height: 100)
+//                                                            case .success(let image):
+//                                                                image
+//                                                                    .resizable()
+//                                                                    .scaledToFill()
+//                                                                    .frame(width: 100, height: 100)
+//                                                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+//                                                            case .failure:
+//                                                                Image(systemName: "photo")
+//                                                                    .resizable()
+//                                                                    .frame(width: 100, height: 100)
+//                                                                    .foregroundColor(.gray)
+//                                                            @unknown default:
+//                                                                EmptyView()
+//                                                            }
+//                                                        }
+//                                                    } else {
+//                                                        Image(systemName: "photo")
+//                                                            .resizable()
+//                                                            .frame(width: 100, height: 100)
+//                                                            .foregroundColor(.gray)
+//                                                    }
+//
+//                                                    // Name
+//                                                    Text(restaurant.name)
+//                                                        .font(.caption)
+//                                                        .multilineTextAlignment(.center)
+//                                                        .frame(width: 100)
+//                                                        .foregroundColor(.primary)
+//                                                }
+//                                                .frame(width: 100)
+//                                            }
+//                                            .buttonStyle(PlainButtonStyle())
+//                                        }
+//                                    }
+//                                    .padding(.horizontal)
+//                                }
+//                            }
+//                        }
                         .padding()
                         // **Reviews Section**
                         VStack(alignment: .leading) {
@@ -273,17 +274,7 @@ struct UserProfile: View {
             }
     }
 }
-// **Favorite Item**
-struct FavoriteItem: View {
-    var title: String
-    var body: some View {
-        Text(title)
-            .frame(width: 120)
-            .padding()
-            .background(Color.gray.opacity(0.2))
-            .cornerRadius(12)
-    }
-}
+
 // **Review Item**
 struct ReviewItem: View {
     var title: String
