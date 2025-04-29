@@ -3,7 +3,7 @@
 //  DineHalal
 //
 //  Created by Joanne on 4/1/25.
-//
+//  Edited by Iman Ikram on 4/28/2025
 
 import Foundation
 import CoreLocation
@@ -155,5 +155,69 @@ class PlacesService: ObservableObject {
         }
         
         return verifiedRestaurants
+    }
+    
+    func fetchGoogleReviews(for placeID: String, completion: @escaping (Result<[GoogleReview], Error>) -> Void) {
+        guard let url = GoogleMapConfig.getPlaceDetailsURL(placeId: placeID) else {
+            completion(.failure(NSError(domain: "Invalid URL", code: -1)))
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                DispatchQueue.main.async {
+                    completion(.failure(error))
+                }
+                return
+            }
+            
+            guard let data = data else {
+                DispatchQueue.main.async {
+                    completion(.failure(NSError(domain: "No data", code: -1)))
+                }
+                return
+            }
+            
+            do {
+                let response = try JSONDecoder().decode(GooglePlaceDetailsResponse.self, from: data)
+                let reviews = response.result.reviews ?? []
+                DispatchQueue.main.async {
+                    completion(.success(reviews))
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    completion(.failure(error))
+                }
+            }
+        }.resume()
+    }
+    
+    
+    // MARK: - Models for Google Reviews
+
+    struct GooglePlaceDetailsResponse: Codable {
+        let result: GooglePlaceDetailsResult
+    }
+
+    struct GooglePlaceDetailsResult: Codable {
+        let reviews: [GoogleReview]?
+    }
+
+    struct GoogleReview: Codable, Identifiable {
+        var id: String { authorName + (relativeTimeDescription ?? UUID().uuidString) }
+        
+        let authorName: String
+        let rating: Int
+        let text: String
+        let time: Int
+        let relativeTimeDescription: String?
+        
+        enum CodingKeys: String, CodingKey {
+            case authorName = "author_name"
+            case rating
+            case text
+            case time
+            case relativeTimeDescription = "relative_time_description"
+        }
     }
 }

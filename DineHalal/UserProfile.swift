@@ -68,16 +68,16 @@ struct UserProfile: View {
                                             .frame(width: 60, height: 60)
                                             .foregroundColor(.white)
                                     }
-                                    Button(action: {
-                                        print("Edit Avatar")
-                                    }) {
-                                        Image(systemName: "pencil.circle.fill")
-                                            .resizable()
-                                            .frame(width: 30, height: 30)
-                                            .foregroundColor(.mud)
-                                            .background(Circle().fill(Color.white))
-                                    }
-                                    .offset(x: 35, y: 35)
+//                                    Button(action: {
+//                                        print("Edit Avatar")
+//                                    }) {
+//                                        Image(systemName: "pencil.circle.fill")
+//                                            .resizable()
+//                                            .frame(width: 30, height: 30)
+//                                            .foregroundColor(.mud)
+//                                            .background(Circle().fill(Color.white))
+//                                    }
+                                    //.offset(x: 35, y: 35)
                                 }
                                 .offset(y: -18)
                                 // User Name
