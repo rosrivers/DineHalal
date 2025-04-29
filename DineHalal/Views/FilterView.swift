@@ -2,8 +2,6 @@
 //  DineHalal
 //
 //  Created by Iman Ikram on 3/24/25.
-//
-//  Created by Iman Ikram on 3/24/25.
 //  Edited by Chelsea on 4/5/25
 //  Edited/Modified - Rosa
 

@@ -1,9 +1,7 @@
-//
 //  MapPageView.swift
 //  DineHalal
 //
 //  Created by Rosa Rivera on 4/24/25.
-//
 
 import SwiftUI
 import MapKit
@@ -21,6 +19,7 @@ struct MapPageView: View {
         span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
     )
     @State private var annotations: [MKPointAnnotation] = []
+    @State private var lastRegionCenter: CLLocationCoordinate2D? = nil
     
     var body: some View {
         ZStack {
@@ -67,6 +66,13 @@ struct MapPageView: View {
                 showFilter.toggle()
             }
         }
+        .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { _ in
+            if lastRegionCenter == nil ||
+                distanceBetween(region.center, lastRegionCenter!) > 50 {
+                lastRegionCenter = region.center
+                fetchAndAnnotate(lat: region.center.latitude, lon: region.center.longitude)
+            }
+        }
     }
     
     private func locateUser() {
@@ -81,26 +87,35 @@ struct MapPageView: View {
     private func fetchAndAnnotate(lat: Double, lon: Double) {
         placesService.fetchNearbyRestaurants(latitude: lat, longitude: lon, filter: filterCriteria) {
             DispatchQueue.main.async {
-                self.annotations = self.placesService.allRestaurants.map { restaurant in
+                let newAnnotations = self.placesService.allRestaurants.map { restaurant in
                     let annotation = MKPointAnnotation()
                     annotation.title = restaurant.name
                     annotation.coordinate = CLLocationCoordinate2D(latitude: restaurant.latitude, longitude: restaurant.longitude)
                     return annotation
                 }
-                print("Fetched annotations count:", self.annotations.count)
+
+                if newAnnotations.map({ $0.coordinate.latitude }) != self.annotations.map({ $0.coordinate.latitude }) ||
+                   newAnnotations.map({ $0.coordinate.longitude }) != self.annotations.map({ $0.coordinate.longitude }) {
+                    self.annotations = newAnnotations
+                    print("Updated annotations:", self.annotations.count)
+                } else {
+                    print("No changes in annotations")
+                }
             }
         }
     }
 
-    
     private func applyFilters(_ criteria: FilterCriteria) {
         if !criteria.cityZip.isEmpty {
             geocodeZipCode(criteria.cityZip) { coord in
-                fetchAndAnnotate(lat: coord?.latitude ?? region.center.latitude,
-                                 lon: coord?.longitude ?? region.center.longitude)
+                if let coord = coord {
+                    region.center = coord
+                } else {
+                    fetchAndAnnotate(lat: region.center.latitude, lon: region.center.longitude)
+                }
             }
         } else if criteria.nearMe, let userLoc = locationManager.userLocation {
-            fetchAndAnnotate(lat: userLoc.latitude, lon: userLoc.longitude)
+            region.center = userLoc
         } else {
             fetchAndAnnotate(lat: region.center.latitude, lon: region.center.longitude)
         }
@@ -111,6 +126,12 @@ struct MapPageView: View {
         geocoder.geocodeAddressString(zip) { placemarks, _ in
             completion(placemarks?.first?.location?.coordinate)
         }
+    }
+    
+    private func distanceBetween(_ coord1: CLLocationCoordinate2D, _ coord2: CLLocationCoordinate2D) -> CLLocationDistance {
+        let loc1 = CLLocation(latitude: coord1.latitude, longitude: coord1.longitude)
+        let loc2 = CLLocation(latitude: coord2.latitude, longitude: coord2.longitude)
+        return loc1.distance(from: loc2)
     }
 }
 

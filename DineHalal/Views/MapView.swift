@@ -1,9 +1,8 @@
-//
 //  MapView.swift
 //  DineHalal
 //
-///  Created by Iman Ikram on 3/24/25.
-///  Edited/Modified - Joana
+//  Created by Iman Ikram on 3/24/25.
+//  Edited/Modified - Joana + Rosa
 
 import SwiftUI
 import GoogleMaps
@@ -30,6 +29,14 @@ struct GoogleMapView: UIViewRepresentable {
         func mapView(_ mapView: GMSMapView, didTap marker: GMSMarker) -> Bool {
             print("Tapped restaurant: \(marker.title ?? "")")
             return true
+        }
+
+        func mapView(_ mapView: GMSMapView, idleAt position: GMSCameraPosition) {
+            // Update region.center when user stops moving the map
+            parent.region.center = CLLocationCoordinate2D(
+                latitude: position.target.latitude,
+                longitude: position.target.longitude
+            )
         }
     }
 
@@ -73,7 +80,6 @@ struct GoogleMapView: UIViewRepresentable {
         updateMarkers(mapView: mapView)
     }
 
-    
     private func updateMarkers(mapView: GMSMapView) {
         print("Updating markers...")
         mapView.clear()
@@ -82,11 +88,10 @@ struct GoogleMapView: UIViewRepresentable {
             let marker = GMSMarker(position: annotation.coordinate)
             marker.title = annotation.title ?? ""
             marker.snippet = annotation.subtitle ?? ""
-            marker.icon = UIImage(named: "halal_pin") ?? GMSMarker.markerImage(with: .systemRed)
+            marker.icon = UIImage(named: "halal_pin") ?? GMSMarker.markerImage(with: .brown)
             marker.appearAnimation = .pop
             marker.map = mapView
             print("Added marker:", marker.title ?? "", "at", marker.position)
         }
     }
-
 }
