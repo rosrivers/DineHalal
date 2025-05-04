@@ -19,7 +19,7 @@ struct SignUp: View {
     @State private var errorMessage: String?
     
     // updated by rosa: state variable to control when the email verification view should be shown.
-    @State private var showEmailVerification = false  // NEW: Added to trigger email verification screen after registration.
+    @State private var showEmailVerification = false  // Added to trigger email verification screen after registration.
 
     var body: some View {
         ScrollView {
@@ -187,15 +187,33 @@ struct SignUp: View {
                     return
                 }
 
+                guard let user = authResult?.user else { return }
+
+                // Combine first and last name
+                let fullName = "\(firstName) \(lastName)"
+
+                // Save full name to Firestore
+                let userData: [String: Any] = [
+                    "uid": user.uid,
+                    "email": email,
+                    "username": fullName
+                ]
+
+                Firestore.firestore().collection("users").document(user.uid).setData(userData) { error in
+                    if let error = error {
+                        self.errorMessage = "Failed to save user info: \(error.localizedDescription)"
+                    } else {
+                        print("User profile saved with full name.")
+                    }
+                }
+
                 print("Account created successfully!")
-                // NEW: After account creation, send a verification email.
-                guard let user = Auth.auth().currentUser else { return }
                 user.sendEmailVerification { error in
                     if let error = error {
                         self.errorMessage = "Failed to send verification email: \(error.localizedDescription)"
                     } else {
                         print("Verification email sent!")
-                        self.showEmailVerification = true  // NEW: Trigger email verification screen.
+                        self.showEmailVerification = true
                     }
                 }
             }

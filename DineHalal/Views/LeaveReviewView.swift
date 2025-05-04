@@ -8,12 +8,15 @@
 
 import SwiftUI
 import FirebaseAuth
+import FirebaseFirestore // Required to fetch user full name
+
 struct LeaveReviewView: View {
     let restaurantId: String
     let restaurantName: String // Added this to store restaurant name
     @Environment(\.presentationMode) var presentationMode
     @State private var reviewRating = 0
     @State private var reviewText = ""
+    
     var body: some View {
         NavigationView {
             VStack(alignment: .leading, spacing: 20) {
@@ -56,14 +59,35 @@ struct LeaveReviewView: View {
             })
         }
     }
+
+    //  Updated to fetch full name before submitting the review
     private func submitReview() {
         guard reviewRating > 0, !reviewText.isEmpty else { return }
-        FirebaseService.shared.addReview(
-            restaurantId: restaurantId,
-            restaurantName: restaurantName,
-            rating: reviewRating,
-            comment: reviewText
-        )
-        presentationMode.wrappedValue.dismiss()
+
+        fetchCurrentUserFullName { fullName in
+            FirebaseService.shared.addReview(
+                restaurantId: restaurantId,
+                restaurantName: restaurantName,
+                rating: reviewRating,
+                comment: reviewText,
+                username: fullName  //  This will now match the updated function
+            )
+        }
+    }
+
+    //  Helper to fetch the current user's full name from Firestore
+    private func fetchCurrentUserFullName(completion: @escaping (String) -> Void) {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            completion("Anonymous")
+            return
+        }
+
+        Firestore.firestore().collection("users").document(uid).getDocument { snapshot, error in
+            if let data = snapshot?.data(), let name = data["username"] as? String {
+                completion(name)
+            } else {
+                completion("Anonymous")
+            }
+        }
     }
 }

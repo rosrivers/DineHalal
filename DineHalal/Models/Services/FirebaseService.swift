@@ -3,12 +3,12 @@
 // Created by Joanne on 4/1/25.
 //Edited by Chelsea on 4/27/25
 
-
 import FirebaseFirestore
 import FirebaseAuth
 class FirebaseService {
     static let shared = FirebaseService()
     private let db = Firestore.firestore()
+    
     // Fetch all restaurants
     func fetchAllRestaurants(completion: @escaping ([Restaurant]?, Error?) -> Void) {
         db.collection("restaurants").getDocuments { (snapshot, error) in
@@ -86,16 +86,17 @@ class FirebaseService {
         }
     }
     // Add review for a restaurant
-    func addReview(restaurantId: String, restaurantName: String, rating: Int, comment: String) {
+    func addReview(restaurantId: String, restaurantName: String, rating: Int, comment: String, username: String) {
         guard let user = Auth.auth().currentUser else { return }
         let reviewData: [String: Any] = [
             "id": UUID().uuidString,
             "userId": user.uid,
             "restaurantId": restaurantId,
-            "restaurantName": restaurantName, // Added so user reviews show restaurant name
+            "restaurantName": restaurantName,
             "rating": rating,
             "comment": comment,
-            "date": Timestamp(date: Date())
+            "date": Timestamp(date: Date()),
+            "username": username  
         ]
         // Save in restaurant -> reviews
         db.collection("restaurants")
@@ -133,6 +134,3 @@ class FirebaseService {
             }
     }
 }
-
-
-

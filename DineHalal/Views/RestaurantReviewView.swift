@@ -11,7 +11,6 @@
 import SwiftUI
 import FirebaseAuth
 
-
 struct RestaurantReviewView: View {
     let restaurantId: String
     @Binding var isPresented: Bool
@@ -38,18 +37,8 @@ struct RestaurantReviewView: View {
                         } else {
                             Section(header: Text("User Reviews").font(.headline)) {
                                 ForEach(reviews) { review in
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        HStack(spacing: 2) {
-                                            ForEach(1...5, id: \.self) { index in
-                                                Image(systemName: index <= review.rating ? "star.fill" : "star")
-                                                    .foregroundColor(.yellow)
-                                            }
-                                        }
-                                        Text(review.comment)
-                                            .font(.body)
-                                        Text(review.date, style: .date)
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        UserReviewRow(review: review)
                                         if review.userId == Auth.auth().currentUser?.uid {
                                             Button(role: .destructive) {
                                                 reviewToDelete = review
@@ -65,7 +54,7 @@ struct RestaurantReviewView: View {
                                 }
                             }
                         }
-                        
+
                         // Google Reviews Section
                         if googleReviews.isEmpty {
                             Section(header: Text("Google Reviews").font(.headline)) {
@@ -122,7 +111,7 @@ struct RestaurantReviewView: View {
             }
         }
     }
-    
+
     private func loadReviews() {
         FirebaseService.shared.fetchRestaurantReviews(restaurantId: restaurantId) { reviews, error in
             if let reviews = reviews {
@@ -153,3 +142,28 @@ struct RestaurantReviewView: View {
     }
 }
 
+//new
+struct UserReviewRow: View {
+    let review: Review
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(review.username ?? "Anonymous")
+                    .fontWeight(.semibold)
+                Spacer()
+                Text(review.date, style: .date)
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            HStack(spacing: 2) {
+                ForEach(1...5, id: \.self) { index in
+                    Image(systemName: index <= review.rating ? "star.fill" : "star")
+                        .foregroundColor(.yellow)
+                }
+            }
+            Text(review.comment)
+                .font(.body)
+        }
+    }
+}

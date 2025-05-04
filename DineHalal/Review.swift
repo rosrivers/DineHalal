@@ -15,6 +15,7 @@ struct Review: Identifiable, Decodable {
     var rating: Int
     var comment: String
     var date: Date
+    var username:String?
     
     /// Add CodingKeys enum if needed to map JSON keys to struct properties
     enum CodingKeys: String, CodingKey {
@@ -24,6 +25,7 @@ struct Review: Identifiable, Decodable {
         case rating
         case comment
         case date
+        case username //Firestore decodes it
     }
 }
 
