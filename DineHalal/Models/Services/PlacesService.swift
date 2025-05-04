@@ -88,7 +88,6 @@ class PlacesService: ObservableObject {
                     let newRestaurants = response.results
                     
                     let fiveStars = newRestaurants.filter { $0.rating == 5.0 }
-                    print(" Found \(fiveStars.count) 5-star restaurants:")
                     fiveStars.forEach { print("→ \( $0.name)") }
 
                     var filteredRestaurants = newRestaurants
@@ -220,4 +219,46 @@ class PlacesService: ObservableObject {
             case relativeTimeDescription = "relative_time_description"
         }
     }
+    // MARK: - Fetch Place Details (to get full opening hours)
+
+    func fetchPlaceDetails(for placeID: String, completion: @escaping (Result<Restaurant, Error>) -> Void) {
+        guard let url = GoogleMapConfig.getPlaceDetailsURL(placeId: placeID) else {
+            completion(.failure(NSError(domain: "Invalid URL", code: -1)))
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                DispatchQueue.main.async {
+                    completion(.failure(error))
+                }
+                return
+            }
+
+            guard let data = data else {
+                DispatchQueue.main.async {
+                    completion(.failure(NSError(domain: "No data", code: -1)))
+                }
+                return
+            }
+
+            do {
+                let decoder = JSONDecoder()
+                let response = try decoder.decode(GooglePlaceDetailsRestaurantResponse.self, from: data)
+                DispatchQueue.main.async {
+                    completion(.success(response.result))
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    completion(.failure(error))
+                }
+            }
+        }.resume()
+    }
+
+    // Helper struct to decode detailed Place response
+    private struct GooglePlaceDetailsRestaurantResponse: Codable {
+        let result: Restaurant
+    }
+
 }
