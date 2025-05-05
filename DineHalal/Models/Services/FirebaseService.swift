@@ -5,10 +5,11 @@
 
 import FirebaseFirestore
 import FirebaseAuth
+
 class FirebaseService {
     static let shared = FirebaseService()
     private let db = Firestore.firestore()
-    
+
     // Fetch all restaurants
     func fetchAllRestaurants(completion: @escaping ([Restaurant]?, Error?) -> Void) {
         db.collection("restaurants").getDocuments { (snapshot, error) in
@@ -26,6 +27,7 @@ class FirebaseService {
             completion(restaurants, nil)
         }
     }
+
     // Fetch user favorites
     func fetchUserFavorites(completion: @escaping ([Restaurant]?, Error?) -> Void) {
         guard let userId = Auth.auth().currentUser?.uid else {
@@ -47,6 +49,7 @@ class FirebaseService {
             completion(favorites, nil)
         }
     }
+
     // Fetch user reviews
     func fetchUserReviews(completion: @escaping ([Review]?, Error?) -> Void) {
         guard let userId = Auth.auth().currentUser?.uid else {
@@ -68,6 +71,7 @@ class FirebaseService {
             completion(reviews, nil)
         }
     }
+
     // Fetch reviews for a restaurant
     func fetchRestaurantReviews(restaurantId: String, completion: @escaping ([Review]?, Error?) -> Void) {
         db.collection("restaurants").document(restaurantId).collection("reviews").getDocuments { (snapshot, error) in
@@ -85,30 +89,63 @@ class FirebaseService {
             completion(reviews, nil)
         }
     }
+
     // Add review for a restaurant
     func addReview(restaurantId: String, restaurantName: String, rating: Int, comment: String, username: String) {
         guard let user = Auth.auth().currentUser else { return }
+
+        let reviewId = UUID().uuidString
         let reviewData: [String: Any] = [
-            "id": UUID().uuidString,
+            "id": reviewId,
             "userId": user.uid,
             "restaurantId": restaurantId,
             "restaurantName": restaurantName,
             "rating": rating,
             "comment": comment,
             "date": Timestamp(date: Date()),
-            "username": username  
+            "username": username
         ]
+
         // Save in restaurant -> reviews
         db.collection("restaurants")
             .document(restaurantId)
             .collection("reviews")
-            .addDocument(data: reviewData)
+            .document(reviewId)
+            .setData(reviewData)
+
         // Save in user -> reviews
         db.collection("users")
             .document(user.uid)
             .collection("reviews")
-            .addDocument(data: reviewData)
+            .document(reviewId)
+            .setData(reviewData)
+
+        // Increment restaurant review count
+        db.collection("restaurants")
+            .document(restaurantId)
+            .updateData([
+                "reviewCount": FieldValue.increment(Int64(1))
+            ])
+
+        // Recalculate and update average rating
+        let reviewsRef = db.collection("restaurants")
+            .document(restaurantId)
+            .collection("reviews")
+
+        reviewsRef.getDocuments { snapshot, error in
+            guard let documents = snapshot?.documents else { return }
+
+            let ratings = documents.compactMap { $0["rating"] as? Int }
+            let average = Double(ratings.reduce(0, +)) / Double(max(ratings.count, 1))
+
+            self.db.collection("restaurants")
+                .document(restaurantId)
+                .updateData([
+                    "rating": average
+                ])
+        }
     }
+
     func deleteReview(restaurantId: String, reviewId: String, userId: String) {
         db.collection("restaurants")
             .document(restaurantId)
@@ -121,6 +158,7 @@ class FirebaseService {
                     }
                 }
             }
+
         db.collection("users")
             .document(userId)
             .collection("reviews")
@@ -132,5 +170,34 @@ class FirebaseService {
                     }
                 }
             }
+    }
+
+    func updateReview(restaurantId: String, review: Review) {
+        let db = Firestore.firestore()
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+
+        // Update restaurant review
+        let restaurantReviewRef = db.collection("restaurants").document(restaurantId)
+            .collection("reviews").document(review.id)
+
+        restaurantReviewRef.setData([
+            "rating": review.rating,
+            "comment": review.comment,
+            "date": Timestamp(date: Date()),
+            "username": review.username ?? "Anonymous",
+            "userId": userId
+        ], merge: true)
+
+        // Update user review
+        let userReviewRef = db.collection("users").document(userId)
+            .collection("reviews").document(review.id)
+
+        userReviewRef.setData([
+            "rating": review.rating,
+            "comment": review.comment,
+            "date": Timestamp(date: Date()),
+            "username": review.username ?? "Anonymous",
+            "restaurantId": restaurantId
+        ], merge: true)
     }
 }

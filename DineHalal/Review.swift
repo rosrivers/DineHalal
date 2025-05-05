@@ -1,33 +1,27 @@
-//
 //  Review.swift
 //  Dine Halal
 //
 //  Created by Iman Ikram on 3/11/25.
-/// updated - Joana 
+/// updated - Joana
+/// Updated by Chelsea Bhuiyan 04/27/2025
 
-///Updated by Chelsea Bhuiyan 04/27/2025
-///
 import Foundation
-struct Review: Identifiable, Decodable {
-    var id: String //Changed to match what Firebase is storing
+
+struct Review: Identifiable, Decodable, Equatable {
+    var id: String
     var userId: String
     var restaurantId: String
+    var restaurantName: String  // ← Add this line
     var rating: Int
     var comment: String
     var date: Date
-    var username:String?
+    var username: String?
     
-    /// Add CodingKeys enum if needed to map JSON keys to struct properties
     enum CodingKeys: String, CodingKey {
-        case id
-        case userId
-        case restaurantId
-        case rating
-        case comment
-        case date
-        case username //Firestore decodes it
+        case id, userId, restaurantId, restaurantName, rating, comment, date, username
+    }
+
+    static func == (lhs: Review, rhs: Review) -> Bool {
+        lhs.id == rhs.id
     }
 }
-
-
-

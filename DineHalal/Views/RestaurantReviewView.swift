@@ -1,4 +1,3 @@
-//
 //  RestaurantReviewView.swift
 //  DineHalal
 //
@@ -20,6 +19,9 @@ struct RestaurantReviewView: View {
     @State private var reviewToDelete: Review?
     @State private var googleReviews: [PlacesService.GoogleReview] = []  // Google reviews
 
+    // New edit state
+    @State private var reviewToEdit: Review?
+
     var body: some View {
         NavigationView {
             VStack {
@@ -39,15 +41,27 @@ struct RestaurantReviewView: View {
                                 ForEach(reviews) { review in
                                     VStack(alignment: .leading, spacing: 4) {
                                         UserReviewRow(review: review)
+
                                         if review.userId == Auth.auth().currentUser?.uid {
-                                            Button(role: .destructive) {
-                                                reviewToDelete = review
-                                                showDeleteAlert = true
-                                            } label: {
-                                                Label("Delete", systemImage: "trash")
-                                                    .font(.caption)
-                                                    .foregroundColor(.red)
+                                            HStack(spacing: 12) {
+                                                Button(action: {
+                                                    reviewToEdit = review
+                                                }) {
+                                                    Label("Edit", systemImage: "pencil")
+                                                        .font(.caption)
+                                                        .foregroundColor(.blue)
+                                                }
+
+                                                Button(role: .destructive) {
+                                                    reviewToDelete = review
+                                                    showDeleteAlert = true
+                                                } label: {
+                                                    Label("Delete", systemImage: "trash")
+                                                        .font(.caption)
+                                                        .foregroundColor(.red)
+                                                }
                                             }
+                                            .padding(.top, 4)
                                         }
                                     }
                                     .padding(.vertical, 4)
@@ -105,9 +119,14 @@ struct RestaurantReviewView: View {
             } message: { review in
                 Text("Are you sure you want to delete this review?")
             }
+            .sheet(item: $reviewToEdit) { review in
+                EditReviewView(restaurantId: restaurantId, review: review) {
+                    loadReviews()
+                }
+            }
             .onAppear {
-                loadReviews()          // your app's user reviews
-                fetchGoogleReviews()   // google reviews
+                loadReviews()
+                fetchGoogleReviews()
             }
         }
     }

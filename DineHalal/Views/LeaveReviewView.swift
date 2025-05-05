@@ -1,4 +1,3 @@
-//
 //  LeaveReviewView.swift
 //  DineHalal
 //
@@ -16,7 +15,7 @@ struct LeaveReviewView: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var reviewRating = 0
     @State private var reviewText = ""
-    
+
     var body: some View {
         NavigationView {
             VStack(alignment: .leading, spacing: 20) {
@@ -25,6 +24,7 @@ struct LeaveReviewView: View {
                 Text(restaurantName)
                     .font(.title2)
                     .bold()
+
                 // Rating Picker
                 Picker("Rating", selection: $reviewRating) {
                     ForEach(1...5, id: \.self) { star in
@@ -32,6 +32,7 @@ struct LeaveReviewView: View {
                     }
                 }
                 .pickerStyle(SegmentedPickerStyle())
+
                 // Text Area
                 TextEditor(text: $reviewText)
                     .frame(height: 150)
@@ -40,6 +41,7 @@ struct LeaveReviewView: View {
                             .stroke(Color.gray.opacity(0.3))
                     )
                     .padding(.bottom)
+
                 // Submit Button
                 Button(action: submitReview) {
                     Text("Submit Review")
@@ -50,6 +52,7 @@ struct LeaveReviewView: View {
                         .cornerRadius(8)
                 }
                 .disabled(reviewRating == 0 || reviewText.isEmpty)
+
                 Spacer()
             }
             .padding()
@@ -60,7 +63,7 @@ struct LeaveReviewView: View {
         }
     }
 
-    //  Updated to fetch full name before submitting the review
+    // Updated: fetch full name, then submit and dismiss
     private func submitReview() {
         guard reviewRating > 0, !reviewText.isEmpty else { return }
 
@@ -70,8 +73,11 @@ struct LeaveReviewView: View {
                 restaurantName: restaurantName,
                 rating: reviewRating,
                 comment: reviewText,
-                username: fullName  //  This will now match the updated function
+                username: fullName
             )
+
+            // Dismiss the review screen
+            presentationMode.wrappedValue.dismiss()
         }
     }
 
