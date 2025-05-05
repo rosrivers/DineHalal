@@ -4,6 +4,7 @@
 //
 //  Created by Joanne on 4/1/25.
 //  Edited by Iman Ikram on 4/28/2025
+//  Edited by Rosa on 05/05/25 to preload full opening-hours
 
 import Foundation
 import CoreLocation
@@ -44,8 +45,13 @@ class PlacesService: ObservableObject {
         }
     }
     
-    //accepts completion handler
-    func fetchNearbyRestaurants(latitude: Double, longitude: Double, filter: FilterCriteria? = nil, completion: (() -> Void)? = nil) {
+    // Accepts completion handler
+    func fetchNearbyRestaurants(
+        latitude: Double,
+        longitude: Double,
+        filter: FilterCriteria? = nil,
+        completion: (() -> Void)? = nil
+    ) {
         isLoading = true
         allRestaurants = []
         nextPageToken = nil
@@ -62,19 +68,24 @@ class PlacesService: ObservableObject {
     }
 
     // passes completion through
-    private func fetchRestaurants(from url: URL, using filter: FilterCriteria?, completion: (() -> Void)? = nil) {
+    private func fetchRestaurants(
+        from url: URL,
+        using filter: FilterCriteria?,
+        completion: (() -> Void)? = nil
+    ) {
         URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
             DispatchQueue.main.async {
-                self?.isLoading = false
-                self?.isFetchingNextPage = false
-                self?.isLoadingMore = false
+                guard let self = self else { return }
+                self.isLoading = false
+                self.isFetchingNextPage = false
+                self.isLoadingMore = false
                 
                 defer {
                     completion?() // Always call completion when done
                 }
                 
                 if let error = error {
-                    self?.error = error
+                    self.error = error
                     return
                 }
 
@@ -83,41 +94,55 @@ class PlacesService: ObservableObject {
                 do {
                     let decoder = JSONDecoder()
                     let response = try decoder.decode(PlacesResponse.self, from: data)
-                    self?.nextPageToken = response.nextPageToken
-
-                    let newRestaurants = response.results
-                    
-                    let fiveStars = newRestaurants.filter { $0.rating == 5.0 }
-                    fiveStars.forEach { print("→ \( $0.name)") }
-
-                    var filteredRestaurants = newRestaurants
+                    self.nextPageToken = response.nextPageToken
+                    var newRestaurants = response.results
                     if let filter = filter {
-                        filteredRestaurants = newRestaurants.filter { $0.rating >= filter.rating }
+                        newRestaurants = newRestaurants.filter { $0.rating >= filter.rating }
                     }
-
-                    if let existing = self?.allRestaurants {
-                        self?.allRestaurants = existing + filteredRestaurants
-                    } else {
-                        self?.allRestaurants = filteredRestaurants
+                    self.allRestaurants += newRestaurants
+                    for stub in newRestaurants {
+                        self.fetchPlaceDetails(for: stub.placeId) { result in
+                            if case .success(let full) = result {
+                                DispatchQueue.main.async {
+                                    if let idx = self.allRestaurants.firstIndex(where: { $0.id == full.id }) {
+                                        self.allRestaurants[idx] = full
+                                        let currentList = self.allRestaurants
+                                        let minRating = filter?.rating ?? 0.0
+                                        self.recommendedRestaurants = Array(
+                                            currentList
+                                                .filter { $0.rating >= minRating }
+                                                .sorted(by: { $0.rating > $1.rating })
+                                                .prefix(10)
+                                        )
+                                        self.popularRestaurants = Array(
+                                            currentList
+                                                .filter { $0.rating >= minRating && $0.numberOfRatings > 200 }
+                                                .sorted(by: { $0.numberOfRatings > $1.numberOfRatings })
+                                                .prefix(10)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
-                    
-                    if let allRestaurants = self?.allRestaurants {
-                        let minRating = filter?.rating ?? 0.0
-                        self?.recommendedRestaurants = Array(allRestaurants
+                    let currentList = self.allRestaurants
+                    let minRating = filter?.rating ?? 0.0
+                    self.recommendedRestaurants = Array(
+                        currentList
                             .filter { $0.rating >= minRating }
                             .sorted(by: { $0.rating > $1.rating })
-                            .prefix(10))
-                        
-                        self?.popularRestaurants = Array(allRestaurants
+                            .prefix(10)
+                    )
+                    self.popularRestaurants = Array(
+                        currentList
                             .filter { $0.rating >= minRating && $0.numberOfRatings > 200 }
                             .sorted(by: { $0.numberOfRatings > $1.numberOfRatings })
-                            .prefix(10))
-                        
-                        self?.findVerifiedRestaurants(from: allRestaurants)
-                    }
+                            .prefix(10)
+                    )
+                    self.findVerifiedRestaurants(from: self.allRestaurants)
 
                 } catch {
-                    self?.error = error
+                    self.error = error
                 }
             }
         }.resume()
@@ -126,7 +151,6 @@ class PlacesService: ObservableObject {
     private func findVerifiedRestaurants(from restaurants: [Restaurant]) {
         Task {
             let verifiedRestaurantsLocal = await findVerifiedRestaurantsAsync(from: restaurants)
-            
             await MainActor.run {
                 self.recentlyVerified = verifiedRestaurantsLocal
             }
@@ -136,20 +160,15 @@ class PlacesService: ObservableObject {
     private func findVerifiedRestaurantsAsync(from restaurants: [Restaurant]) async -> [Restaurant] {
         var verifiedRestaurants: [Restaurant] = []
         
-        for restaurant in restaurants {
-            if verifiedRestaurantIDs.contains(restaurant.id) {
-                verifiedRestaurants.append(restaurant)
-            }
+        for restaurant in restaurants where verifiedRestaurantIDs.contains(restaurant.id) {
+            verifiedRestaurants.append(restaurant)
         }
-        
-        for restaurant in restaurants {
-            if !verifiedRestaurantIDs.contains(restaurant.id) {
-                let result = verificationService.verifyRestaurant(restaurant)
-                if result.isVerified {
-                    verifiedRestaurants.append(restaurant)
-                    verifiedRestaurantIDs.insert(restaurant.id)
-                    UserDefaults.standard.set(Array(verifiedRestaurantIDs), forKey: "verifiedRestaurantIDs")
-                }
+        for restaurant in restaurants where !verifiedRestaurantIDs.contains(restaurant.id) {
+            let result = verificationService.verifyRestaurant(restaurant)
+            if result.isVerified {
+                verifiedRestaurants.append(restaurant)
+                verifiedRestaurantIDs.insert(restaurant.id)
+                UserDefaults.standard.set(Array(verifiedRestaurantIDs), forKey: "verifiedRestaurantIDs")
             }
         }
         
@@ -191,9 +210,8 @@ class PlacesService: ObservableObject {
         }.resume()
     }
     
-    
     // MARK: - Models for Google Reviews
-
+    
     struct GooglePlaceDetailsResponse: Codable {
         let result: GooglePlaceDetailsResult
     }
@@ -210,7 +228,7 @@ class PlacesService: ObservableObject {
         let text: String
         let time: Int
         let relativeTimeDescription: String?
-        
+
         enum CodingKeys: String, CodingKey {
             case authorName = "author_name"
             case rating
@@ -219,9 +237,13 @@ class PlacesService: ObservableObject {
             case relativeTimeDescription = "relative_time_description"
         }
     }
-    // MARK: - Fetch Place Details (to get full opening hours)
-
-    func fetchPlaceDetails(for placeID: String, completion: @escaping (Result<Restaurant, Error>) -> Void) {
+    
+    // MARK: - Fetch Place Details (for full opening hours)
+    
+    func fetchPlaceDetails(
+        for placeID: String,
+        completion: @escaping (Result<Restaurant, Error>) -> Void
+    ) {
         guard let url = GoogleMapConfig.getPlaceDetailsURL(placeId: placeID) else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1)))
             return
@@ -260,5 +282,4 @@ class PlacesService: ObservableObject {
     private struct GooglePlaceDetailsRestaurantResponse: Codable {
         let result: Restaurant
     }
-
 }

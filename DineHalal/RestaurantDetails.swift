@@ -112,11 +112,13 @@ struct RestaurantDetails: View {
                         }
                     }
 
-                    HStack {
+                    HStack(alignment: .top) {
                         Image(systemName: "mappin.circle.fill")
                             .foregroundColor(.red)
-                        Text(restaurant.vicinity)
+                        Text(restaurant.address)
                             .foregroundColor(.gray)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
 
                     HStack {
