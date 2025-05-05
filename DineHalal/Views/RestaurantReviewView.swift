@@ -1,4 +1,3 @@
-//
 //  RestaurantReviewView.swift
 //  DineHalal
 //
@@ -11,7 +10,6 @@
 import SwiftUI
 import FirebaseAuth
 
-
 struct RestaurantReviewView: View {
     let restaurantId: String
     @Binding var isPresented: Bool
@@ -20,6 +18,9 @@ struct RestaurantReviewView: View {
     @State private var showDeleteAlert = false
     @State private var reviewToDelete: Review?
     @State private var googleReviews: [PlacesService.GoogleReview] = []  // Google reviews
+
+    // New edit state
+    @State private var reviewToEdit: Review?
 
     var body: some View {
         NavigationView {
@@ -38,34 +39,36 @@ struct RestaurantReviewView: View {
                         } else {
                             Section(header: Text("User Reviews").font(.headline)) {
                                 ForEach(reviews) { review in
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        HStack(spacing: 2) {
-                                            ForEach(1...5, id: \.self) { index in
-                                                Image(systemName: index <= review.rating ? "star.fill" : "star")
-                                                    .foregroundColor(.yellow)
-                                            }
-                                        }
-                                        Text(review.comment)
-                                            .font(.body)
-                                        Text(review.date, style: .date)
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        UserReviewRow(review: review)
+
                                         if review.userId == Auth.auth().currentUser?.uid {
-                                            Button(role: .destructive) {
-                                                reviewToDelete = review
-                                                showDeleteAlert = true
-                                            } label: {
-                                                Label("Delete", systemImage: "trash")
-                                                    .font(.caption)
-                                                    .foregroundColor(.red)
+                                            HStack(spacing: 12) {
+                                                Button(action: {
+                                                    reviewToEdit = review
+                                                }) {
+                                                    Label("Edit", systemImage: "pencil")
+                                                        .font(.caption)
+                                                        .foregroundColor(.blue)
+                                                }
+
+                                                Button(role: .destructive) {
+                                                    reviewToDelete = review
+                                                    showDeleteAlert = true
+                                                } label: {
+                                                    Label("Delete", systemImage: "trash")
+                                                        .font(.caption)
+                                                        .foregroundColor(.red)
+                                                }
                                             }
+                                            .padding(.top, 4)
                                         }
                                     }
                                     .padding(.vertical, 4)
                                 }
                             }
                         }
-                        
+
                         // Google Reviews Section
                         if googleReviews.isEmpty {
                             Section(header: Text("Google Reviews").font(.headline)) {
@@ -116,13 +119,18 @@ struct RestaurantReviewView: View {
             } message: { review in
                 Text("Are you sure you want to delete this review?")
             }
+            .sheet(item: $reviewToEdit) { review in
+                EditReviewView(restaurantId: restaurantId, review: review) {
+                    loadReviews()
+                }
+            }
             .onAppear {
-                loadReviews()          // your app's user reviews
-                fetchGoogleReviews()   // google reviews
+                loadReviews()
+                fetchGoogleReviews()
             }
         }
     }
-    
+
     private func loadReviews() {
         FirebaseService.shared.fetchRestaurantReviews(restaurantId: restaurantId) { reviews, error in
             if let reviews = reviews {
@@ -153,3 +161,28 @@ struct RestaurantReviewView: View {
     }
 }
 
+//new
+struct UserReviewRow: View {
+    let review: Review
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(review.username ?? "Anonymous")
+                    .fontWeight(.semibold)
+                Spacer()
+                Text(review.date, style: .date)
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            HStack(spacing: 2) {
+                ForEach(1...5, id: \.self) { index in
+                    Image(systemName: index <= review.rating ? "star.fill" : "star")
+                        .foregroundColor(.yellow)
+                }
+            }
+            Text(review.comment)
+                .font(.body)
+        }
+    }
+}
