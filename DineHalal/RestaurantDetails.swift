@@ -1,17 +1,16 @@
-
 ///  RestaurantDetails.swift
 ///  Dine Halal
 ///  Created by Iman Ikram and Joana on 3/11/25.
-/// Edited by Chelsea on 4/5/25.
+///  Edited by Chelsea on 4/5/25.
 ///  Further Edited by Chelsea on 4/27/25 to add Leave Review feature and clickable reviews count
-///
+///  Edited by Rosa to add in closing / opening correctly
+
 import SwiftUI
 import MapKit
 import FirebaseAuth
 
-
 struct RestaurantDetails: View {
-    let restaurant: Restaurant
+    @State var restaurant: Restaurant
     @State private var region: MKCoordinateRegion
     @State private var rating: Int = 0
     @State private var review: String = ""
@@ -22,29 +21,20 @@ struct RestaurantDetails: View {
     @State private var verificationResult: VerificationResult?
     @State private var showLeaveReviewSheet = false
     @State private var showAllReviews = false
-    
-    
+
     init(restaurant: Restaurant, verificationService: VerificationService) {
-        self.restaurant = restaurant
+        _restaurant = State(initialValue: restaurant)
         self.verificationService = verificationService
-        // Pre-check the verification status
         _verificationResult = State(initialValue: verificationService.verifyRestaurant(restaurant))
-        // Initialize region
         _region = State(initialValue: MKCoordinateRegion(
-            center: CLLocationCoordinate2D(
-                latitude: restaurant.latitude,
-                longitude: restaurant.longitude
-            ),
-            span: MKCoordinateSpan(
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01
-            )
+            center: CLLocationCoordinate2D(latitude: restaurant.latitude, longitude: restaurant.longitude),
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         ))
     }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // Restaurant photo - use photoReference directly
                 if let photoRef = restaurant.photoReference {
                     GooglePlaceImage(photoReference: photoRef)
                         .aspectRatio(contentMode: .fill)
@@ -60,18 +50,14 @@ struct RestaurantDetails: View {
                                 .foregroundColor(.gray)
                         )
                 }
-                //Resturant info
+
                 VStack(alignment: .leading, spacing: 8) {
-                    //Name and action buttons row
                     HStack {
                         Text(restaurant.name)
                             .font(.title2)
                             .fontWeight(.bold)
-                        //Get directions button
                         Spacer()
-                        Button(action: {
-                            openInGoogleMaps()
-                        }) {
+                        Button(action: { openInGoogleMaps() }) {
                             HStack {
                                 Image(systemName: "location.fill")
                                 Text("Get Directions")
@@ -82,23 +68,18 @@ struct RestaurantDetails: View {
                             .foregroundColor(.white)
                             .cornerRadius(8)
                         }
-                        //favorites button
-                        Button(action: {
-                            favorites.toggleFavorite(restaurant)
-                        }) {
+                        Button(action: { favorites.toggleFavorite(restaurant) }) {
                             Image(systemName: favorites.isFavorite(restaurant) ? "heart.fill" : "heart")
                                 .foregroundColor(favorites.isFavorite(restaurant) ? .red : .gray)
                                 .font(.title2)
                         }
                     }
-                    //rating
+
                     HStack {
                         StarRatingView(rating: restaurant.rating)
                         Text("\(restaurant.rating, specifier: "%.1f")")
                             .foregroundColor(.gray)
-                        Button(action: {
-                            showAllReviews.toggle()
-                        }) {
+                        Button(action: { showAllReviews.toggle() }) {
                             Text("(\(restaurant.numberOfRatings) reviews)")
                                 .font(.subheadline)
                                 .foregroundColor(.blue)
@@ -107,22 +88,17 @@ struct RestaurantDetails: View {
                             RestaurantReviewView(restaurantId: restaurant.id, isPresented: $showAllReviews)
                         }
                     }
-                    // Verification badge - MOVED HERE (replacing $$ signs)
-                    // This is where the $ price indicator used to be
+
                     if let result = verificationResult, result.isVerified {
-                        Button(action: {
-                            showingVerificationDetails = true
-                        }) {
+                        Button(action: { showingVerificationDetails = true }) {
                             HStack(spacing: 4) {
                                 if result.source == .communityVerified {
-                                    // Orange for community verification
                                     Image(systemName: "person.2.fill")
                                         .foregroundColor(.orange)
                                     Text("Community Verified")
                                         .font(.subheadline)
                                         .foregroundColor(.orange)
                                 } else {
-                                    // Green for official verification
                                     Image(systemName: "checkmark.seal.fill")
                                         .foregroundColor(.green)
                                     Text("Verified Halal")
@@ -130,32 +106,44 @@ struct RestaurantDetails: View {
                                         .foregroundColor(.green)
                                 }
                             }
-                            .padding(.vertical, 2)
                         }
                         .sheet(isPresented: $showingVerificationDetails) {
                             VerificationDetailsSheet(result: result, restaurant: restaurant)
                         }
                     }
-                    //Address with icon
-                    HStack {
+
+                    HStack(alignment: .top) {
                         Image(systemName: "mappin.circle.fill")
                             .foregroundColor(.red)
-                        Text(restaurant.vicinity)
+                        Text(restaurant.address)
                             .foregroundColor(.gray)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    //Opening hours with icon
+
                     HStack {
                         Image(systemName: "clock.fill")
                             .foregroundColor(.blue)
-                        Text(restaurant.isOpenNow ? "Open Now" : "Closed")
-                            .foregroundColor(restaurant.isOpenNow ? .green : .red)
+                        if restaurant.isOpenNow, let untilTime = restaurant.openUntilTime {
+                            Text("Open until \(untilTime)")
+                                .foregroundColor(.green)
+                        } else if restaurant.isOpenNow {
+                            Text("Open Now")
+                                .foregroundColor(.green)
+                        } else {
+                            Text("Closed")
+                                .foregroundColor(.red)
+                        }
                     }
                 }
                 .padding(.horizontal)
+
                 Divider()
+
                 Text("Location")
                     .font(.headline)
                     .padding(.horizontal)
+
                 RestaurantMapView(latitude: restaurant.latitude, longitude: restaurant.longitude, name: restaurant.name)
                     .frame(height: 200)
                     .cornerRadius(12)
@@ -244,10 +232,8 @@ struct RestaurantDetails: View {
                     }
                 }
                 Divider()
-                    .padding(.horizontal)
-                Button(action: {
-                    showLeaveReviewSheet.toggle()
-                }) {
+
+                Button(action: { showLeaveReviewSheet.toggle() }) {
                     HStack {
                         Image(systemName: "square.and.pencil")
                         Text("Leave a Review")
@@ -263,11 +249,14 @@ struct RestaurantDetails: View {
                 .sheet(isPresented: $showLeaveReviewSheet) {
                     LeaveReviewView(restaurantId: restaurant.id, restaurantName: restaurant.name)
                 }
+
                 Divider()
+
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Nearby Halal Restaurants")
                         .font(.headline)
                         .padding(.leading)
+
                     if placesService.isLoading {
                         ProgressView("Fetching restaurants...")
                     } else if let error = placesService.error {
@@ -292,9 +281,23 @@ struct RestaurantDetails: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            placesService.fetchNearbyRestaurants(latitude: restaurant.latitude, longitude: restaurant.longitude, filter: nil)
-        }
+                // Fetch place details (for open/close times)
+                placesService.fetchPlaceDetails(for: restaurant.placeId) { result in
+                    switch result {
+                    case .success(let updatedRestaurant):
+                        self.restaurant = updatedRestaurant
+                    case .failure(let error):
+                        print("Error fetching place details: \(error)")
+                    }
+                }
+                
+                placesService.fetchNearbyRestaurants(
+                    latitude: restaurant.latitude,
+                    longitude: restaurant.longitude
+                )
+            }
     }
+
     private func openInGoogleMaps() {
         let destination = "\(restaurant.latitude),\(restaurant.longitude)"
         if let url = URL(string: "https://www.google.com/maps/dir/?api=1&destination=\(destination)&travelmode=driving") {
@@ -390,6 +393,3 @@ struct RestaurantMapView: View {
         return MKCoordinateRegion(center: center, span: span)
     }
 }
-
-
-

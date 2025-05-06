@@ -27,7 +27,6 @@ struct GoogleMapView: UIViewRepresentable {
         }
         
         func mapView(_ mapView: GMSMapView, didTap marker: GMSMarker) -> Bool {
-            print("Tapped restaurant: \(marker.title ?? "")")
             return true
         }
 
@@ -63,8 +62,6 @@ struct GoogleMapView: UIViewRepresentable {
     }
 
     func updateUIView(_ mapView: GMSMapView, context: Context) {
-        print("Updating UIView with", annotations.count, "annotations")
-        
         let currentCenter = mapView.camera.target
         let newCenter = CLLocationCoordinate2D(
             latitude: region.center.latitude,
@@ -81,7 +78,6 @@ struct GoogleMapView: UIViewRepresentable {
     }
 
     private func updateMarkers(mapView: GMSMapView) {
-        print("Updating markers...")
         mapView.clear()
         
         for annotation in annotations {
@@ -91,7 +87,6 @@ struct GoogleMapView: UIViewRepresentable {
             marker.icon = UIImage(named: "halal_pin") ?? GMSMarker.markerImage(with: .brown)
             marker.appearAnimation = .pop
             marker.map = mapView
-            print("Added marker:", marker.title ?? "", "at", marker.position)
         }
     }
 }

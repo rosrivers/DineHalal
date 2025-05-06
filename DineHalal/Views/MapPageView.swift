@@ -95,12 +95,8 @@ struct MapPageView: View {
                 }
 
                 if newAnnotations.map({ $0.coordinate.latitude }) != self.annotations.map({ $0.coordinate.latitude }) ||
-                   newAnnotations.map({ $0.coordinate.longitude }) != self.annotations.map({ $0.coordinate.longitude }) {
-                    self.annotations = newAnnotations
-                    print("Updated annotations:", self.annotations.count)
-                } else {
-                    print("No changes in annotations")
-                }
+                    newAnnotations.map({ $0.coordinate.longitude }) != self.annotations.map({ $0.coordinate.longitude }) {
+                    self.annotations = newAnnotations}
             }
         }
     }
