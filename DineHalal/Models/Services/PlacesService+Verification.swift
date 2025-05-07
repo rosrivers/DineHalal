@@ -1,4 +1,3 @@
-
 ///  PlacesService+Verification.swift
 ///  DineHalal
 ///  Created by Joanne on 4/20/25.
@@ -8,11 +7,11 @@ import Foundation
 import Combine
 import SwiftUI
 import ObjectiveC
-
+import FirebaseFirestore
+import FirebaseAuth
 
 extension PlacesService {
-    // Use static computed properties that return the address of a static variable
-    // This prevents the "exposes internal representation" warnings
+
     private static var verificationServiceAssociationKey = 0
     private static var cancellablesAssociationKey = 0
     private static var verificationResultsAssociationKey = 0
@@ -24,8 +23,7 @@ extension PlacesService {
         
         let newService = VerificationService()
         objc_setAssociatedObject(self, &PlacesService.verificationServiceAssociationKey, newService, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        
-        // Subscribe to changes in verification data
+ 
         newService.objectWillChange.sink { [weak self] _ in
             self?.updateVerificationStatus()
         }
@@ -34,7 +32,6 @@ extension PlacesService {
         return newService
     }
     
-    // Add storage for cancellables
     private var cancellables: Set<AnyCancellable> {
         get {
             if let existing = objc_getAssociatedObject(self, &PlacesService.cancellablesAssociationKey) as? Set<AnyCancellable> {
@@ -48,23 +45,105 @@ extension PlacesService {
             objc_setAssociatedObject(self, &PlacesService.cancellablesAssociationKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
     }
+
+    // Store newly fetched restaurants in Firebase
+    func storeRestaurantsInFirebase() {
+        let db = Firestore.firestore()
+        
+        // Store each restaurant in Firebase
+        for restaurant in allRestaurants {
+            // Get the verification result
+            let result = verificationService.verifyRestaurant(restaurant)
+            
+            // Create complete restaurant data with all fields
+            var restaurantData: [String: Any] = [
+                "name": restaurant.name,
+                "address": restaurant.address,
+                "placeId": restaurant.id,
+                "latitude": restaurant.latitude,
+                "longitude": restaurant.longitude,
+                "rating": restaurant.rating,
+                "numberOfRatings": restaurant.numberOfRatings,
+                "isVerified": result.isVerified,
+                "lastUpdated": FieldValue.serverTimestamp()
+            ]
+            
+            // Add verification source if restaurant is verified
+            if result.isVerified {
+                let sourceString: String
+                switch result.source {
+                case .officialRegistry:
+                    sourceString = "official"
+                case .communityVerified:
+                    sourceString = "community"
+                default:
+                    sourceString = "unknown"
+                }
+                restaurantData["verificationSource"] = sourceString
+            }
+            
+            // Store directly in Firestore
+            db.collection("restaurants").document(restaurant.id)
+                .setData(restaurantData, merge: true) { error in
+                    if let error = error {
+                        print("Error storing restaurant in Firebase: \(error.localizedDescription)")
+                    }
+                }
+        }
+        
+        //print("Stored \(allRestaurants.count) restaurants in Firebase")
+    }
     
     // Update verification status for all restaurants
     func updateVerificationStatus() {
         // Instead of modifying restaurants directly, store verification results in a dictionary
         var verificationResults: [String: VerificationResult] = [:]
+        var verifiedRestaurants: [Restaurant] = [] // Add this line
         
         // Verify all restaurants and store results
         for restaurant in allRestaurants {
             let result = verificationService.verifyRestaurant(restaurant)
             verificationResults[restaurant.id] = result
+            
+            // Add this block to collect verified restaurants
+            if result.isVerified {
+                verifiedRestaurants.append(restaurant)
+                updateFirebaseVerification(restaurant: restaurant, isVerified: true, source: result.source)
+            } else {
+                updateFirebaseVerification(restaurant: restaurant, isVerified: false, source: .notVerified)
+            }
         }
+        
+        // Add this line to update the recentlyVerified array
+        self.recentlyVerified = verifiedRestaurants
         
         // Force UI refresh to reflect new verification data
         self.objectWillChange.send()
         
         // Store the verification results dictionary
         storeVerificationResults(verificationResults)
+    }
+    // Helper to update Firebase verification status
+    private func updateFirebaseVerification(restaurant: Restaurant, isVerified: Bool, source: VerificationSource) {
+        var sourceString = "unknown"
+        
+        if source == .officialRegistry {
+            sourceString = "official"
+        } else if source == .communityVerified {
+            sourceString = "community"
+        } else {
+            sourceString = "none" // For unverified restaurants
+        }
+        
+        FirestoreUtilities.shared.updateRestaurantVerification(
+            restaurantID: restaurant.id,
+            isVerified: isVerified,
+            source: sourceString
+        ) { error in
+            if let error = error {
+                print("Error updating verification in Firebase: \(error.localizedDescription)")
+            }
+        }
     }
     
     // Store verification results using associated objects
@@ -85,6 +164,19 @@ extension PlacesService {
         results[restaurant.id] = verificationService.verifyRestaurant(restaurant)
         storeVerificationResults(results)
         
+        // Record vote in Firebase - FIXED: Direct Auth access
+        if let userID = Auth.auth().currentUser?.uid {
+            FirestoreUtilities.shared.recordRestaurantVerificationVote(
+                restaurantID: restaurant.id,
+                userID: userID,
+                isUpvote: true
+            ) { error in
+                if let error = error {
+                    print("Error recording upvote: \(error.localizedDescription)")
+                }
+            }
+        }
+        
         self.objectWillChange.send()
     }
     
@@ -95,6 +187,19 @@ extension PlacesService {
         var results = getVerificationResults()
         results[restaurant.id] = verificationService.verifyRestaurant(restaurant)
         storeVerificationResults(results)
+        
+        // Record vote in Firebase - FIXED: Direct Auth access
+        if let userID = Auth.auth().currentUser?.uid {
+            FirestoreUtilities.shared.recordRestaurantVerificationVote(
+                restaurantID: restaurant.id,
+                userID: userID,
+                isUpvote: false
+            ) { error in
+                if let error = error {
+                    print("Error recording downvote: \(error.localizedDescription)")
+                }
+            }
+        }
         
         self.objectWillChange.send()
     }
@@ -137,5 +242,10 @@ extension PlacesService {
         storeVerificationResults(updatedResults)
         
         return result
+    }
+    
+    // Check if verification is in progress
+    var isVerifying: Bool {
+        return verificationService.isLoading
     }
 }

@@ -1,8 +1,7 @@
-
 ///  VerificationService.swift
 ///  Dine Halal
 ///  Created by Joanne on 3/19/25.
-///References: Core Data - https://developer.apple.com/documentation/foundation/userdefaults
+///References: Core Data https://developer.apple.com/documentation/foundation/userdefaults
 
 import Foundation
 import Combine
@@ -18,149 +17,161 @@ class VerificationService: ObservableObject {
     /// Community verification data
     @Published private(set) var restaurantVotes: [String: VoteData] = [:]
     
-    /// Debugging properties - just for dubugging
-    private var matchAttemptCount = 0
-    private var successfulMatchCount = 0
-    private var lastFailedMatches: [(name: String, address: String)] = []
+    /// Track if data is loaded and processing state
+    private var isPDFLoaded = false
+    private var isPDFLoading = false
+    
+    /// CSV Parser Service
+    private let csvParserService = CSVParserService()
     
     //MARK: Firestore reference - backend on console
-    private lazy var db: Firestore = { ///Let Firestore be created only when it is first accessed, and not when VerificationService initializes it
+    private lazy var db: Firestore = {
         return Firestore.firestore()
     }()
     
-    /// Initialize the service and load halal data from the PDF
+    /// Initialize the service and load halal data from CSV
     init() {
-        loadHalalData()
         loadSavedVotes()
-    }
-    
-    func loadHalalData() {
-        isLoading = true
-        
+        // Start loading CSV data -
         Task {
-            do {
-                let pdfParserService = PDFParserService()
-                let data = try await pdfParserService.downloadAndParsePDF()
-                
-                await MainActor.run {
-                    self.halalData = data
-                    self.isLoading = false
-                    
-                    // Add test establishments for testing matching
-                    self.addTestEstablishments()
-                }
-            } catch {
-                await MainActor.run {
-                    self.error = error
-                    self.isLoading = false
-                }
-            }
+           await loadHalalDataAsync()
         }
     }
     
-    /// MARK: Enhanced function to update verification status in Firestore
-    private func updateFirestoreVerification(restaurantID: String, isVerified: Bool, source: VerificationSource, confidence: MatchConfidence? = nil) {
+    /// Regular non-blocking function to start CSV loading
+    func loadHalalData() {
+        Task {
+            await loadHalalDataAsync()
+        }
+    }
+    
+    // Async function loads and waits for CSV data
+    @MainActor
+    func loadHalalDataAsync() async {
+        // Prevent concurrent loading attempts
+        if isLoading || isPDFLoaded { return }
+        
+        isLoading = true
+        isPDFLoading = true
+        
+        // Load from CSV - PDF converted to Csv file
+        let data = csvParserService.loadHalalEstablishmentsFromCSV()
+        
+        if !data.isEmpty {
+            self.halalData = data
+            self.isPDFLoaded = true
+        } else {
+            // If CSV fails, fall back to sample data -  not used might delete
+            //self.halalData = csvParserService.loadSampleData()
+            self.isPDFLoaded = !self.halalData.isEmpty
+        }
+        
+        isPDFLoading = false
+        isLoading = false
+    }
+    
+    /// Wait for data to be available - with timeout
+    @MainActor
+    func ensurePDFDataLoaded() async -> Bool {
+        if isPDFLoaded && !halalData.isEmpty {
+            return true
+        }
+        
+        if !isPDFLoading {
+            await loadHalalDataAsync()
+        } else {
+            // Wait a reasonable time for the data to load
+            let maxWaitTimeSeconds = 10.0
+            let startTime = Date()
+            
+            while isPDFLoading && Date().timeIntervalSince(startTime) < maxWaitTimeSeconds {
+                try? await Task.sleep(nanoseconds: 500_000_000) // Wait 0.5 seconds
+            }
+        }
+        
+        // Return true if we have data, false otherwise
+        return isPDFLoaded && !halalData.isEmpty
+    }
+    
+    /// Update verification status in Firestore
+    private func updateFirestoreVerification(restaurantID: String, isVerified: Bool, source: VerificationSource) {
         var data: [String: Any] = ["isVerified": isVerified]
         
-        /// Add source information - proof
-        data["verificationSource"] = source == .officialRegistry ? "official" : "community"
-        
-        // Add confidence level if available (for official verifications)
-        if let confidence = confidence {
-            var confidenceString = "low"
-            switch confidence {
-                case .high: confidenceString = "high"
-                case .medium: confidenceString = "medium"
-                case .low: confidenceString = "low"
-            }
-            data["verificationConfidence"] = confidenceString
+        /// Add source information
+        if source == .officialRegistry {
+            data["verificationSource"] = "official"
+        } else if source == .communityVerified {
+            data["verificationSource"] = "community"
+        } else {
+            // For unverified restaurants
+            data["verificationSource"] = FieldValue.delete()
         }
         
-        // Add timestamp
+        // Add timestamp - not entirely important. meh
         data["lastUpdated"] = FieldValue.serverTimestamp()
         
         // Get document reference
         let documentRef = db.collection("restaurants").document(restaurantID)
         
-        // Check if document exists before updating
-        documentRef.getDocument { (document, error) in
-            if let document = document, document.exists {
-                // Document exists, update it
-                documentRef.updateData(data) { _ in }
-            } else {
-                // Document doesn't exist, create it
-                var newData = data
-                newData["createdAt"] = FieldValue.serverTimestamp()
-                documentRef.setData(newData) { _ in }
+        // Use setData with merge instead of updateData
+        documentRef.setData(data, merge: true) { [weak self] error in
+            if error == nil {
+                // Only try to delete the confidence field if we're setting to unverified
+                if source == .notVerified {
+                    documentRef.updateData(["verificationConfidence": FieldValue.delete()]) { error in
+                        
+                    }
+                }
             }
         }
     }
     
     /// Function to verify if a restaurant is halal certified
     func verifyRestaurant(_ restaurant: Restaurant) -> VerificationResult {
-        matchAttemptCount += 1
-        
-        /// First try direct match for test establishments
-        if let directMatch = directTestMatch(restaurant: restaurant) {
-            successfulMatchCount += 1
+        // If data is not yet loaded, load
+        if !isPDFLoaded {
+            Task {
+                let dataLoaded = await ensurePDFDataLoaded()
+                if dataLoaded {
+                    // This will update the Firebase status when data loads, but we can't
+                    // immediately update the UI since we've already returned - get back to this later.
+                    _ = findExactMatch(for: restaurant)
+                }
+            }
             
-            //MARK: Update Firestore when direct match is found
-            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true, source: .officialRegistry, confidence: .high)
+            // Return community verification if available, otherwise not verified
+            if let voteData = restaurantVotes[restaurant.id], voteData.isConsideredVerified() {
+                return VerificationResult(
+                    isVerified: true,
+                    establishment: nil,
+                    source: .communityVerified,
+                    voteData: voteData
+                )
+            }
             
             return VerificationResult(
-                isVerified: true,
-                establishment: directMatch,
-                source: .officialRegistry,
-                matchConfidence: .high
+                isVerified: false,
+                establishment: nil,
+                source: .notVerified,
+                voteData: restaurantVotes[restaurant.id]
             )
         }
         
-        // Find best match using new algorithm - confidence algo 2x
-        let (bestMatch, confidence, _) = findBestMatch(for: restaurant)
-        
-        // If we have a match
-        if let establishment = bestMatch, confidence >= 0.15 { // We detect matches at 0.15, but don't necessarily verify them
-            // Determine the confidence level
-            let matchConfidence: MatchConfidence
-            if confidence >= 0.5 {
-                matchConfidence = .high
-            } else if confidence >= 0.3 {
-                matchConfidence = .medium
-            } else {
-                matchConfidence = .low
-            }
+        // If data is loaded, check for official match
+        if let match = findExactMatch(for: restaurant) {
+            // Update Firestore when direct match is found
+            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true, source: .officialRegistry)
             
-            // Only consider medium and high confidence as officially verified
-            if confidence >= 0.3 {
-                successfulMatchCount += 1
-                
-                //MARK: Update Firestore when a good match is found
-                updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true, source: .officialRegistry, confidence: matchConfidence)
-                
-                return VerificationResult(
-                    isVerified: true,
-                    establishment: establishment,
-                    source: .officialRegistry,
-                    matchConfidence: matchConfidence
-                )
-            } else {
-                // Low confidence matches are NOT considered verified
-                // Store as a failed match for debugging
-                if lastFailedMatches.count < 5 {
-                    lastFailedMatches.append((name: restaurant.name, address: restaurant.vicinity))
-                }
-            }
-        } else {
-            // No match found at all
-            // Store failed match info for debugging
-            if lastFailedMatches.count < 5 {
-                lastFailedMatches.append((name: restaurant.name, address: restaurant.vicinity))
-            }
+            return VerificationResult(
+                isVerified: true,
+                establishment: match,
+                source: .officialRegistry
+            )
         }
         
         // Check community verification
         if let voteData = restaurantVotes[restaurant.id], voteData.isConsideredVerified() {
-            //MARK: Update Firestore when community verification threshold is met
+            // Update Firestore when community verification threshold is met
             updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true, source: .communityVerified)
             
             return VerificationResult(
@@ -179,145 +190,167 @@ class VerificationService: ObservableObject {
         )
     }
     
-    /// Function to match a restaurant with the halal data (exact match)
-    private func matchEstablishment(name: String, address: String) -> HalalEstablishment? {
-        return halalData.first { establishment in
-            isSimilarName(establishment.name, name) &&
-            isSimilarAddress(establishment.address, address)
-        }
-    }
-    
-    /// Function to match just by name with fuzzy matching
-    private func fuzzyMatchByName(name: String) -> HalalEstablishment? {
-        return halalData.first { establishment in
-            isSimilarName(establishment.name, name, threshold: 0.15) // SUPER OPTIMIZED: Consistent threshold
-        }
-    }
-    
-    /// Enhanced name similarity check - make thresholds strict to make sure name matches exactly??? maybe just maybe
-    private func isSimilarName(_ name1: String, _ name2: String, threshold: Double = 0.15) -> Bool { // SUPER OPTIMIZED: Consistent threshold
-        // Clean and normalize names
-        let cleanName1 = normalizeEstablishmentName(name1)
-        let cleanName2 = normalizeEstablishmentName(name2)
-        
-        // Exact match check
-        if cleanName1 == cleanName2 {
-            return true
+    /// Find exact match according to both strict nameing and address creteria
+    func findExactMatch(for restaurant: Restaurant) -> HalalEstablishment? {
+        // IMPORTANT: Early return if data is empty to prevent the infinite loop
+        if halalData.isEmpty {
+            return nil
         }
         
-        // Contains check - more relaxed
-        if cleanName1.contains(cleanName2) || cleanName2.contains(cleanName1) {
-            return true
-        }
+        // Get restaurant details
+        let restaurantName = restaurant.name
+        let restaurantAddress = restaurant.address.isEmpty ? restaurant.vicinity : restaurant.address
         
-        /// SUPER OPTIMIZED: Special case for borough matches
-        let boroughs = ["brooklyn", "queens", "bronx", "manhattan", "staten island",]
-        for borough in boroughs {
-            if cleanName1.contains(borough) && cleanName2.contains(borough) {
-                if (cleanName1.contains(cleanName2.replacingOccurrences(of: borough, with: "").trimmingCharacters(in: .whitespacesAndNewlines)) ||
-                    cleanName2.contains(cleanName1.replacingOccurrences(of: borough, with: "").trimmingCharacters(in: .whitespacesAndNewlines))) {
-                    return true
+        // 1: check strict name and address matching
+        for establishment in halalData {
+            // Check name match
+            if areNamesEqual(restaurantName, establishment.name) {
+                // Check address match
+                if areAddressesRelated(restaurantAddress, establishment.address) {
+                    return establishment
                 }
             }
         }
         
-        /// Word overlap check - this handles things like word order differences
-        let words1 = Set(cleanName1.components(separatedBy: " "))
-        let words2 = Set(cleanName2.components(separatedBy: " "))
-        
-        /// SUPER OPTIMIZED: First-word matching for halal restaurants if not common term
-        let commonTerms = ["halal", "restaurant", "food", "kitchen", "grill", "cafe", "deli", "the", "and", "of", "inc", "corp", "llc"]
-        
-        if let firstWord1 = words1.first?.lowercased(),
-           let firstWord2 = words2.first?.lowercased(),
-           !commonTerms.contains(firstWord1) &&
-           !commonTerms.contains(firstWord2) &&
-           firstWord1 == firstWord2 {
-            return true
+        //similar name match with strong address matching
+        for establishment in halalData {
+            if areNamesSimilar(restaurantName, establishment.name) {
+                if areAddressesStreetMatch(restaurantAddress, establishment.address) {
+                    return establishment
+                }
+            }
         }
         
-        /// OPTIMIZED: Special case for single-word restaurant names
-        if (words1.count == 1 || words2.count == 1) &&
-           calculateSimilarity(cleanName1, cleanName2) > 0.5 {
-            return true
+        // name/adress/zip code match
+        for establishment in halalData {
+            // Check if names share significant keywords
+            if shareSignificantKeywords(restaurantName, establishment.name) {
+                // With keyword matching, require zip code match for safety
+                if haveMatchingZipCodes(restaurantAddress, establishment.address) {
+                    return establishment
+                }
+            }
         }
         
-        // Word overlap check
-        let commonWords = words1.intersection(words2)
-        
-        // Filter out common words like "halal", "restaurant", etc.
-        let significantCommonWords = commonWords.filter { !commonTerms.contains($0.lowercased()) }
-        
-        if significantCommonWords.count >= 1 {
-            return true
-        }
-        
-        /// Levenshtein similarity as last resort
-        let similarity = calculateSimilarity(cleanName1, cleanName2)
-        return similarity >= threshold
+        return nil
     }
     
-    /// Enhanced address similarity check
-    private func isSimilarAddress(_ address1: String, _ address2: String) -> Bool {
-        let cleanAddress1 = normalizeAddress(address1)
-        let cleanAddress2 = normalizeAddress(address2)
+    
+    // MARK: - Verify Places API Results Directly
+    
+    /// Verify an array of restaurants from Places API directly
+    func verifyPlacesAPIRestaurants(_ restaurants: [Restaurant]) -> [String: VerificationResult] {
+        var results: [String: VerificationResult] = [:]
         
-        // Exact match
-        if cleanAddress1 == cleanAddress2 {
+        // Make sure data is loaded first
+        if !isPDFLoaded {
+            Task {
+                let _ = await ensurePDFDataLoaded()
+                // Update the results when data becomes available
+                let updatedResults = self.verifyPlacesAPIRestaurants(restaurants)
+                // Post a notification that results are ready - not needed might delete
+                NotificationCenter.default.post(name: Notification.Name("HalalVerificationResultsUpdated"),
+                                              object: nil,
+                                              userInfo: ["results": updatedResults])
+            }
+            
+            // Return empty results for now
+            return results
+        }
+        
+        // Data is loaded, check each restaurant
+        for restaurant in restaurants {
+            // Check for official match
+            if let match = findExactMatch(for: restaurant) {
+                results[restaurant.id] = VerificationResult(
+                    isVerified: true,
+                    establishment: match,
+                    source: .officialRegistry
+                )
+                
+                // Also update Firestore
+                updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true, source: .officialRegistry)
+            }
+            // Check for community verification
+            else if let voteData = restaurantVotes[restaurant.id], voteData.isConsideredVerified() {
+                results[restaurant.id] = VerificationResult(
+                    isVerified: true,
+                    establishment: nil,
+                    source: .communityVerified,
+                    voteData: voteData
+                )
+            }
+            // Not verified
+            else {
+                results[restaurant.id] = VerificationResult(
+                    isVerified: false,
+                    establishment: nil,
+                    source: .notVerified,
+                    voteData: restaurantVotes[restaurant.id]
+                )
+            }
+        }
+        
+        return results
+    }
+    
+    // MARK
+    
+    /// Check if two names are effectively equal
+    private func areNamesEqual(_ name1: String, _ name2: String) -> Bool {
+        let n1 = normalizeText(name1)
+        let n2 = normalizeText(name2)
+        
+        return n1 == n2 || n1.contains(n2) || n2.contains(n1)
+    }
+    
+    /// Check if two names are similar
+    private func areNamesSimilar(_ name1: String, _ name2: String) -> Bool {
+        let n1 = normalizeText(name1)
+        let n2 = normalizeText(name2)
+        
+        // Direct match
+        if n1 == n2 || n1.contains(n2) || n2.contains(n1) {
             return true
         }
         
-        // Extract street numbers and names
-        if let street1 = extractStreetInfo(from: cleanAddress1),
-           let street2 = extractStreetInfo(from: cleanAddress2) {
-            if street1 == street2 {
+        // Remove "The" prefix and check again
+        let n1NoThe = n1.hasPrefix("the ") ? String(n1.dropFirst(4)) : n1
+        let n2NoThe = n2.hasPrefix("the ") ? String(n2.dropFirst(4)) : n2
+        
+        if n1NoThe == n2NoThe {
+            return true
+        }
+        
+        // Check if one name is the beginning of the other
+        if n1.count > 5 && n2.count > 5 {
+            if n1.hasPrefix(String(n2.prefix(5))) || n2.hasPrefix(String(n1.prefix(5))) {
                 return true
             }
         }
         
-        // Check for street number match (most reliable part of address)
-        let number1 = extractStreetNumber(from: cleanAddress1)
-        let number2 = extractStreetNumber(from: cleanAddress2)
+        return false
+    }
+    
+    /// Check if two names share significant keywords
+    private func shareSignificantKeywords(_ name1: String, _ name2: String) -> Bool {
+        let n1 = normalizeText(name1)
+        let n2 = normalizeText(name2)
         
-        if let num1 = number1, let num2 = number2, num1 == num2 {
-            // Same building number, now check if street names have overlap
-            let streetName1 = extractStreetName(from: cleanAddress1)
-            let streetName2 = extractStreetName(from: cleanAddress2)
-            
-            if let street1 = streetName1, let street2 = streetName2 {
-                // Check if one street name contains the other
-                if street1.contains(street2) || street2.contains(street1) {
-                    return true
-                }
-                
-                // Check if they share significant words
-                let words1 = Set(street1.components(separatedBy: " "))
-                let words2 = Set(street2.components(separatedBy: " "))
-                let commonWords = words1.intersection(words2)
-                
-                // If there's at least one significant matching word (not "st", "ave", etc.)
-                let insignificantWords = ["st", "street", "ave", "avenue", "rd", "road", "blvd", "boulevard"]
-                let significantCommonWords = commonWords.filter { !insignificantWords.contains($0) }
-                
-                if significantCommonWords.count > 0 {
-                    return true
-                }
-            }
-        }
+        let words1 = n1.split(separator: " ")
+        let words2 = n2.split(separator: " ")
         
-        // OPTIMIZED: Check for ZIP code match as a strong signal on its own
-        let zip1 = extractZipCode(from: cleanAddress1)
-        let zip2 = extractZipCode(from: cleanAddress2)
-        if let z1 = zip1, let z2 = zip2, z1 == z2 {
-            return true
-        }
+        // Ignore common words
+        let commonWords = ["the", "and", "of", "in", "halal", "food", "restaurant"]
         
-        // SUPER OPTIMIZED: Check for borough match
-        let boroughs = ["brooklyn", "queens", "bronx", "manhattan", "staten island"]
-        for borough in boroughs {
-            if cleanAddress1.contains(borough) && cleanAddress2.contains(borough) {
-                // If same borough and addresses have some similarity
-                if calculateSimilarity(cleanAddress1, cleanAddress2) > 0.3 {
+        // Look for significant keywords (longer than 3 letters and not in common words)
+        let keywords1 = words1.filter { $0.count > 3 && !commonWords.contains(String($0)) }
+        let keywords2 = words2.filter { $0.count > 3 && !commonWords.contains(String($0)) }
+        
+        // Check if they share any significant keywords
+        for word1 in keywords1 {
+            for word2 in keywords2 {
+                if word1 == word2 {
                     return true
                 }
             }
@@ -326,38 +359,79 @@ class VerificationService: ObservableObject {
         return false
     }
     
-    /// Normalize establishment name
-    private func normalizeEstablishmentName(_ name: String) -> String {
-        var result = name.lowercased()
+    /// Check if addresses are related (more flexible)
+    private func areAddressesRelated(_ addr1: String, _ addr2: String) -> Bool {
+        // Try different matching strategies
+        
+        // 1. Standard address comparison
+        if normalizeAddress(addr1).contains(normalizeAddress(addr2)) ||
+           normalizeAddress(addr2).contains(normalizeAddress(addr1)) {
+            return true
+        }
+        
+        let components1 = extractAddressComponents(from: addr1)
+        let components2 = extractAddressComponents(from: addr2)
+        
+        // ZIP code matching
+        if let zip1 = components1.zip, let zip2 = components2.zip, zip1 == zip2 {
+            return true
+        }
+        
+        // Street number + street name matching
+        if let num1 = components1.number, let num2 = components2.number,
+           let street1 = components1.street, let street2 = components2.street,
+           num1 == num2 && (street1.contains(street2) || street2.contains(street1)) {
+            return true
+        }
+        
+        return false
+    }
+    
+    /// Check if addresses share the same street (number + name)
+    private func areAddressesStreetMatch(_ addr1: String, _ addr2: String) -> Bool {
+        let components1 = extractAddressComponents(from: addr1)
+        let components2 = extractAddressComponents(from: addr2)
+        
+        if let num1 = components1.number, let num2 = components2.number, num1 == num2 {
+            // Street number match is a strong indicator - to be officially verified.
+            return true
+        }
+        
+        return false
+    }
+    
+    /// Check if addresses have matching ZIP codes
+    private func haveMatchingZipCodes(_ addr1: String, _ addr2: String) -> Bool {
+        let components1 = extractAddressComponents(from: addr1)
+        let components2 = extractAddressComponents(from: addr2)
+        
+        if let zip1 = components1.zip, let zip2 = components2.zip, zip1 == zip2 {
+            return true
+        }
+        
+        return false
+    }
+    
+    /// Normalize text by removing extra spaces and standardizing capitalization
+    private func normalizeText(_ text: String) -> String {
+        let normalized = text.lowercased()
             .replacingOccurrences(of: ".", with: "")
             .replacingOccurrences(of: ",", with: "")
             .replacingOccurrences(of: "&", with: "and")
             .replacingOccurrences(of: "-", with: " ")
             .replacingOccurrences(of: "'", with: "")
             .replacingOccurrences(of: "\"", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
         
-        // SUPER OPTIMIZED: Remove location indicators that might differ
-        result = result
-            .replacingOccurrences(of: " ny", with: "")
-            .replacingOccurrences(of: " nyc", with: "")
-            .replacingOccurrences(of: " new york", with: "")
-            
         // Remove common company suffixes
-        let suffixes = [" inc", " corp", " llc", " co", " company", " corporation", " restaurant", " kitchen", " halal", " food"]
+        let suffixes = [" inc", " corp", " llc", " co", " company", " corporation"]
+        var result = normalized
         for suffix in suffixes {
             if result.hasSuffix(suffix) {
                 result = String(result.dropLast(suffix.count))
             }
         }
         
-        // Remove common words that don't help with matching
-        let commonWords = [" the ", " and ", " of ", " a ", " an "]
-        for word in commonWords {
-            result = result.replacingOccurrences(of: word, with: " ")
-        }
-        
-        // Clean up extra spaces
+        // Remove extra spaces
         while result.contains("  ") {
             result = result.replacingOccurrences(of: "  ", with: " ")
         }
@@ -365,12 +439,11 @@ class VerificationService: ObservableObject {
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
-    /// Normalize address
+    /// Normalize address specifically
     private func normalizeAddress(_ address: String) -> String {
         var result = address.lowercased()
             .replacingOccurrences(of: ",", with: " ")
             .replacingOccurrences(of: ".", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Standardize street types
         let streetTypes: [(full: String, abbr: String)] = [
@@ -402,14 +475,17 @@ class VerificationService: ObservableObject {
         
         for (full, abbr) in directions {
             result = result.replacingOccurrences(of: " \(full) ", with: " \(abbr) ")
-            
-            // Also handle cases like "W.125th" or "W 125th"
-            if result.contains("\(full) ") {
-                result = result.replacingOccurrences(of: "\(full) ", with: "\(abbr) ")
-            }
+            result = result.replacingOccurrences(of: "\(full) ", with: "\(abbr) ")
         }
         
-        // Clean up extra spaces
+        // Handle New York variations
+        result = result.replacingOccurrences(of: " ny ", with: " new york ")
+        result = result.replacingOccurrences(of: " nyc", with: " new york")
+        if result.hasSuffix(" ny") {
+            result = result.replacingOccurrences(of: " ny", with: " new york")
+        }
+        
+        // Remove extra spaces
         while result.contains("  ") {
             result = result.replacingOccurrences(of: "  ", with: " ")
         }
@@ -417,7 +493,42 @@ class VerificationService: ObservableObject {
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
-    /// Extract just the street number
+    /// Extract address components for structured comparison
+    private func extractAddressComponents(from address: String) -> (number: String?, street: String?, zip: String?) {
+        // Extract street number
+        let streetNumber = extractStreetNumber(from: address)
+        
+        // Extract street name
+        let streetName = extractStreetName(from: address)
+        
+        // Extract ZIP code
+        let zipCode = extractZipCode(from: address)
+        
+        return (streetNumber, streetName, zipCode)
+    }
+    
+    /// Compare address components with more flexibility
+    private func doAddressComponentsMatch(_ components1: (number: String?, street: String?, zip: String?),
+                                         _ components2: (number: String?, street: String?, zip: String?)) -> Bool {
+        // If both have ZIP codes and they match, consider it a match
+        if let zip1 = components1.zip, let zip2 = components2.zip, zip1 == zip2 {
+            return true
+        }
+        
+        // If both have street numbers and they match, it's a strong indicator
+        let hasStreetNumberMatch = components1.number != nil && components2.number != nil && components1.number == components2.number
+        
+        // If both have street names, check if they match or if one contains the other
+        var hasStreetMatch = false
+        if let street1 = components1.street, let street2 = components2.street {
+            hasStreetMatch = street1 == street2 || street1.contains(street2) || street2.contains(street1)
+        }
+        
+        // For a match, require street number match or street name match
+        return hasStreetNumberMatch || hasStreetMatch
+    }
+    
+    /// Extract street number
     private func extractStreetNumber(from address: String) -> String? {
         let pattern = "^\\d+"
         if let regex = try? NSRegularExpression(pattern: pattern) {
@@ -430,9 +541,8 @@ class VerificationService: ObservableObject {
         return nil
     }
     
-    /// Extract just the street name without the number
+    /// Extract street name
     private func extractStreetName(from address: String) -> String? {
-        // Skip the number at the beginning
         if let regex = try? NSRegularExpression(pattern: "^\\d+\\s+(.+?)(?:,|$)") {
             let range = NSRange(location: 0, length: address.count)
             if let match = regex.firstMatch(in: address, range: range),
@@ -444,11 +554,10 @@ class VerificationService: ObservableObject {
         return nil
     }
     
-    /// Helper function to extract street information from an address
-    private func extractStreetInfo(from address: String) -> String? {
-        // Match pattern like "123 Main St" - get the whole thing
-        let pattern = "\\d+\\s+[\\w\\s]+(st|ave|rd|dr|ln|blvd|pl|ct)"
-        if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]),
+    /// Extract ZIP code
+    private func extractZipCode(from address: String) -> String? {
+        let pattern = "\\b\\d{5}(?:-\\d{4})?\\b" // US ZIP code pattern
+        if let regex = try? NSRegularExpression(pattern: pattern),
            let match = regex.firstMatch(in: address, options: [], range: NSRange(location: 0, length: address.count)),
            let range = Range(match.range, in: address) {
             return String(address[range])
@@ -456,201 +565,7 @@ class VerificationService: ObservableObject {
         return nil
     }
     
-    /// Calculate simple string similarity (Levenshtein distance based)
-    private func calculateSimilarity(_ s1: String, _ s2: String) -> Double {
-        let empty = [Int](repeating: 0, count: s2.count + 1)
-        var last = [Int](0...s2.count)
-        
-        for (i, c1) in s1.enumerated() {
-            var current = [i + 1] + empty
-            for (j, c2) in s2.enumerated() {
-                current[j + 1] = c1 == c2 ? last[j] : min(last[j], last[j + 1], current[j]) + 1
-            }
-            last = current
-        }
-        
-        let maxLength = max(s1.count, s2.count)
-        guard maxLength > 0 else { return 1.0 }
-        
-        let distance = Double(last[s2.count])
-        return 1.0 - (distance / Double(maxLength))
-    }
     
-    /// Extract ZIP code from address
-    private func extractZipCode(from address: String) -> String? {
-        // Pattern for US ZIP codes (5 digits, optionally followed by hyphen and 4 digits)
-        let pattern = "\\b\\d{5}(?:-\\d{4})?\\b"
-        if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: address, range: NSRange(address.startIndex..., in: address)),
-           let range = Range(match.range, in: address) {
-            return String(address[range])
-        }
-        return nil
-    }
-    
-    /// Address-specific similarity calculation
-    private func calculateAddressSimilarity(_ address1: String, _ address2: String) -> Double {
-        // Handle nil or empty addresses
-        guard !address1.isEmpty && !address2.isEmpty else {
-            return 0.0
-        }
-        
-        // Extract street numbers
-        let number1 = extractStreetNumber(from: address1)
-        let number2 = extractStreetNumber(from: address2)
-        
-        // Extract street names
-        let street1 = extractStreetName(from: address1)?.lowercased()
-        let street2 = extractStreetName(from: address2)?.lowercased()
-        
-        // Extract zip codes
-        let zip1 = extractZipCode(from: address1)
-        let zip2 = extractZipCode(from: address2)
-        
-        var score = 0.0
-        
-        // Street number match is a strong signal
-        if let num1 = number1, let num2 = number2, num1 == num2 {
-            score += 0.6
-        }
-        
-        // Street name match
-        if let s1 = street1, let s2 = street2 {
-            if s1 == s2 {
-                score += 0.3
-            } else if s1.contains(s2) || s2.contains(s1) {
-                score += 0.2
-            } else {
-                // Check word overlap
-                let words1 = Set(s1.split(separator: " ").map { String($0) })
-                let words2 = Set(s2.split(separator: " ").map { String($0) })
-                let commonWords = words1.intersection(words2)
-                
-                if !commonWords.isEmpty {
-                    score += 0.1 * Double(commonWords.count)
-                }
-            }
-        }
-        
-        // Zip code match
-        if let z1 = zip1, let z2 = zip2, z1 == z2 {
-            score += 0.3 // SUPER OPTIMIZED: Increased weight for ZIP match
-        }
-        
-        // SUPER OPTIMIZED: Check for same borough
-        let boroughs = ["brooklyn", "queens", "bronx", "manhattan", "staten island"]
-        for borough in boroughs {
-            if address1.contains(borough) && address2.contains(borough) {
-                score += 0.1
-                break
-            }
-        }
-        
-        return min(1.0, score)
-    }
-    
-    /// Extract keywords from a name (removing common words)
-    private func extractKeywords(from text: String) -> Set<String> {
-        let words = text.lowercased().components(separatedBy: .whitespacesAndNewlines)
-        let commonWords = ["the", "and", "of", "a", "an", "in", "on", "at", "&", "inc", "llc", "corp"]
-        
-        return Set(words.filter { word in
-            !commonWords.contains(word) && word.count > 2
-        })
-    }
-    
-    
-    /// Enhanced matching with better thresholds for both name and address - Subject to change for testing.
-    func findBestMatch(for restaurant: Restaurant) -> (HalalEstablishment?, Double, String) {
-        let restaurantName = normalizeEstablishmentName(restaurant.name)
-        let restaurantAddr = normalizeAddress(restaurant.vicinity)
-        
-        var bestMatch: HalalEstablishment? = nil
-        var bestScore = 0.0
-        var matchReason = ""
-        
-        for establishment in halalData {
-            let establishmentName = normalizeEstablishmentName(establishment.name)
-            let establishmentAddr = normalizeAddress(establishment.address)
-            
-            // Calculate name similarity
-            let nameSimilarity = calculateSimilarity(restaurantName, establishmentName)
-            
-            // Calculate address similarity
-            let addressSimilarity = calculateAddressSimilarity(restaurantAddr, establishmentAddr)
-            
-            // Require BOTH name and address to meet minimum thresholds
-            if nameSimilarity < 0.3 || addressSimilarity < 0.2 {
-                continue // Skip this match if either falls below minimum
-            }
-          
-            
-            // SUPER OPTIMIZED: More weight on name matching (85/20)-make address similarity more strictier
-            let score = (nameSimilarity * 0.85) + (addressSimilarity * 0.2)
-            
-            // If this is our best match so far
-            if score > bestScore && score > 0.15 { // SUPER OPTIMIZED: Consistent threshold
-                bestScore = score
-                bestMatch = establishment
-                
-                let namePercent = Int(nameSimilarity * 100)
-                let addrPercent = Int(addressSimilarity * 100)
-                matchReason = "Name match: \(namePercent)%, Address match: \(addrPercent)%"
-            }
-        }
-        
-        return (bestMatch, bestScore, matchReason)
-    }
-    
-    /// Simple direct match check
-    private func directTestMatch(restaurant: Restaurant) -> HalalEstablishment? {
-        // Try direct name match first
-        return halalData.first(where: {
-            $0.name.lowercased() == restaurant.name.lowercased() ||
-            ($0.name.contains(restaurant.name) || restaurant.name.contains($0.name))
-        })
-    }
-    
-    /// Add test establishments for debugging
-    func addTestEstablishments() {
-        let testEstablishments = [
-            HalalEstablishment(
-                id: UUID(),
-                name: "Halal Eats",
-                address: "89-25 Queens Blvd, Queens",  // Exact format as from Google
-                certificationType: "Halal Certified",
-                verificationDate: Date(),
-                registrationNumber: "NY-TEST-1"
-            ),
-            HalalEstablishment(
-                id: UUID(),
-                name: "Sharif's Famous",  // Exact name as returned by Google
-                address: "W 31st St &, Broadway, New York",  // Exact format with comma placement
-                certificationType: "Halal Certified",
-                verificationDate: Date(),
-                registrationNumber: "NY-TEST-2"
-            ),
-            HalalEstablishment(
-                id: UUID(),
-                name: "ZAMZAM HALAL - زمزم حلال",  // Exact with Arabic characters
-                address: "102 Saratoga Ave, Brooklyn",
-                certificationType: "Halal Certified",
-                verificationDate: Date(),
-                registrationNumber: "NY-TEST-3"
-            ),
-            HalalEstablishment(
-                id: UUID(),
-                name: "Halal Bros Grill Queens Village",
-                address: "218-74 Hempstead Ave, Queens Village",
-                certificationType: "Halal Certified",
-                verificationDate: Date(),
-                registrationNumber: "NY-TEST-4"
-            )
-        ]
-        
-        // Add to existing data
-        halalData.append(contentsOf: testEstablishments)
-    }
     
     // MARK: - Community Verification Methods
     
@@ -661,7 +576,7 @@ class VerificationService: ObservableObject {
         restaurantVotes[restaurant.id] = currentVotes
         saveVotes()
         
-        // ADDED: Check if the restaurant now meets verification threshold
+        // Check if the restaurant now meets verification threshold
         if currentVotes.isConsideredVerified() {
             updateFirestoreVerification(restaurantID: restaurant.id, isVerified: true, source: .communityVerified)
         }
@@ -674,14 +589,14 @@ class VerificationService: ObservableObject {
         restaurantVotes[restaurant.id] = currentVotes
         saveVotes()
         
-        // ADDED: Check if verification status needs to be revised
+        // Check if verification status needs to be revised
         if let oldVotes = restaurantVotes[restaurant.id],
            oldVotes.isConsideredVerified() && !currentVotes.isConsideredVerified() {
-            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: false, source: .communityVerified)
+            updateFirestoreVerification(restaurantID: restaurant.id, isVerified: false, source: .notVerified)
         }
     }
     
-    /// Save votes to UserDefaults - Userdefaults: a class that allows you to store small amounts of data persistently across app launches. eg: user preferences.
+    /// Save votes to UserDefaults
     private func saveVotes() {
         let encodedData = try? JSONEncoder().encode(restaurantVotes)
         UserDefaults.standard.set(encodedData, forKey: "restaurantHalalVotes")
@@ -710,34 +625,24 @@ struct VoteData: Codable {
     }
 }
 
-
 /// Result of the verification process
 struct VerificationResult {
     let isVerified: Bool
     let establishment: HalalEstablishment?
     let source: VerificationSource
-    let matchConfidence: MatchConfidence
     let voteData: VoteData?
     
-    init(isVerified: Bool, establishment: HalalEstablishment?, source: VerificationSource, matchConfidence: MatchConfidence = .high, voteData: VoteData? = nil) {
+    init(isVerified: Bool, establishment: HalalEstablishment?, source: VerificationSource, voteData: VoteData? = nil) {
         self.isVerified = isVerified
         self.establishment = establishment
         self.source = source
-        self.matchConfidence = matchConfidence
         self.voteData = voteData
     }
 }
 
 /// Source of verification
 enum VerificationSource {
-    case officialRegistry   /// Verified from the PDF
+    case officialRegistry   /// Verified from the official registry
     case communityVerified  /// Verified through user votes
     case notVerified        /// Not verified
-}
-
-/// Confidence level of the match
-enum MatchConfidence {
-    case high    /// Direct match for pdf
-    case medium  /// Name match but address differences
-    case low     /// Partial match - needed tweeking
 }

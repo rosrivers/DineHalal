@@ -39,13 +39,12 @@ class Favorites: ObservableObject {
     }
     
     private func saveFavoritesToFirestore() {
-            guard let userId = Auth.auth().currentUser?.uid else { return }
+        guard let userId = Auth.auth().currentUser?.uid else { return }
 
-            let data = favorites.map { try? JSONEncoder().encode($0) }
-                                .compactMap { $0 }
-                                .map { String(data: $0, encoding: .utf8) ?? "" }
+        let data = favorites.map { try? JSONEncoder().encode($0) }
+                            .compactMap { $0 }
+                            .map { String(data: $0, encoding: .utf8) ?? "" }
 
-            db.collection("users").document(userId).setData(["favorites": data])
-        }
+        db.collection("users").document(userId).setData(["favorites": data])
+    }
 }
-

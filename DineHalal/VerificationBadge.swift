@@ -51,27 +51,13 @@ struct VerificationBadge: View {
                         Image(systemName: "checkmark.seal.fill")
                             .foregroundColor(.green)
                         
-                        // Tiered display based on confidence level
-                        switch result.matchConfidence {
-                        case .high:
-                            Text("Officially Verified")
-                                .font(.caption)
-                                .bold()
-                                .foregroundColor(.green)
-                        case .medium:
-                            Text("Likely Halal")
-                                .font(.caption)
-                                .bold()
-                                .foregroundColor(.green)
-                        case .low:
-                            Text("Partially Matched")
-                                .font(.caption)
-                                .bold()
-                                .foregroundColor(.green)
-                        }
+                        Text("Officially Verified")
+                            .font(.caption)
+                            .bold()
+                            .foregroundColor(.green)
                         
                     case .communityVerified:
-                        // Community verification badge is ORANGE (fixed)
+                        // Community verification badge is ORANGE
                         Image(systemName: "person.2.fill")
                             .foregroundColor(.orange)
                         
@@ -97,19 +83,9 @@ struct VerificationBadge: View {
                 if result.isVerified {
                     switch result.source {
                     case .officialRegistry:
-                        if case .high = result.matchConfidence {
-                            Text("✓ Official NY State Halal Registry")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        } else if case .medium = result.matchConfidence {
-                            Text("✓ Likely match in NY Halal Registry")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("✓ Partial match in NY Halal Registry")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
+                        Text("✓ Official NY State Halal Registry")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
                             
                     case .communityVerified:
                         if let votes = result.voteData {

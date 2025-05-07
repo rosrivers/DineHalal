@@ -159,23 +159,20 @@ struct SignUp: View {
 
                 Spacer()
             }
-            // NEW: Present the EmailVerificationView full screen when email verification is needed.
+            // Present the EmailVerificationView full screen when email verification is needed.
             .fullScreenCover(isPresented: $showEmailVerification) {
-                EmailVerificationView(onVerified: {   // NEW: Pass the callback that triggers transition to HomeScreen.
+                EmailVerificationView(onVerified: {   // Pass the callback that triggers transition to HomeScreen.
                     self.showEmailVerification = false
-                    self.isSignedIn = true  // NEW: When email is verified, set isSignedIn to true.
+                    self.isSignedIn = true  // When email is verified, set isSignedIn to true.
                 })
             }
         }
         .padding()
         .background(Color("AccentColor"))
         .ignoresSafeArea()
-        // NEW: When isSignedIn becomes true, present the HomeScreen.
+        // When isSignedIn becomes true, present the HomeScreen.
         .fullScreenCover(isPresented: $isSignedIn) {
-
-            ContentView()  // NEW: Changed destination to HomeScreen.
-
-            HomeScreen()  // NEW: Changed destination to HomeScreen.
+            HomeScreen()  // Using HomeScreen as the destination
         }
     }
 
@@ -252,7 +249,7 @@ struct SignUp: View {
                     print("Error signing in with Firebase: \(error.localizedDescription)")
                 } else {
                     print("Firebase sign-in successful!")
-                    // NEW: After Google sign-in, send verification email and show the verification screen.
+                    // After Google sign-in, send verification email and show the verification screen.
                     guard let user = Auth.auth().currentUser else { return }
                     user.sendEmailVerification { error in
                         if let error = error {
@@ -267,10 +264,9 @@ struct SignUp: View {
         }
     }
 }
-
-// NEW: Preview for SignUp using a constant binding for NavigationPath.
-struct SignUp_Previews: PreviewProvider {
-    static var previews: some View {
-        SignUp(path: .constant(NavigationPath()))
-    }
-}
+//// NEW: Preview for SignUp using a constant binding for NavigationPath.
+//struct SignUp_Previews: PreviewProvider {
+//    static var previews: some View {
+//        SignUp(path: .constant(NavigationPath()))
+//    }
+//}

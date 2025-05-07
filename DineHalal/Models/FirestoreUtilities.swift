@@ -1,4 +1,3 @@
-
 ///  FirestoreUtilities.swift
 ///  DineHalal
 ///  Created by Joanne on 4/21/25.
@@ -19,8 +18,29 @@ class FirestoreUtilities {
         db.settings = settings
     }
     
+    /// Store or update restaurant data in Firestore
+    func storeRestaurant(restaurant: Restaurant, completion: @escaping (Error?) -> Void) {
+        let documentRef = db.collection("restaurants").document(restaurant.id)
+        
+        // Convert Restaurant - include all fields
+        let data: [String: Any] = [
+            "name": restaurant.name,
+            "address": restaurant.address,
+            "placeId": restaurant.id,
+            "latitude": restaurant.latitude,
+            "longitude": restaurant.longitude,
+            "rating": restaurant.rating,
+            "lastUpdated": FieldValue.serverTimestamp()
+        ]
+        
+        // Set with merge to update existing or create new
+        documentRef.setData(data, merge: true) { error in
+            completion(error)
+        }
+    }
+    
     /// Update Firestore's `isVerified` field for a restaurant
-    func updateRestaurantVerification(restaurantID: String, isVerified: Bool, completion: @escaping (Error?) -> Void) {
+    func updateRestaurantVerification(restaurantID: String, isVerified: Bool, source: String, completion: @escaping (Error?) -> Void) {
         let documentRef = db.collection("restaurants").document(restaurantID)
         
         // Check if document exists first
@@ -38,6 +58,7 @@ class FirestoreUtilities {
                 // Document exists, update it
                 documentRef.updateData([
                     "isVerified": isVerified,
+                    "verificationSource": source,
                     "lastUpdated": FieldValue.serverTimestamp()
                 ]) { error in
                     completion(error)
@@ -46,6 +67,7 @@ class FirestoreUtilities {
                 // Document doesn't exist, create it
                 documentRef.setData([
                     "isVerified": isVerified,
+                    "verificationSource": source,
                     "createdAt": FieldValue.serverTimestamp(),
                     "lastUpdated": FieldValue.serverTimestamp()
                 ]) { error in

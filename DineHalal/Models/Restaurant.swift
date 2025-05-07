@@ -35,15 +35,16 @@ struct Restaurant: Identifiable, Codable, Hashable {
     struct GeometryKeys: CodingKey {
         var stringValue: String
         var intValue: Int?
-
+        
         init?(stringValue: String) {
             self.stringValue = stringValue
+            self.intValue = nil
         }
-
+        
         init?(intValue: Int) {
             return nil
         }
-
+        
         static let location = GeometryKeys(stringValue: "location")!
         static let lat = GeometryKeys(stringValue: "lat")!
         static let lng = GeometryKeys(stringValue: "lng")!
@@ -65,7 +66,7 @@ struct Restaurant: Identifiable, Codable, Hashable {
 
     struct PhotoData: Codable {
         let photoReference: String
-
+        
         enum CodingKeys: String, CodingKey {
             case photoReference = "photo_reference"
         }
@@ -93,9 +94,40 @@ struct Restaurant: Identifiable, Codable, Hashable {
       let photo_reference: String
     }
     
+    // Initializer for creating Restaurant objects from Firestore data
+    init(
+        id: String,
+        name: String,
+        rating: Double,
+        numberOfRatings: Int,
+        priceLevel: Int?,
+        vicinity: String,
+        isOpenNow: Bool = false,
+        openUntilTime: String? = nil,
+        photoReference: String? = nil,
+        placeId: String,
+        latitude: Double,
+        longitude: Double,
+        address: String
+    ) {
+        self.id = id
+        self.name = name
+        self.rating = rating
+        self.numberOfRatings = numberOfRatings
+        self.priceLevel = priceLevel
+        self.vicinity = vicinity
+        self.isOpenNow = isOpenNow
+        self.openUntilTime = openUntilTime
+        self.photoReference = photoReference
+        self.placeId = placeId
+        self.latitude = latitude
+        self.longitude = longitude
+        self.address = address
+    }
+    
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-
+        
         self.placeId = try container.decode(String.self, forKey: .placeId)
         self.id = self.placeId
         self.name = try container.decode(String.self, forKey: .name)
@@ -103,12 +135,12 @@ struct Restaurant: Identifiable, Codable, Hashable {
         self.numberOfRatings = try container.decodeIfPresent(Int.self, forKey: .numberOfRatings) ?? 0
         self.priceLevel = try container.decodeIfPresent(Int.self, forKey: .priceLevel)
         self.vicinity = try container.decode(String.self, forKey: .vicinity)
-
+        
         let geometryContainer = try container.nestedContainer(keyedBy: GeometryKeys.self, forKey: .geometry)
         let locationContainer = try geometryContainer.nestedContainer(keyedBy: GeometryKeys.self, forKey: .location)
         self.latitude = try locationContainer.decode(Double.self, forKey: .lat)
         self.longitude = try locationContainer.decode(Double.self, forKey: .lng)
-
+        
         var isOpenNowLocal = false
         var openUntilTimeLocal: String? = nil
 
@@ -122,16 +154,16 @@ struct Restaurant: Identifiable, Codable, Hashable {
 
         self.isOpenNow = isOpenNowLocal
         self.openUntilTime = openUntilTimeLocal
-
+        
         if let photos = try? container.decode([PhotoData].self, forKey: .photos) {
             self.photoReference = photos.first?.photoReference
         } else {
             self.photoReference = nil
         }
-
+        
         self.address = self.vicinity
     }
-
+    
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(name, forKey: .name)
@@ -139,16 +171,16 @@ struct Restaurant: Identifiable, Codable, Hashable {
         try container.encode(numberOfRatings, forKey: .numberOfRatings)
         try container.encode(vicinity, forKey: .vicinity)
         try container.encode(placeId, forKey: .placeId)
-
+        
         var geometryContainer = container.nestedContainer(keyedBy: GeometryKeys.self, forKey: .geometry)
         var locationContainer = geometryContainer.nestedContainer(keyedBy: GeometryKeys.self, forKey: .location)
         try locationContainer.encode(latitude, forKey: .lat)
         try locationContainer.encode(longitude, forKey: .lng)
-
+        
         var openingHoursContainer = container.nestedContainer(keyedBy: OpeningHoursKeys.self, forKey: .openingHours)
         try openingHoursContainer.encode(isOpenNow, forKey: .openNow)
     }
-
+    
     // MARK: - Helper Functions
 
     private static func findTodayClosingTime(from periods: [Period]) -> String? {
@@ -172,7 +204,7 @@ struct Restaurant: Identifiable, Codable, Hashable {
         hasher.combine(id)
         hasher.combine(placeId)
     }
-
+    
     static func == (lhs: Restaurant, rhs: Restaurant) -> Bool {
         return lhs.id == rhs.id && lhs.placeId == rhs.placeId
     }
