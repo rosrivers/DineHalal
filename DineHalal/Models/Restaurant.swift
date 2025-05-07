@@ -1,7 +1,7 @@
-
 ///  Restaurant.swift
 ///  Dine Halal
 ///  Created by Joanne on 3/19/25.
+///  Edited by Rosa to include opening hours / closing
 
 import Foundation
 
@@ -13,12 +13,13 @@ struct Restaurant: Identifiable, Codable, Hashable {
     let priceLevel: Int?
     let vicinity: String
     let isOpenNow: Bool
+    let openUntilTime: String? // added for "Open until [time]"
     let photoReference: String?
     let placeId: String
     let latitude: Double
     let longitude: Double
     let address: String
-    
+
     enum CodingKeys: String, CodingKey {
         case name
         case rating
@@ -30,7 +31,7 @@ struct Restaurant: Identifiable, Codable, Hashable {
         case photos
         case placeId = "place_id"
     }
-    
+
     struct GeometryKeys: CodingKey {
         var stringValue: String
         var intValue: Int?
@@ -48,11 +49,21 @@ struct Restaurant: Identifiable, Codable, Hashable {
         static let lat = GeometryKeys(stringValue: "lat")!
         static let lng = GeometryKeys(stringValue: "lng")!
     }
-    
+
     enum OpeningHoursKeys: String, CodingKey {
         case openNow = "open_now"
+        case periods
     }
-    
+
+    struct Period: Codable {
+        struct TimeData: Codable {
+            let day: Int
+            let time: String
+        }
+        let open: TimeData
+        let close: TimeData
+    }
+
     struct PhotoData: Codable {
         let photoReference: String
         
@@ -83,7 +94,7 @@ struct Restaurant: Identifiable, Codable, Hashable {
       let photo_reference: String
     }
     
-    // NEW INITIALIZER: initializer for creating Restaurant objects from Firestore data
+    // Initializer for creating Restaurant objects from Firestore data
     init(
         id: String,
         name: String,
@@ -92,6 +103,7 @@ struct Restaurant: Identifiable, Codable, Hashable {
         priceLevel: Int?,
         vicinity: String,
         isOpenNow: Bool = false,
+        openUntilTime: String? = nil,
         photoReference: String? = nil,
         placeId: String,
         latitude: Double,
@@ -105,6 +117,7 @@ struct Restaurant: Identifiable, Codable, Hashable {
         self.priceLevel = priceLevel
         self.vicinity = vicinity
         self.isOpenNow = isOpenNow
+        self.openUntilTime = openUntilTime
         self.photoReference = photoReference
         self.placeId = placeId
         self.latitude = latitude
@@ -128,11 +141,19 @@ struct Restaurant: Identifiable, Codable, Hashable {
         self.latitude = try locationContainer.decode(Double.self, forKey: .lat)
         self.longitude = try locationContainer.decode(Double.self, forKey: .lng)
         
+        var isOpenNowLocal = false
+        var openUntilTimeLocal: String? = nil
+
         if let openingHoursContainer = try? container.nestedContainer(keyedBy: OpeningHoursKeys.self, forKey: .openingHours) {
-            self.isOpenNow = (try? openingHoursContainer.decode(Bool.self, forKey: .openNow)) ?? false
-        } else {
-            self.isOpenNow = false
+            isOpenNowLocal = (try? openingHoursContainer.decode(Bool.self, forKey: .openNow)) ?? false
+
+            if let periods = try? openingHoursContainer.decodeIfPresent([Period].self, forKey: .periods) {
+                openUntilTimeLocal = Self.findTodayClosingTime(from: periods)
+            }
         }
+
+        self.isOpenNow = isOpenNowLocal
+        self.openUntilTime = openUntilTimeLocal
         
         if let photos = try? container.decode([PhotoData].self, forKey: .photos) {
             self.photoReference = photos.first?.photoReference
@@ -160,7 +181,25 @@ struct Restaurant: Identifiable, Codable, Hashable {
         try openingHoursContainer.encode(isOpenNow, forKey: .openNow)
     }
     
-    /// Hashable conformance
+    // MARK: - Helper Functions
+
+    private static func findTodayClosingTime(from periods: [Period]) -> String? {
+        let weekday = (Calendar.current.component(.weekday, from: Date()) + 6) % 7 // Fix to make Sunday=0
+        if let todayPeriod = periods.first(where: { $0.open.day == weekday }) {
+            return formatTime(todayPeriod.close.time)
+        }
+        return nil
+    }
+
+    private static func formatTime(_ militaryTime: String) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HHmm"
+        guard let date = dateFormatter.date(from: militaryTime) else { return militaryTime }
+
+        dateFormatter.dateFormat = "h:mm a"
+        return dateFormatter.string(from: date)
+    }
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(placeId)

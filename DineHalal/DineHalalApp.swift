@@ -1,4 +1,3 @@
-
 ///  Dine_HalalApp.swift
 ///  Dine Halal
 ///  Created by Joanne on 3/5/25.
@@ -15,7 +14,7 @@ struct DineHalalApp: App {
     @StateObject private var navigationState = NavigationStateManager()
     @StateObject private var favorites = Favorites()
     
-    /// Create location manager -  user location -restaurants are fetched based on user location.
+    /// Create location manager - user location - restaurants are fetched based on user location.
     @StateObject private var locationManager = LocationManager()
     
     /// Create verification service
@@ -26,10 +25,15 @@ struct DineHalalApp: App {
     
     // Initialize with proper setup
     init() {
+        // Set consistent tab bar color
+        let tabBarAppearance = UITabBar.appearance()
+        tabBarAppearance.backgroundColor = UIColor.systemBackground
+        tabBarAppearance.barTintColor = UIColor.systemBackground
+        
         /// verification service instance
         let verificationServiceInstance = VerificationService()
         
-        /// StateObjects Instances 
+        /// StateObjects Instances
         _verificationService = StateObject(wrappedValue: verificationServiceInstance)
         _placesService = StateObject(wrappedValue: PlacesService(verificationService: verificationServiceInstance))
     }

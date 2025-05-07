@@ -1,4 +1,3 @@
-
 ///  FirestoreUtilities.swift
 ///  DineHalal
 ///  Created by Joanne on 4/21/25.
@@ -11,7 +10,7 @@ class FirestoreUtilities {
     private let db = Firestore.firestore()
     
     init() {
-        // Configure Firestore
+        // Configure Firestore for less verbose logging
         let settings = db.settings
         #if !DEBUG
         settings.loggingEnabled = false
@@ -44,13 +43,37 @@ class FirestoreUtilities {
     func updateRestaurantVerification(restaurantID: String, isVerified: Bool, source: String, completion: @escaping (Error?) -> Void) {
         let documentRef = db.collection("restaurants").document(restaurantID)
         
-        // Create/update with verification data
-        documentRef.setData([
-            "isVerified": isVerified,
-            "verificationSource": source,
-            "lastUpdated": FieldValue.serverTimestamp()
-        ], merge: true) { error in
-            completion(error)
+        // Check if document exists first
+        documentRef.getDocument { (document, error) in
+            if let error = error {
+                // Only log errors in debug builds
+                #if DEBUG
+                print("Error checking document: \(error)")
+                #endif
+                completion(error)
+                return
+            }
+            
+            if let document = document, document.exists {
+                // Document exists, update it
+                documentRef.updateData([
+                    "isVerified": isVerified,
+                    "verificationSource": source,
+                    "lastUpdated": FieldValue.serverTimestamp()
+                ]) { error in
+                    completion(error)
+                }
+            } else {
+                // Document doesn't exist, create it
+                documentRef.setData([
+                    "isVerified": isVerified,
+                    "verificationSource": source,
+                    "createdAt": FieldValue.serverTimestamp(),
+                    "lastUpdated": FieldValue.serverTimestamp()
+                ]) { error in
+                    completion(error)
+                }
+            }
         }
     }
     

@@ -279,7 +279,7 @@ struct HomeScreen: View {
                         }
                     }
 
-                    /// Verified Restaurants
+                    // Verified Restaurants
                     if !placesService.recentlyVerified.isEmpty {
                         VStack(alignment: .leading) {
                             Text("Verified Halal Restaurants")
@@ -355,9 +355,11 @@ struct HomeScreen: View {
         }
     }
 }
-//struct HomeScreen_Previews: PreviewProvider {
-//    static var previews: some View {
-//        HomeScreen()
-//            .environmentObject(NavigationStateManager())
+    
+//    struct HomeScreen_Previews: PreviewProvider {
+//        static var previews: some View {
+//            HomeScreen()
+//                .environmentObject(NavigationStateManager())
+//        }
 //    }
-//}
+

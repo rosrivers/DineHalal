@@ -5,6 +5,8 @@
 //  Created by Iman Ikram on 3/24/25.
 //
 // Edited by Chelsea on 4/25/25
+// Edited/Modified - Rosa
+
 import SwiftUI
 
 struct FilterView: View {
@@ -30,6 +32,7 @@ struct FilterView: View {
                 Section(header: Text("Location")) {
                     //Toggle("Near Me", isOn: $criteria.nearMe)
                     TextField("Enter City/Zipcode", text: $criteria.cityZip)
+                        .keyboardType(.numberPad)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                 }
                 

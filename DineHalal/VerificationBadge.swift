@@ -2,6 +2,7 @@
 ///  VerificationBadge.swift
 /// DineHalal
 ///  Created by Joanne on 4/20/25.
+
 import SwiftUI
 
 struct VerificationBadge: View {

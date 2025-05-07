@@ -1,4 +1,3 @@
-
 ///  ContentView.swift
 ///  Dine Halal
 ///  Created by Joanne on 3/5/25.
@@ -47,7 +46,7 @@ struct ContentView: View {
                     Text("Favorites")
                 }
             
-            HomeScreen() //MapPageView()
+            MapPageView()
                 .tabItem {
                     Image(systemName: "map.fill")
                     Text("Map")

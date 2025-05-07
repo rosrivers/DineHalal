@@ -1,23 +1,25 @@
+//  UserProfile.swift
+//  Dine Halal
+//  Created by Iman Ikram on 3/11/25.
+//  Edited/ modified - Joana
+//  Edited by Chelsea to add signout button
+//  Refactored to use Review model, grid layout, and delete support
 
-///  UserProfile.swift
-///  Dine Halal
-///  Created by Iman Ikram on 3/11/25.
-/// Edited/ modified - Joana
-///Edited by Chelsea to add signout button
-///
 import FirebaseAuth
 import FirebaseFirestore
 import SwiftUI
 
 struct UserProfile: View {
-    @Binding var navigationPath: NavigationPath // Pass navigationPath as a binding
+    @Binding var navigationPath: NavigationPath
     @State private var userName: String = ""
     @State private var userEmail: String = ""
     @State private var profileImageURL: URL?
     @State private var userFavorites: [String] = [] // Just store restaurant names for now
-    @State private var userReviews: [(restaurantName: String, rating: Int, review: String)] = [] // Simple tuple for reviews
+    @State private var userReviews: [Review] = [] // Using the structured Review model
     @State private var isLoading = true
-    @State private var isSignedOut = false // Flag to navigate after sign-out
+    @State private var isSignedOut = false
+    @State private var reviewToEdit: Review? = nil // For editing reviews
+    @EnvironmentObject var favorites: Favorites
     
     var body: some View {
         ZStack {
@@ -135,7 +137,7 @@ struct UserProfile: View {
                         }
                         .padding()
 
-                        // **Reviews Section**
+                        // **Reviews Section** - Combined from both versions
                         VStack(alignment: .leading) {
                             Text("My Reviews")
                                 .font(.title2)
@@ -146,10 +148,45 @@ struct UserProfile: View {
                                 Text("No reviews yet")
                                     .foregroundColor(.mud)
                             } else {
-                                ForEach(userReviews, id: \.restaurantName) { review in
-                                    ReviewItem(title: review.restaurantName,
-                                             rating: review.rating,
-                                             review: review.review)
+                                VStack(spacing: 12) {
+                                    ForEach(userReviews.sorted { $0.date > $1.date }) { review in
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(review.restaurantName)
+                                                .font(.headline)
+                                                .lineLimit(1)
+
+                                            HStack(spacing: 2) {
+                                                ForEach(1...5, id: \.self) { index in
+                                                    Image(systemName: index <= review.rating ? "star.fill" : "star")
+                                                        .foregroundColor(.yellow)
+                                                        .font(.system(size: 10))
+                                                }
+                                            }
+
+                                            Text(review.comment)
+                                                .font(.caption)
+                                                .lineLimit(2)
+
+                                            HStack {
+                                                Button(role: .destructive) {
+                                                    deleteReview(review)
+                                                } label: {
+                                                    Image(systemName: "trash")
+                                                        .foregroundColor(.red)
+                                                }
+
+                                                Button {
+                                                    reviewToEdit = review
+                                                } label: {
+                                                    Image(systemName: "pencil")
+                                                        .foregroundColor(.blue)
+                                                }
+                                            }
+                                        }
+                                        .padding()
+                                        .background(Color.gray.opacity(0.2))
+                                        .cornerRadius(12)
+                                    }
                                 }
                             }
                         }
@@ -178,6 +215,11 @@ struct UserProfile: View {
             // Navigate back to the Sign-In screen after signing out, passing the navigationPath
             SignInView(path: $navigationPath)
         }
+        .sheet(item: $reviewToEdit) { review in
+            EditReviewView(restaurantId: review.restaurantId, review: review) {
+                loadUserData()
+            }
+        }
     }
 
     // Sign-Out Function
@@ -191,7 +233,7 @@ struct UserProfile: View {
         }
     }
 
-    // Load user data from Firebase
+    // Load user data from Firebase - Combined approach
     private func loadUserData() {
         guard let user = Auth.auth().currentUser else {
             isLoading = false
@@ -200,9 +242,7 @@ struct UserProfile: View {
         
         userName = user.displayName ?? "User"
         userEmail = user.email ?? ""
-        if let photoURL = user.photoURL {
-            profileImageURL = photoURL
-        }
+        profileImageURL = user.photoURL
         
         let db = Firestore.firestore()
         
@@ -216,27 +256,22 @@ struct UserProfile: View {
                         doc.data()["name"] as? String
                     } ?? []
                 }
-                
-                // Load reviews
-                db.collection("users").document(user.uid).collection("reviews")
-                    .getDocuments { snapshot, error in
-                        if let error = error {
-                            print("Error getting reviews: \(error)")
-                        } else {
-                            userReviews = snapshot?.documents.compactMap { doc -> (String, Int, String)? in
-                                let data = doc.data()
-                                guard let restaurantName = data["restaurantName"] as? String,
-                                      let rating = data["rating"] as? Int,
-                                      let review = data["reviewText"] as? String else {
-                                    return nil
-                                }
-                                return (restaurantName, rating, review)
-                            } ?? []
-                        }
-                        
-                        isLoading = false
-                    }
             }
+        
+        // Load reviews using FirebaseService (from main-backup)
+        FirebaseService.shared.fetchUserReviews { reviews, error in
+            if let reviews = reviews {
+                self.userReviews = reviews
+            }
+            isLoading = false
+        }
+    }
+    
+    // Delete review function from main-backup
+    private func deleteReview(_ review: Review) {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        FirebaseService.shared.deleteReview(restaurantId: review.restaurantId, reviewId: review.id, userId: userId)
+        userReviews.removeAll { $0.id == review.id }
     }
 }
 
@@ -253,35 +288,9 @@ struct FavoriteItem: View {
     }
 }
 
-// **Review Item**
-struct ReviewItem: View {
-    var title: String
-    var rating: Int
-    var review: String
-
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text(title)
-                .fontWeight(.bold)
-            HStack {
-                ForEach(0..<5) { index in
-                    Image(systemName: index < rating ? "star.fill" : "star")
-                        .foregroundColor(.yellow)
-                }
-            }
-            Text(review)
-                .font(.footnote)
-                .foregroundColor(.black)
-        }
-        .padding()
-        .background(Color.gray.opacity(0.2))
-        .cornerRadius(12)
-    }
-}
-
 // **Preview**
-struct UserProfileView_Previews: PreviewProvider {
-    static var previews: some View {
-        UserProfile(navigationPath: .constant(NavigationPath()))
-    }
-}
+//struct UserProfileView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        UserProfile(navigationPath: .constant(NavigationPath()))
+//    }
+//}

@@ -1,10 +1,8 @@
-
 ///  GoogleMapConfig.swift
 ///  DineHalal
-///  Maps API configuration is done here securely  and removed from homescreen.
+///  Maps API configuration is done here securely and removed from homescreen.
 /// Created by Joanne on 3/25/25.
 /// Edited by Chelsea on 4/5/25.
-
 
 import Foundation
 import CoreLocation
@@ -65,6 +63,19 @@ struct GoogleMapConfig {
         components?.queryItems = [
             URLQueryItem(name: "maxwidth", value: "\(maxWidth)"),
             URLQueryItem(name: "photo_reference", value: photoReference),
+            URLQueryItem(name: "key", value: placesKey)
+        ]
+        
+        return components?.url
+    }
+    
+    // For Google Reviews
+    static func getPlaceDetailsURL(placeId: String) -> URL? {
+        let baseURLString = "https://maps.googleapis.com/maps/api/place/details/json"
+        
+        var components = URLComponents(string: baseURLString)
+        components?.queryItems = [
+            URLQueryItem(name: "placeid", value: placeId),
             URLQueryItem(name: "key", value: placesKey)
         ]
         

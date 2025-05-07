@@ -19,7 +19,7 @@ struct SignUp: View {
     @State private var errorMessage: String?
     
     // updated by rosa: state variable to control when the email verification view should be shown.
-    @State private var showEmailVerification = false  // NEW: Added to trigger email verification screen after registration.
+    @State private var showEmailVerification = false  // Added to trigger email verification screen after registration.
 
     var body: some View {
         ScrollView {
@@ -159,23 +159,20 @@ struct SignUp: View {
 
                 Spacer()
             }
-            // NEW: Present the EmailVerificationView full screen when email verification is needed.
+            // Present the EmailVerificationView full screen when email verification is needed.
             .fullScreenCover(isPresented: $showEmailVerification) {
-                EmailVerificationView(onVerified: {   // NEW: Pass the callback that triggers transition to HomeScreen.
+                EmailVerificationView(onVerified: {   // Pass the callback that triggers transition to HomeScreen.
                     self.showEmailVerification = false
-                    self.isSignedIn = true  // NEW: When email is verified, set isSignedIn to true.
+                    self.isSignedIn = true  // When email is verified, set isSignedIn to true.
                 })
             }
         }
         .padding()
         .background(Color("AccentColor"))
         .ignoresSafeArea()
-        // NEW: When isSignedIn becomes true, present the HomeScreen.
+        // When isSignedIn becomes true, present the HomeScreen.
         .fullScreenCover(isPresented: $isSignedIn) {
-
-            ContentView()  // NEW: Changed destination to HomeScreen.
-
-            HomeScreen()  // NEW: Changed destination to HomeScreen.
+            HomeScreen()  // Using HomeScreen as the destination
         }
     }
 
@@ -187,15 +184,33 @@ struct SignUp: View {
                     return
                 }
 
+                guard let user = authResult?.user else { return }
+
+                // Combine first and last name
+                let fullName = "\(firstName) \(lastName)"
+
+                // Save full name to Firestore
+                let userData: [String: Any] = [
+                    "uid": user.uid,
+                    "email": email,
+                    "username": fullName
+                ]
+
+                Firestore.firestore().collection("users").document(user.uid).setData(userData) { error in
+                    if let error = error {
+                        self.errorMessage = "Failed to save user info: \(error.localizedDescription)"
+                    } else {
+                        print("User profile saved with full name.")
+                    }
+                }
+
                 print("Account created successfully!")
-                // NEW: After account creation, send a verification email.
-                guard let user = Auth.auth().currentUser else { return }
                 user.sendEmailVerification { error in
                     if let error = error {
                         self.errorMessage = "Failed to send verification email: \(error.localizedDescription)"
                     } else {
                         print("Verification email sent!")
-                        self.showEmailVerification = true  // NEW: Trigger email verification screen.
+                        self.showEmailVerification = true
                     }
                 }
             }
@@ -234,7 +249,7 @@ struct SignUp: View {
                     print("Error signing in with Firebase: \(error.localizedDescription)")
                 } else {
                     print("Firebase sign-in successful!")
-                    // NEW: After Google sign-in, send verification email and show the verification screen.
+                    // After Google sign-in, send verification email and show the verification screen.
                     guard let user = Auth.auth().currentUser else { return }
                     user.sendEmailVerification { error in
                         if let error = error {
@@ -249,10 +264,9 @@ struct SignUp: View {
         }
     }
 }
-
-// NEW: Preview for SignUp using a constant binding for NavigationPath.
-struct SignUp_Previews: PreviewProvider {
-    static var previews: some View {
-        SignUp(path: .constant(NavigationPath()))
-    }
-}
+//// NEW: Preview for SignUp using a constant binding for NavigationPath.
+//struct SignUp_Previews: PreviewProvider {
+//    static var previews: some View {
+//        SignUp(path: .constant(NavigationPath()))
+//    }
+//}

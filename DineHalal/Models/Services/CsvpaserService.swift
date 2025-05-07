@@ -10,30 +10,32 @@ import PDFKit
 
 /// Service responsible for handling CSV data for Halal Establishments
 class CSVParserService {
-    // Flag to prevent duplicate logging
-    private var hasReportedLoadSuccess = false
+    // Static cache to store loaded establishments
+    private static var cachedEstablishments: [HalalEstablishment]?
     
     /// Load establishments from CSV, converting from PDF if necessary
     func loadHalalEstablishmentsFromCSV() -> [HalalEstablishment] {
+        // First check if we already have cached establishments
+        if let cached = CSVParserService.cachedEstablishments {
+            return cached
+        }
+        
         // Try loading from bundled CSV file first
         if let establishments = loadFromLocalCSV() {
-            if !hasReportedLoadSuccess {
-                print("Successfully loaded \(establishments.count) halal establishments from CSV file")
-                hasReportedLoadSuccess = true
-            }
+            // Cache the loaded data
+            CSVParserService.cachedEstablishments = establishments
             return establishments
         }
         
         // If CSV not found, try automatic conversion from PDF
         if let establishments = convertPDFtoCSVAndLoad() {
-            if !hasReportedLoadSuccess {
-                //print("Successfully converted PDF to CSV and loaded \(establishments.count) halal establishments")
-                hasReportedLoadSuccess = true
-            }
+            // Cache the loaded data
+            CSVParserService.cachedEstablishments = establishments
             return establishments
         }
         
-        print("Failed to load establishments from CSV")
+        // Cache the empty array to prevent repeated attempts
+        CSVParserService.cachedEstablishments = []
         return []
     }
     
@@ -82,10 +84,8 @@ class CSVParserService {
         return processAndConvertPDF(pdfDocument)
     }
     
-    /// Process the PDF document and convert to CSV - MAXIMIZED TO GET ALL ESTABLISHMENTS
+    /// Process the PDF document and convert to CSV
     private func processAndConvertPDF(_ pdfDocument: PDFDocument) -> [HalalEstablishment]? {
-        print("Processing ALL \(pdfDocument.pageCount) pages of the PDF...")
-        
         // Extract text and convert to CSV format
         var csvContent = "name,address,city,state,zip,registration_number\n"
         var allEstablishments: [HalalEstablishment] = []
@@ -101,11 +101,6 @@ class CSVParserService {
             let mainEstablishments = extractEstablishmentsUsingMainPattern(pageContent)
             let alternativeEstablishments = extractEstablishmentsUsingAlternativePattern(pageContent)
             let extractedEstablishments = mainEstablishments + alternativeEstablishments
-            
-            // Debug info for this page
-            if !extractedEstablishments.isEmpty {
-                print("Page \(pageIndex+1): Found \(extractedEstablishments.count) establishments")
-            }
             
             // Add to our list
             allEstablishments.append(contentsOf: extractedEstablishments)
@@ -125,24 +120,10 @@ class CSVParserService {
             }
         }
         
-        // Print a detailed report of what was found
-        print("PDF PROCESSING COMPLETE: Extracted \(allEstablishments.count) halal establishments from \(pdfDocument.pageCount) pages")
-        
-        // Show sample of what was extracted
-        if !allEstablishments.isEmpty {
-            print("SAMPLE ESTABLISHMENTS FOUND:")
-            for i in 0..<min(5, allEstablishments.count) {
-                let est = allEstablishments[i]
-                print("   \(i+1). \"\(est.name)\" at \"\(est.address)\"")
-            }
-        }
-        
-        // get more pages from the pdf
+        // get more pages from the pdf if needed
         if allEstablishments.count < 100 {
-            print(" Still finding few establishments. Trying advanced extraction...")
             let desperation = extractAllPossibleEstablishments(pdfDocument)
             if desperation.count > allEstablishments.count {
-                print("extraction successful! Found \(desperation.count) establishments")
                 allEstablishments = desperation
             }
         }
@@ -154,7 +135,7 @@ class CSVParserService {
                 try csvContent.write(to: csvURL, atomically: true, encoding: .utf8)
             }
         } catch {
-            print("Error saving CSV file: \(error)")
+            // Skip error printing
         }
         
         // Return the extracted establishments
@@ -234,7 +215,7 @@ class CSVParserService {
         return establishments
     }
     
-    /// Extract establishments 
+    /// Extract establishments
     private func extractEstablishmentsUsingAlternativePattern(_ content: String) -> [HalalEstablishment] {
         var establishments: [HalalEstablishment] = []
         
@@ -283,7 +264,7 @@ class CSVParserService {
                     }
                 }
                 
-                // If no address found, try another approach - look for text near the name - this is not needed 
+                // If no address found, try another approach - look for text near the name
                 if address.isEmpty {
                     // Start looking after the name
                     let nameEndIndex = content.index(nameRange.upperBound, offsetBy: min(100, content.count - nameRange.upperBound.utf16Offset(in: content)))
@@ -322,7 +303,7 @@ class CSVParserService {
         return establishments
     }
     
-    /// Extract all possible establishments with a different approach - use this if other methods fail
+    /// Extract all possible establishments with a different approach
     private func extractAllPossibleEstablishments(_ pdfDocument: PDFDocument) -> [HalalEstablishment] {
         var establishments: [HalalEstablishment] = []
         
@@ -337,8 +318,6 @@ class CSVParserService {
         
         // Look for Registration Forms header followed by establishment info
         let formSections = allText.components(separatedBy: "HALAL FOOD ESTABLISHMENT REGISTRATION")
-        
-        print("Found \(formSections.count) potential registration sections")
         
         for (index, section) in formSections.enumerated() {
             // Skip the first split (it's before the first header)
@@ -541,52 +520,13 @@ class CSVParserService {
             
             do {
                 try FileManager.default.removeItem(at: csvURL)
-                print("Deleted existing CSV file - will regenerate from PDF")
                 
-                // Reset the success flag too
-                hasReportedLoadSuccess = false
+                // Clear the cache
+                CSVParserService.cachedEstablishments = nil
             } catch {
-                print("No CSV file to delete or error: \(error.localizedDescription)")
+                // No need to print error
             }
         }
-    }
-    
-    /// Diagnosis tool for matching issues
-    func diagnoseMatchingIssues(establishments: [HalalEstablishment], restaurants: [Restaurant]) {
-        print("MATCHING DIAGNOSTIC REPORT:")
-        print("Working with \(establishments.count) halal establishments and \(restaurants.count) restaurants")
-        
-        // Show samples
-        print("\nSAMPLE HALAL ESTABLISHMENTS:")
-        for i in 0..<min(5, establishments.count) {
-            print("  \(i+1). \"\(establishments[i].name)\" at \"\(establishments[i].address)\"")
-        }
-        
-        print("\n SAMPLE RESTAURANTS:")
-        for i in 0..<min(5, restaurants.count) {
-            let address = restaurants[i].address.isEmpty ? restaurants[i].vicinity : restaurants[i].address
-            print("  \(i+1). \"\(restaurants[i].name)\" at \"\(address)\"")
-        }
-        
-        // Try basic name matching
-        print("\n TRYING BASIC NAME MATCHING:")
-        var nameMatches = 0
-        
-        for restaurant in restaurants {
-            let normalizedRestName = normalizeTextForMatching(restaurant.name)
-            
-            for establishment in establishments {
-                let normalizedEstName = normalizeTextForMatching(establishment.name)
-                
-                if normalizedRestName.contains(normalizedEstName) || normalizedEstName.contains(normalizedRestName) {
-                    nameMatches += 1
-                    print("✓ NAME MATCH: \"\(restaurant.name)\" ~ \"\(establishment.name)\"")
-                    break
-                }
-            }
-        }
-        
-        print("\nFound \(nameMatches) potential name matches out of \(restaurants.count) restaurants")
     }
     
     /// Normalize text for matching comparison
@@ -612,60 +552,4 @@ class CSVParserService {
         
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
-    
-    // Helper to manually create a sample CSV file if needed
-//    func createSampleCSVFile() {
-//        let csvContent = """
-//name,address,city,state,zip,registration_number
-//"The Halal Guys","West 53rd Street & 6th Avenue","New York","NY","10019","NY12345"
-//"Mamoun's Falafel","119 MacDougal St","New York","NY","10012","NY12346"
-//"Adel's Famous Halal Food","1090 6th Ave","New York","NY","10036","NY12347"
-//"King Souvlaki of Astoria","223 Bushwick Ave","Brooklyn","NY","11206","NY12348"
-//"Halal Guys of Bay Ridge","8402 5th Ave","Brooklyn","NY","11209","NY12349"
-//"Shah's Halal Food","75-02 37th Ave","Queens","NY","11372","NY12350"
-//"King of Falafel & Shawarma","30-15 Broadway","Astoria","NY","11106","NY12351"
-//"Halal Food Cart NY","265 E Fordham Rd","Bronx","NY","10458","NY12352"
-//"Grill N Gyro","112 Stuyvesant Pl","Staten Island","NY","10301","NY12353"
-//"Sammy's Halal Food","73rd St & Broadway","New York","NY","10036","NY12354"
-//"""
-//        
-//        if let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-//            let csvURL = documentsDirectory.appendingPathComponent("halalestablishmentregistrations.csv")
-//            
-//            do {
-//                try csvContent.write(to: csvURL, atomically: true, encoding: .utf8)
-//                print("Created sample CSV file at: \(csvURL.path)")
-//            } catch {
-//                print(" Failed to create sample CSV: \(error)")
-//            }
-//        }
-//    }
-    
-    // Sample data as fallback
-//    func loadSampleData() -> [HalalEstablishment] {
-//        let sampleData = [
-//            ("The Halal Guys", "West 53rd Street & 6th Avenue, New York, NY 10019", "NY12345"),
-//            ("Mamoun's Falafel", "119 MacDougal St, New York, NY 10012", "NY12346"),
-//            ("Adel's Famous Halal Food", "1090 6th Ave, New York, NY 10036", "NY12347"),
-//            ("King Souvlaki of Astoria", "223 Bushwick Ave, Brooklyn, NY 11206", "NY12348"),
-//            ("Halal Guys of Bay Ridge", "8402 5th Ave, Brooklyn, NY 11209", "NY12349"),
-//            ("Shah's Halal Food", "75-02 37th Ave, Queens, NY 11372", "NY12350"),
-//            ("King of Falafel & Shawarma", "30-15 Broadway, Astoria, NY 11106", "NY12351"),
-//            ("Halal Food Cart NY", "265 E Fordham Rd, Bronx, NY 10458", "NY12352"),
-//            ("Grill N Gyro", "112 Stuyvesant Pl, Staten Island, NY 10301", "NY12353"),
-//            ("Sammy's Halal Food", "73rd St & Broadway, New York, NY 10036", "NY12354")
-//        ]
-//        
-//        return sampleData.map { data in
-//            HalalEstablishment(
-//                id: UUID(),
-//                name: data.0,
-//                address: data.1,
-//                certificationType: "Halal Certified",
-//                verificationDate: Date(),
-//                registrationNumber: data.2
-//            )
-//        }
-//    }
 }
-

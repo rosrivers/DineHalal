@@ -1,9 +1,7 @@
-
 ///  VerificationService.swift
 ///  Dine Halal
 ///  Created by Joanne on 3/19/25.
 ///References: Core Data https://developer.apple.com/documentation/foundation/userdefaults
-
 
 import Foundation
 import Combine

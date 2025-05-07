@@ -20,5 +20,3 @@ struct FilterCriteria {
     var priceModerate: Bool = false
     var priceExpensive: Bool = false
 }
-
-

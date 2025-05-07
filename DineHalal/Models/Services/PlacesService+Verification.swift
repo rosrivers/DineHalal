@@ -1,4 +1,3 @@
-
 ///  PlacesService+Verification.swift
 ///  DineHalal
 ///  Created by Joanne on 4/20/25.
@@ -92,7 +91,7 @@ extension PlacesService {
                 }
         }
         
-        print("Stored \(allRestaurants.count) restaurants in Firebase")
+        //print("Stored \(allRestaurants.count) restaurants in Firebase")
     }
     
     // Update verification status for all restaurants

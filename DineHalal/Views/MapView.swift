@@ -3,7 +3,7 @@
 //  DineHalal
 //
 ///  Created by Iman Ikram on 3/24/25.
-///  Edited/Modified - Joana
+///  Edited/Modified - Joana + Rosa
 
 import SwiftUI
 import GoogleMaps
@@ -31,6 +31,14 @@ struct GoogleMapView: UIViewRepresentable {
             print("Tapped marker: \(marker.title ?? "")")
             return true
         }
+        
+        func mapView(_ mapView: GMSMapView, idleAt position: GMSCameraPosition) {
+            // Update region.center when user stops moving the map
+            parent.region.center = CLLocationCoordinate2D(
+                latitude: position.target.latitude,
+                longitude: position.target.longitude
+            )
+        }
     }
 
     func makeUIView(context: Context) -> GMSMapView {
@@ -38,11 +46,11 @@ struct GoogleMapView: UIViewRepresentable {
         let camera = GMSCameraPosition(
             latitude: region.center.latitude,
             longitude: region.center.longitude,
-            zoom: 15
+            zoom: 14
         )
         
         // Create map view with camera
-        let mapView = GMSMapView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 0.4), camera: camera)
+        let mapView = GMSMapView(frame: .zero, camera: camera)
         
         // Configure map settings
         mapView.isMyLocationEnabled = false
@@ -62,18 +70,15 @@ struct GoogleMapView: UIViewRepresentable {
 
     func updateUIView(_ mapView: GMSMapView, context: Context) {
         // Only update if there's a significant change
-        let currentPosition = mapView.camera.target
-        let newPosition = CLLocationCoordinate2D(
+        let currentCenter = mapView.camera.target
+        let newCenter = CLLocationCoordinate2D(
             latitude: region.center.latitude,
             longitude: region.center.longitude
         )
         
-        if abs(currentPosition.latitude - newPosition.latitude) > 0.000001 ||
-           abs(currentPosition.longitude - newPosition.longitude) > 0.000001 {
-            let camera = GMSCameraPosition(
-                target: newPosition,
-                zoom: mapView.camera.zoom
-            )
+        if abs(currentCenter.latitude - newCenter.latitude) > 0.000001 ||
+           abs(currentCenter.longitude - newCenter.longitude) > 0.000001 {
+            let camera = GMSCameraPosition(target: newCenter, zoom: mapView.camera.zoom)
             mapView.animate(to: camera)
         }
         
@@ -90,7 +95,8 @@ struct GoogleMapView: UIViewRepresentable {
             let marker = GMSMarker(position: annotation.coordinate)
             marker.title = annotation.title ?? ""
             marker.snippet = annotation.subtitle ?? ""
-            marker.icon = GMSMarker.markerImage(with: .systemRed)
+            marker.icon = UIImage(named: "halal_pin") ?? GMSMarker.markerImage(with: .systemRed)
+            marker.appearAnimation = .pop
             marker.map = mapView
         }
     }

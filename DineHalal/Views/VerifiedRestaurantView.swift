@@ -1,4 +1,3 @@
-
 ///  VerifiedRestaurantView.swift
 ///  DineHalal
 ///  Created by Joanne on 4/20/25.
@@ -84,7 +83,6 @@ struct VerifiedRestaurantsView: View {
     }
 }
 
-// Helper views remain unchanged
 
 /// Helper Views for various states with updated colors
 

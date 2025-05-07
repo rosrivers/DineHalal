@@ -1,4 +1,3 @@
-
 ///  AppDelegate.swift
 ///  Dine Halal
 ///  Created by Joanne on 3/7/25.
@@ -15,7 +14,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         GMSServices.provideAPIKey(APIKeys.mapsKey)
        
         // Force regeneration of the CSV file from PDF
-       // CSVParserService().deleteExistingCSVFile()
+        // CSVParserService().deleteExistingCSVFile()
         
         //  Maps initialization
         Thread.sleep(forTimeInterval: 0.1)
