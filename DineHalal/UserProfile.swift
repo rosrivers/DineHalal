@@ -71,17 +71,6 @@ struct UserProfile: View {
                                             .frame(width: 60, height: 60)
                                             .foregroundColor(.white)
                                     }
-
-                                    Button(action: {
-                                        print("Edit Avatar")
-                                    }) {
-                                        Image(systemName: "pencil.circle.fill")
-                                            .resizable()
-                                            .frame(width: 30, height: 30)
-                                            .foregroundColor(.mud)
-                                            .background(Circle().fill(Color.white))
-                                    }
-                                    .offset(x: 35, y: 35)
                                 }
                                 .offset(y: -18)
 
@@ -113,29 +102,6 @@ struct UserProfile: View {
                             }
                             .padding(.top, 100) // Position elements within the background
                         }
-
-                        // **Favorites Section**
-                        VStack(alignment: .leading) {
-                            Text("My Favorites")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.darkBrown)
-                            
-                            if userFavorites.isEmpty {
-                                Text("No favorites yet")
-                                    .foregroundColor(.mud)
-                            } else {
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 15) {
-                                        ForEach(userFavorites, id: \.self) { restaurantName in
-                                            FavoriteItem(title: restaurantName)
-                                        }
-                                    }
-                                    .padding(.horizontal)
-                                }
-                            }
-                        }
-                        .padding()
 
                         // **Reviews Section** - Combined from both versions
                         VStack(alignment: .leading) {
@@ -192,18 +158,18 @@ struct UserProfile: View {
                         }
                         .padding()
 
+                        Spacer()
                         // **Sign-Out Button** placed at the bottom of the page
                         Button(action: signOut) {
                             Text("Sign Out")
                                 .foregroundColor(.white)
                                 .padding()
-                                .background(Color.red)
+                                .background(Color.mud)
                                 .cornerRadius(10)
                                 .padding(.top)
+
                         }
                         .padding()
-
-                        Spacer()
                     }
                 }
             }
@@ -272,19 +238,6 @@ struct UserProfile: View {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         FirebaseService.shared.deleteReview(restaurantId: review.restaurantId, reviewId: review.id, userId: userId)
         userReviews.removeAll { $0.id == review.id }
-    }
-}
-
-// **Favorite Item**
-struct FavoriteItem: View {
-    var title: String
-
-    var body: some View {
-        Text(title)
-            .frame(width: 120)
-            .padding()
-            .background(Color.gray.opacity(0.2))
-            .cornerRadius(12)
     }
 }
 
