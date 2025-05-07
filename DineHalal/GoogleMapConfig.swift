@@ -5,6 +5,7 @@
 /// Created by Joanne on 3/25/25.
 /// Edited by Chelsea on 4/5/25.
 
+
 import Foundation
 import CoreLocation
 import GoogleMaps
@@ -25,6 +26,13 @@ struct GoogleMapConfig {
         
         // Build keyword starting with "halal" then add additional cuisine filters if enabled.
         var keyword = "halal"
+        
+        // Add city/zip to the keyword if provided
+        if let filter = filter, !filter.cityZip.isEmpty {
+            keyword += " " + filter.cityZip
+        }
+        
+        // Add cuisine filters
         if let filter = filter {
             if filter.middleEastern { keyword += " middle eastern" }
             if filter.mediterranean { keyword += " mediterranean" }

@@ -79,9 +79,16 @@ struct RestaurantCard: View {
 }
 
 struct HomeScreen: View {
-    @StateObject private var locationManager = LocationManager()
-    @StateObject private var placesService = PlacesService()
+    // UPDATED: Using shared services from environment instead of creating new ones
+    @EnvironmentObject var placesService: PlacesService
     @EnvironmentObject var navigationState: NavigationStateManager
+    
+    // NEW: Reference to shared LocationManager - Use actual user location.
+    @EnvironmentObject var locationManager: LocationManager
+    
+    // Create publisher for location updates - SwiftUI-friendly approach
+    private let locationUpdatePublisher = NotificationCenter.default.publisher(for: NSNotification.Name("LocationUpdated"))
+    
     @State private var showFilter = false
     
     @State private var userFavorites: [String] = []
@@ -89,10 +96,6 @@ struct HomeScreen: View {
     @State private var errorMessage: String?
     @State private var userName: String = "User"
     
-    @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060),
-        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-    )
     @State private var annotations: [MKPointAnnotation] = []
     @State private var filterCriteria = FilterCriteria()
     
@@ -142,6 +145,33 @@ struct HomeScreen: View {
                     try? document.data(as: Review.self)
                 } ?? []
             }
+    }
+    
+    // Function to fetch restaurants based on user location
+    private func fetchRestaurantsForCurrentLocation() {
+        if !filterCriteria.cityZip.isEmpty {
+            geocodeZipCode(filterCriteria.cityZip) { coordinate in
+                if let coordinate = coordinate {
+                    placesService.fetchNearbyRestaurants(
+                        latitude: coordinate.latitude,
+                        longitude: coordinate.longitude,
+                        filter: filterCriteria
+                    )
+                } else if let userLocation = locationManager.userLocation {
+                    placesService.fetchNearbyRestaurants(
+                        latitude: userLocation.latitude,
+                        longitude: userLocation.longitude,
+                        filter: filterCriteria
+                    )
+                }
+            }
+        } else if let userLocation = locationManager.userLocation {
+            placesService.fetchNearbyRestaurants(
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
+                filter: filterCriteria
+            )
+        }
     }
     
     var body: some View {
@@ -249,10 +279,10 @@ struct HomeScreen: View {
                         }
                     }
 
-                    // Recently Verified Restaurants
+                    /// Verified Restaurants
                     if !placesService.recentlyVerified.isEmpty {
                         VStack(alignment: .leading) {
-                            Text("Recently Verified Halal Restaurants")
+                            Text("Verified Halal Restaurants")
                                 .font(.headline)
                                 .padding(.leading)
                                 .foregroundStyle(.darkBrown)
@@ -280,85 +310,54 @@ struct HomeScreen: View {
                 .padding(.bottom, 80) // So bottom nav isn't covered
             } // ScrollView
             .background(Color("AccentColor").ignoresSafeArea())
-            .onAppear { fetchUserData() }
-        }
-            .sheet(isPresented: $showFilter) {
-                FilterView(criteria: $filterCriteria) { criteria in
-                    if !criteria.cityZip.isEmpty {
-                        geocodeZipCode(criteria.cityZip) { coordinate in
-                            if let coordinate = coordinate {
-                                placesService.fetchNearbyRestaurants(
-                                    latitude: coordinate.latitude,
-                                    longitude: coordinate.longitude,
-                                    filter: criteria
-                                )
-                            } else {
-                                placesService.fetchNearbyRestaurants(
-                                    latitude: region.center.latitude,
-                                    longitude: region.center.longitude,
-                                    filter: criteria
-                                )
-                            }
-                        }
-                    } else {
-                        placesService.fetchNearbyRestaurants(
-                            latitude: region.center.latitude,
-                            longitude: region.center.longitude,
-                            filter: criteria
-                        )
-                    }
-                }
-            }
-            .sheet(isPresented: $navigationState.showingRestaurantDetail) {
-                if let restaurant = navigationState.selectedRestaurant {
-                    RestaurantDetails(
-                        restaurant: restaurant,
-                        verificationService: placesService.verificationService
-                    )
-                }
-            }
             .onAppear {
-                if !filterCriteria.cityZip.isEmpty {
-                    geocodeZipCode(filterCriteria.cityZip) { coordinate in
-                        if let coordinate = coordinate {
-                            placesService.fetchNearbyRestaurants(
-                                latitude: coordinate.latitude,
-                                longitude: coordinate.longitude,
-                                filter: filterCriteria
-                            )
-                        } else {
-                            placesService.fetchNearbyRestaurants(
-                                latitude: region.center.latitude,
-                                longitude: region.center.longitude,
-                                filter: filterCriteria
-                            )
-                        }
-                    }
-                } else {
+                fetchUserData()
+                
+                // Request location permission when the view appears
+                locationManager.requestLocationPermission()
+                locationManager.getLocation()
+                
+                // Initial load of restaurants
+                fetchRestaurantsForCurrentLocation()
+            }
+            // Use SwiftUI's onReceive for notification handling - automatically cleans up
+            .onReceive(locationUpdatePublisher) { _ in
+                if let location = locationManager.userLocation {
                     placesService.fetchNearbyRestaurants(
-                        latitude: region.center.latitude,
-                        longitude: region.center.longitude,
+                        latitude: location.latitude,
+                        longitude: location.longitude,
                         filter: filterCriteria
                     )
                 }
-                fetchUserData()
             }
-            .alert("Error", isPresented: .constant(errorMessage != nil)) {
-                Button("OK") {
-                    errorMessage = nil
-                }
-            } message: {
-                if let errorMessage = errorMessage {
-                    Text(errorMessage)
-                }
+        }
+        .sheet(isPresented: $showFilter) {
+            FilterView(criteria: $filterCriteria) { criteria in
+                fetchRestaurantsForCurrentLocation()
+            }
+        }
+        .sheet(isPresented: $navigationState.showingRestaurantDetail) {
+            if let restaurant = navigationState.selectedRestaurant {
+                RestaurantDetails(
+                    restaurant: restaurant,
+                    verificationService: placesService.verificationService
+                )
+            }
+        }
+        .alert("Error", isPresented: .constant(errorMessage != nil)) {
+            Button("OK") {
+                errorMessage = nil
+            }
+        } message: {
+            if let errorMessage = errorMessage {
+                Text(errorMessage)
             }
         }
     }
-    
-    
-    struct HomeScreen_Previews: PreviewProvider {
-        static var previews: some View {
-            HomeScreen()
-                .environmentObject(NavigationStateManager())
-        }
-    }
+}
+//struct HomeScreen_Previews: PreviewProvider {
+//    static var previews: some View {
+//        HomeScreen()
+//            .environmentObject(NavigationStateManager())
+//    }
+//}

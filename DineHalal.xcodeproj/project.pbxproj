@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		84195EF42DC527860017161F /* halalestablishmentregistrations.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 84195EF32DC527860017161F /* halalestablishmentregistrations.pdf */; };
 		84CF13562D9CABCF00818065 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 84CF13552D9CABCF00818065 /* FirebaseCore */; };
 		84D0B4272D8B551300A0E341 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B4262D8B551300A0E341 /* GoogleSignIn */; };
 		84D0B4292D8B551300A0E341 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 84D0B4282D8B551300A0E341 /* GoogleSignInSwift */; };
@@ -34,6 +35,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		84195EF32DC527860017161F /* halalestablishmentregistrations.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = halalestablishmentregistrations.pdf; sourceTree = "<group>"; };
 		848DA2E42D78951E00ED130D /* DineHalal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DineHalal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		848DA2F52D78951F00ED130D /* DineHalalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DineHalalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		848DA2FF2D78951F00ED130D /* DineHalalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DineHalalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -93,6 +95,7 @@
 		848DA2DB2D78951E00ED130D = {
 			isa = PBXGroup;
 			children = (
+				84195EF32DC527860017161F /* halalestablishmentregistrations.pdf */,
 				848DA2E62D78951E00ED130D /* DineHalal */,
 				848DA2F82D78951F00ED130D /* DineHalalTests */,
 				848DA3022D78951F00ED130D /* DineHalalUITests */,
@@ -247,6 +250,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				84195EF42DC527860017161F /* halalestablishmentregistrations.pdf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

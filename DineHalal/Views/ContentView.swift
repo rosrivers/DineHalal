@@ -14,7 +14,7 @@ import Firebase
 struct ContentView: View {
     @State private var navigationPath = NavigationPath() /// Keep track of the navigation path
     @StateObject private var placesService = PlacesService() // Shared PlacesService
-    @StateObject private var locationManager = LocationManager() // Use your existing LocationManager
+    @EnvironmentObject var locationManager: LocationManager
     
     var body: some View {
         TabView {
@@ -62,9 +62,11 @@ struct ContentView: View {
             // Instead of using onChange which requires Equatable
             NotificationCenter.default.addObserver(forName: NSNotification.Name("LocationUpdated"), object: nil, queue: .main) { _ in
                 if let location = locationManager.userLocation {
+                    // FIXED: Added missing filter parameter
                     placesService.fetchNearbyRestaurants(
                         latitude: location.latitude,
-                        longitude: location.longitude
+                        longitude: location.longitude,
+                        filter: FilterCriteria() // Added default empty filter
                     )
                 }
             }
@@ -72,6 +74,6 @@ struct ContentView: View {
     }
 }
 
-#Preview {
-    ContentView()
-}
+//#Preview {
+//    ContentView()
+//}

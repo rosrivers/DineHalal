@@ -13,6 +13,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         // Initialize Google Maps
         GMSServices.provideAPIKey(APIKeys.mapsKey)
+       
+        // Force regeneration of the CSV file from PDF
+       // CSVParserService().deleteExistingCSVFile()
         
         //  Maps initialization
         Thread.sleep(forTimeInterval: 0.1)

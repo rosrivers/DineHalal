@@ -15,17 +15,23 @@ struct DineHalalApp: App {
     @StateObject private var navigationState = NavigationStateManager()
     @StateObject private var favorites = Favorites()
     
-    // Create verification service
-    @StateObject private var verificationService = VerificationService()
+    /// Create location manager -  user location -restaurants are fetched based on user location.
+    @StateObject private var locationManager = LocationManager()
     
-    // Create places service that uses the verification service
+    /// Create verification service
+    @StateObject private var verificationService: VerificationService
+    
+    /// Create places service that uses the verification service
     @StateObject private var placesService: PlacesService
     
     // Initialize with proper setup
     init() {
-        // Use _placesService to set the wrapped value, referencing the existing verificationService
-        _placesService = StateObject(wrappedValue:
-            PlacesService(verificationService: VerificationService()))
+        /// verification service instance
+        let verificationServiceInstance = VerificationService()
+        
+        /// StateObjects Instances 
+        _verificationService = StateObject(wrappedValue: verificationServiceInstance)
+        _placesService = StateObject(wrappedValue: PlacesService(verificationService: verificationServiceInstance))
     }
     
     var body: some Scene {
@@ -35,6 +41,7 @@ struct DineHalalApp: App {
                 .environmentObject(favorites)
                 .environmentObject(verificationService)
                 .environmentObject(placesService)
+                .environmentObject(locationManager)
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url)
                 }

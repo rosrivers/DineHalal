@@ -3,7 +3,6 @@
 ///  Dine Halal
 ///  Created by Joanne on 3/19/25.
 
-
 import Foundation
 
 struct Restaurant: Identifiable, Codable, Hashable {
@@ -82,6 +81,35 @@ struct Restaurant: Identifiable, Codable, Hashable {
     }
     struct Photo: Decodable {
       let photo_reference: String
+    }
+    
+    // NEW INITIALIZER: initializer for creating Restaurant objects from Firestore data
+    init(
+        id: String,
+        name: String,
+        rating: Double,
+        numberOfRatings: Int,
+        priceLevel: Int?,
+        vicinity: String,
+        isOpenNow: Bool = false,
+        photoReference: String? = nil,
+        placeId: String,
+        latitude: Double,
+        longitude: Double,
+        address: String
+    ) {
+        self.id = id
+        self.name = name
+        self.rating = rating
+        self.numberOfRatings = numberOfRatings
+        self.priceLevel = priceLevel
+        self.vicinity = vicinity
+        self.isOpenNow = isOpenNow
+        self.photoReference = photoReference
+        self.placeId = placeId
+        self.latitude = latitude
+        self.longitude = longitude
+        self.address = address
     }
     
     init(from decoder: Decoder) throws {

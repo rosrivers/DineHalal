@@ -4,6 +4,7 @@
 ///  Created by Joanne on 3/19/25.
 ///
 
+/*
 import Foundation
 import PDFKit
 
@@ -11,9 +12,11 @@ import PDFKit
 class PDFParserService {
     
     /// Function to download and parse the PDF, returning an array of HalalEstablishment objects
-    func downloadAndParsePDF() async throws -> [HalalEstablishment] {
+    /// access a specific number of pages
+    func downloadAndParsePDF(maxPages: Int = 100) async throws -> [HalalEstablishment] {
         let pdfData = try await downloadPDF()
-        return extractEstablishmentData(from: pdfData)
+        print("PDF downloaded successfully, size: \(pdfData.count) bytes")
+        return extractEstablishmentData(from: pdfData, maxPages: maxPages)
     }
     
     /// Function to download the PDF from the provided URL
@@ -21,62 +24,91 @@ class PDFParserService {
         /// Try to load from local file first
         if let localPath = Bundle.main.path(forResource: "halalestablishmentregistrations", ofType: "pdf"),
            let localData = try? Data(contentsOf: URL(fileURLWithPath: localPath)) {
+            print("Using locally bundled PDF file")
             return localData
         }
         
         /// Fall back to remote URL if local file not found
+        print("Local PDF not found, downloading from remote URL...")
         guard let url = URL(string: "https://agriculture.ny.gov/system/files/documents/2025/03/halalestablishmentregistrations.pdf") else {
             throw URLError(.badURL)
         }
         
-        let (data, _) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        
         return data
     }
     
-    func extractEstablishmentData(from pdfData: Data) -> [HalalEstablishment] {
+    /// Extract establishment data from PDF, limited to specified number of pages
+    func extractEstablishmentData(from pdfData: Data, maxPages: Int = 100) -> [HalalEstablishment] {
         var establishments: [HalalEstablishment] = []
         
         guard let pdfDocument = PDFDocument(data: pdfData) else {
+            print("Failed to create PDF document from data")
             return establishments
         }
         
+        // Process only up to maxPages or the actual page count, whichever is smaller
+        let pagesToProcess = min(pdfDocument.pageCount, maxPages)
+        print("PDF has \(pdfDocument.pageCount) pages, processing first \(pagesToProcess) pages")
+        
         // Process each page in the PDF
-        for pageIndex in 0..<pdfDocument.pageCount {
-            guard let page = pdfDocument.page(at: pageIndex) else { continue }
-            guard let pageContent = page.string else { continue }
+        for pageIndex in 0..<pagesToProcess {
+            guard let page = pdfDocument.page(at: pageIndex) else {
+                print("Couldn't access page \(pageIndex)")
+                continue
+            }
+            guard let pageContent = page.string else {
+                print("No text content on page \(pageIndex)")
+                continue
+            }
             
-            // Look for form headers to identify establishment records
-            if pageContent.contains("HALAL REGISTRATION FORM") ||
-               pageContent.contains("Name of Establishment:") {
+            print("Processing page \(pageIndex+1) of \(pagesToProcess)")
+            
+            // IMPROVED: More keywords to identify relevant pages
+            if pageContent.contains("HALAL") ||
+               pageContent.contains("ESTABLISHMENT") ||
+               pageContent.contains("CERTIFICATION") ||
+               pageContent.contains("Name of") ||
+               pageContent.contains("Address") {
                 
                 // Extract establishments from this page
                 let pageEstablishments = extractEstablishmentsFromFormPage(pageContent)
+                print("Found \(pageEstablishments.count) establishments on page \(pageIndex+1)")
+                
+                // Debug the establishments found on this page
+                for (i, est) in pageEstablishments.enumerated() {
+                    print("  \(i+1). \"\(est.name)\" at \"\(est.address)\"")
+                }
+                
                 establishments.append(contentsOf: pageEstablishments)
             }
         }
         
+        print("📊 Total establishments extracted: \(establishments.count)")
         return establishments
     }
     
-    /// Try to extract establishments from a page containing registration forms
+    /// FIXED: No longer returns early after finding one establishment
     private func extractEstablishmentsFromFormPage(_ pageContent: String) -> [HalalEstablishment] {
         var establishments: [HalalEstablishment] = []
         
-        // First try the exact form format extraction (based on the screenshot)
+        // Try all extraction methods and collect all results
         if let establishment = extractFormStructuredEstablishment(pageContent) {
             establishments.append(establishment)
-            return establishments
         }
         
-        // Fallback to alternative extraction methods
         if let establishment = extractEstablishmentFromPage(pageContent) {
             establishments.append(establishment)
         }
         
-        if establishments.isEmpty {
-            if let establishment = extractEstablishmentWithRegex(pageContent) {
-                establishments.append(establishment)
-            }
+        if let establishment = extractEstablishmentWithRegex(pageContent) {
+            establishments.append(establishment)
         }
         
         return establishments
@@ -88,7 +120,6 @@ class PDFParserService {
         let namePattern = "Name of Establishment:\\s*([^\\n]+)"
         let addressPattern = "Street Address of the Establishment:\\s*([^\\n]+)"
         let cityStatePattern = "City\\s+([^\\s]+)\\s+State\\s+([^\\s]+)\\s+Zip\\s+([^\\s]+)"
-        //let phonePattern = "Phone Number of Establishment(?:[^:]*):(?:\\s*\\(Optional\\))?\\s*([^\\n]+)"
         
         // Extract name
         var name: String? = nil
@@ -127,15 +158,6 @@ class PDFParserService {
             }
         }
         
-        // Extract phone number
-//        var phone: String? = nil
-//        if let regex = try? NSRegularExpression(pattern: phonePattern),
-//           let match = regex.firstMatch(in: pageContent, range: NSRange(pageContent.startIndex..., in: pageContent)),
-//           match.numberOfRanges > 1,
-//           let phoneRange = Range(match.range(at: 1), in: pageContent) {
-//            phone = String(pageContent[phoneRange]).trimmingCharacters(in: .whitespacesAndNewlines)
-//        }
-        
         // If we found a name, construct the establishment
         guard let name = name, !name.isEmpty else {
             return nil
@@ -164,7 +186,19 @@ class PDFParserService {
             fullAddress = extractAddressFromText(pageContent) ?? "New York"
         }
         
-        let regNumber = "NY-\(UUID().uuidString.prefix(8))"
+        // Try to find registration number in the page content
+        let regNumberPattern = "Registration\\s+(?:No|Number)[.:]?\\s*([A-Z0-9-]+)"
+        var registrationNumber = "NY-\(UUID().uuidString.prefix(8))"
+        
+        if let regex = try? NSRegularExpression(pattern: regNumberPattern, options: .caseInsensitive),
+           let match = regex.firstMatch(in: pageContent, range: NSRange(pageContent.startIndex..., in: pageContent)),
+           match.numberOfRanges > 1,
+           let regRange = Range(match.range(at: 1), in: pageContent) {
+            let extractedRegNumber = String(pageContent[regRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !extractedRegNumber.isEmpty {
+                registrationNumber = extractedRegNumber
+            }
+        }
         
         return HalalEstablishment(
             id: UUID(),
@@ -172,7 +206,7 @@ class PDFParserService {
             address: fullAddress,
             certificationType: "Halal Certified",
             verificationDate: Date(),
-            registrationNumber: regNumber
+            registrationNumber: registrationNumber
         )
     }
     
@@ -279,8 +313,8 @@ class PDFParserService {
         
         // Look for registration number
         for line in lines {
-            if line.contains("Registration") && line.contains("Number") {
-                if let regRange = line.range(of: "Number") {
+            if line.contains("Registration") && (line.contains("Number") || line.contains("No")) {
+                if let regRange = line.range(of: "Number") ?? line.range(of: "No") {
                     regNumber = String(line[regRange.upperBound...])
                         .trimmingCharacters(in: .whitespacesAndNewlines)
                 }
@@ -446,3 +480,4 @@ class PDFParserService {
         return nil
     }
 }
+*/

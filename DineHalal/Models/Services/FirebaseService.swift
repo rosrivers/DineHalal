@@ -99,4 +99,8 @@ class FirebaseService {
             completion(reviews, nil)
         }
     }
+
+    func getCurrentUserID() -> String? {
+        return Auth.auth().currentUser?.uid
+    }
 }

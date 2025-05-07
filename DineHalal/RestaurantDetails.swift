@@ -103,8 +103,6 @@ struct RestaurantDetails: View {
                             .foregroundColor(.gray)
                     }
                     
-                    // Verification badge - MOVED HERE (replacing $$ signs)
-                    // This is where the $ price indicator used to be
                     if let result = verificationResult, result.isVerified {
                         Button(action: {
                             showingVerificationDetails = true
@@ -265,7 +263,7 @@ struct RestaurantDetails: View {
             placesService.fetchNearbyRestaurants(
                 latitude: restaurant.latitude,
                 longitude: restaurant.longitude,
-                filter: nil
+                filter: FilterCriteria()
             )
         }
     }
@@ -299,7 +297,7 @@ struct VerificationDetailsSheet: View {
                     } else {
                         Image(systemName: "checkmark.seal.fill")
                             .foregroundColor(.green)
-                        Text("\(restaurant.name) is verified as halal")
+                        Text("\(restaurant.name) is officially verified as halal")
                             .foregroundColor(.green)
                     }
                 }
@@ -317,22 +315,10 @@ struct VerificationDetailsSheet: View {
                         Text("Certification: \(establishment.certificationType)")
                         Text("Registration: \(establishment.registrationNumber)")
                         
-                        // Match confidence
-                        HStack {
-                            Text("Match Confidence:")
-                            
-                            switch result.matchConfidence {
-                            case .high:
-                                Text("High")
-                                    .foregroundColor(.green)
-                            case .medium:
-                                Text("Medium")
-                                    .foregroundColor(.orange)
-                            case .low:
-                                Text("Low")
-                                    .foregroundColor(.red)
-                            }
-                        }
+                        Text("Verification Method: Exact match in the official New York Halal registry")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.top, 4)
                     }
                 } else if result.source == .communityVerified, let voteData = result.voteData {
                     VStack(alignment: .leading, spacing: 8) {

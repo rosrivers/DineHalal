@@ -29,12 +29,12 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.requestLocation()
     }
     
-    // FIXED: Removed duplicate method, kept the version that posts notifications
+    // FIXED: Removed duplicate method.
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.first else { return }
         DispatchQueue.main.async {
             self.userLocation = location.coordinate
-            // Post notification when location is updated
+            // Post notification when location is updated - not entirely needed but oh well.
             NotificationCenter.default.post(name: NSNotification.Name("LocationUpdated"), object: nil)
         }
     }
