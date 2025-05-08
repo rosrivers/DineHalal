@@ -110,8 +110,7 @@ struct MapPageView: View {
                     fetchAndAnnotate(lat: region.center.latitude, lon: region.center.longitude)
                 }
             }
-        } else if let userLoc = locationManager.userLocation {
-            // Use user location if no specific city/zip is provided
+        } else if criteria.nearMe, let userLoc = locationManager.userLocation {
             region.center = userLoc
         } else {
             fetchAndAnnotate(lat: region.center.latitude, lon: region.center.longitude)
@@ -132,11 +131,9 @@ struct MapPageView: View {
     }
 }
 
-
-
-//struct MapPageView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        MapPageView()
-//            .environmentObject(NavigationStateManager())
-//    }
-//}
+struct MapPageView_Previews: PreviewProvider {
+    static var previews: some View {
+        MapPageView()
+            .environmentObject(NavigationStateManager())
+    }
+}

@@ -106,7 +106,6 @@ struct RestaurantDetails: View {
                                         .foregroundColor(.green)
                                 }
                             }
-                            .padding(.vertical, 2)
                         }
                         .sheet(isPresented: $showingVerificationDetails) {
                             VerificationDetailsSheet(result: result, restaurant: restaurant)
@@ -310,7 +309,6 @@ struct RestaurantDetails: View {
         }
     }
 }
-
 struct GooglePlaceImage: View {
     let photoReference: String
     var body: some View {
@@ -328,7 +326,6 @@ struct GooglePlaceImage: View {
         }
     }
 }
-
 struct StarRatingView: View {
     let rating: Double
     var body: some View {
@@ -345,38 +342,24 @@ struct StarRatingView: View {
         else { return "star" }
     }
 }
-
 struct VerificationDetailsSheet: View {
     let result: VerificationResult
     let restaurant: Restaurant
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Halal Verification Details")
-                .font(.headline)
-            
+            Text("Halal Verification Details").font(.headline)
             if result.isVerified {
-                HStack {
-                    if result.source == .communityVerified {
-                        Image(systemName: "person.2.fill")
-                            .foregroundColor(.orange)
-                        Text("\(restaurant.name) is community verified as halal")
-                            .foregroundColor(.orange)
-                    } else {
-                        Image(systemName: "checkmark.seal.fill")
-                            .foregroundColor(.green)
-                        Text("\(restaurant.name) is officially verified as halal")
-                            .foregroundColor(.green)
-                    }
+                if result.source == .communityVerified {
+                    Label("\(restaurant.name) is community verified as halal", systemImage: "person.2.fill")
+                        .foregroundColor(.orange)
+                } else {
+                    Label("\(restaurant.name) is verified as halal", systemImage: "checkmark.seal.fill")
+                        .foregroundColor(.green)
                 }
-                
-                Divider()
-                
                 if result.source == .officialRegistry, let establishment = result.establishment {
+                    Divider()
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Official Registry Information")
-                            .font(.subheadline)
-                            .fontWeight(.bold)
-                        
+                        Text("Official Registry Information").font(.subheadline).fontWeight(.bold)
                         Text("Registry Name: \(establishment.name)")
                         Text("Registry Address: \(establishment.address)")
                         Text("Certification: \(establishment.certificationType)")
@@ -414,8 +397,7 @@ struct VerificationDetailsSheet: View {
                     }
                 }
             } else {
-                Text("Not Verified")
-                    .foregroundColor(.orange)
+                Text("Not Verified").foregroundColor(.orange)
                 Text("This restaurant has not been verified as halal.")
                 
                 if let voteData = result.voteData {
@@ -434,24 +416,19 @@ struct VerificationDetailsSheet: View {
                     }
                 }
             }
-            
             Spacer()
-        }
-        .padding()
+        }.padding()
     }
 }
-
 struct RestaurantMapView: View {
     let latitude: Double
     let longitude: Double
     let name: String
-    
     var body: some View {
         Map(initialPosition: .region(region)) {
             Marker(name, coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude))
         }
     }
-    
     private var region: MKCoordinateRegion {
         let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
         let span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
