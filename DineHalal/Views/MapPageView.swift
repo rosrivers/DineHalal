@@ -1,35 +1,34 @@
-//  MapPageView.swift
-//  DineHalal
-//
-//  Created by Rosa Rivera on 4/24/25.
+///  MapPageView.swift
+///  DineHalal
+///
+///  Created by Rosa Rivera on 4/24/25.
 
 import SwiftUI
 import MapKit
 import CoreLocation
 
 struct MapPageView: View {
-    @StateObject private var locationManager = LocationManager()
-    @StateObject private var placesService = PlacesService()
+    @EnvironmentObject var locationManager:LocationManager
+    @EnvironmentObject var placesService:PlacesService
     @EnvironmentObject var navigationState: NavigationStateManager
     
     @State private var filterCriteria = FilterCriteria()
     @State private var showFilter = false
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060),
-        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+        span:MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
     )
     @State private var annotations: [MKPointAnnotation] = []
-    @State private var lastRegionCenter: CLLocationCoordinate2D? = nil
-    
+
     var body: some View {
         ZStack {
             GoogleMapView(region: $region, annotations: annotations)
                 .edgesIgnoringSafeArea(.all)
-            
+
             VStack {
                 HStack(spacing: 12) {
                     Spacer()
-                    
+
                     Button(action: locateUser) {
                         Text("Near Me")
                             .fontWeight(.medium)
@@ -39,7 +38,7 @@ struct MapPageView: View {
                             .foregroundColor(Color.beige)
                             .clipShape(Capsule())
                     }
-                    
+
                     Button(action: { showFilter.toggle() }) {
                         Image(systemName: "line.3.horizontal.decrease.circle")
                             .font(.title2)
@@ -51,7 +50,7 @@ struct MapPageView: View {
                     .padding(.trailing, 16)
                 }
                 .padding(.top, 50)
-                
+
                 Spacer()
             }
         }
@@ -66,37 +65,36 @@ struct MapPageView: View {
                 showFilter.toggle()
             }
         }
-        .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { _ in
-            if lastRegionCenter == nil ||
-                distanceBetween(region.center, lastRegionCenter!) > 50 {
-                lastRegionCenter = region.center
-                fetchAndAnnotate(lat: region.center.latitude, lon: region.center.longitude)
-            }
-        }
     }
-    
+
     private func locateUser() {
         locationManager.requestLocationPermission()
         locationManager.getLocation()
     }
-    
-    private func initialLoad() {
-        fetchAndAnnotate(lat: region.center.latitude, lon: region.center.longitude)
-    }
-    
-    private func fetchAndAnnotate(lat: Double, lon: Double) {
-        placesService.fetchNearbyRestaurants(latitude: lat, longitude: lon, filter: filterCriteria) {
-            DispatchQueue.main.async {
-                let newAnnotations = self.placesService.allRestaurants.map { restaurant in
-                    let annotation = MKPointAnnotation()
-                    annotation.title = restaurant.name
-                    annotation.coordinate = CLLocationCoordinate2D(latitude: restaurant.latitude, longitude: restaurant.longitude)
-                    return annotation
-                }
 
-                if newAnnotations.map({ $0.coordinate.latitude }) != self.annotations.map({ $0.coordinate.latitude }) ||
-                    newAnnotations.map({ $0.coordinate.longitude }) != self.annotations.map({ $0.coordinate.longitude }) {
-                    self.annotations = newAnnotations}
+    private func initialLoad() {
+        fetchAndAnnotate(
+            lat: region.center.latitude,
+            lon: region.center.longitude
+        )
+    }
+
+    private func fetchAndAnnotate(lat: Double, lon: Double) {
+        placesService.fetchNearbyRestaurants(
+            latitude: lat,
+            longitude: lon,
+            filter: filterCriteria
+        ) {
+            DispatchQueue.main.async {
+                self.annotations = self.placesService.allRestaurants.map {
+                    let a = MKPointAnnotation()
+                    a.title = $0.name
+                    a.coordinate = CLLocationCoordinate2D(
+                        latitude:  $0.latitude,
+                        longitude: $0.longitude
+                    )
+                    return a
+                }
             }
         }
     }
@@ -104,36 +102,27 @@ struct MapPageView: View {
     private func applyFilters(_ criteria: FilterCriteria) {
         if !criteria.cityZip.isEmpty {
             geocodeZipCode(criteria.cityZip) { coord in
-                if let coord = coord {
-                    region.center = coord
-                } else {
-                    fetchAndAnnotate(lat: region.center.latitude, lon: region.center.longitude)
+                if let c = coord {
+                    region.center = c
                 }
+                fetchAndAnnotate(
+                    lat: region.center.latitude,
+                    lon: region.center.longitude
+                )
             }
-        } else if criteria.nearMe, let userLoc = locationManager.userLocation {
-            region.center = userLoc
+        } else if criteria.nearMe,
+                  let loc = locationManager.userLocation {
+            region.center = loc
+            fetchAndAnnotate(lat: loc.latitude, lon: loc.longitude)
         } else {
-            fetchAndAnnotate(lat: region.center.latitude, lon: region.center.longitude)
+            initialLoad()
         }
     }
-    
-    private func geocodeZipCode(_ zip: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
-        let geocoder = CLGeocoder()
-        geocoder.geocodeAddressString(zip) { placemarks, _ in
-            completion(placemarks?.first?.location?.coordinate)
-        }
-    }
-    
-    private func distanceBetween(_ coord1: CLLocationCoordinate2D, _ coord2: CLLocationCoordinate2D) -> CLLocationDistance {
-        let loc1 = CLLocation(latitude: coord1.latitude, longitude: coord1.longitude)
-        let loc2 = CLLocation(latitude: coord2.latitude, longitude: coord2.longitude)
-        return loc1.distance(from: loc2)
-    }
-}
 
-struct MapPageView_Previews: PreviewProvider {
-    static var previews: some View {
-        MapPageView()
-            .environmentObject(NavigationStateManager())
+    private func geocodeZipCode(_ zip: String,
+                                completion: @escaping (CLLocationCoordinate2D?) -> Void) {
+        CLGeocoder().geocodeAddressString(zip) { marks, _ in
+            completion(marks?.first?.location?.coordinate)
+        }
     }
 }

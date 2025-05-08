@@ -362,4 +362,3 @@ struct HomeScreen: View {
 //                .environmentObject(NavigationStateManager())
 //        }
 //    }
-

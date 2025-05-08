@@ -5,9 +5,8 @@
 import SwiftUI
 
 struct VerifiedRestaurantsView: View {
-    @ObservedObject var placesService: PlacesService
-    @StateObject private var locationManager = LocationManager()
-    
+    @EnvironmentObject var placesService:PlacesService
+    @EnvironmentObject var locationManager:LocationManager
     var body: some View {
         NavigationStack {
             ZStack {
@@ -117,7 +116,6 @@ struct LocationErrorView: View {
         .frame(maxWidth: .infinity)
     }
 }
-
 
 struct RequestLocationView: View {
     let requestAction: () -> Void
