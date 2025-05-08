@@ -1,15 +1,17 @@
-//
-//  PlacesService.swift
-//  DineHalal
-//
-//  Created by Joanne on 4/1/25.
-//  Edited by Iman Ikram on 4/28/2025
-//  Edited by Rosa on 05/05/25 to preload full opening-hours
+///  PlacesService.swift
+///  DineHalal
+///  Created by Joanne on 4/1/25.
+///  Edited by Chelsea on 4/5/25.
+///  Edited by Iman Ikram on 4/28/2025
+///  Edited by Rosa on 05/05/25 to preload full opening-hours
+///"When your application displays results to the user, you should also display any attribution included in the response. The next_page_token can be used to retrieve additional results." - Google Places API Documentation
 
 import Foundation
 import CoreLocation
 import ObjectiveC
+import FirebaseFirestore
 
+/// Define PlacesResponse structure
 struct PlacesResponse: Codable {
     let results: [Restaurant]
     let status: String
@@ -25,17 +27,24 @@ class PlacesService: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
     
+    /// Added for loading state tracking
     @Published var isLoadingMore: Bool = false
     
+    /// Added for pagination
     private var nextPageToken: String?
     private var isFetchingNextPage = false
+    
+    /// Added to track verified restaurant IDs persistently
     private var verifiedRestaurantIDs: Set<String> = []
     
+    /// Public accessor for checking if more pages are available
     var hasMorePages: Bool {
         return nextPageToken != nil
     }
     
+    // Constructor with verification service
     init(verificationService: VerificationService? = nil) {
+        // Load any previously verified restaurants from UserDefaults
         if let savedIDs = UserDefaults.standard.stringArray(forKey: "verifiedRestaurantIDs") {
             verifiedRestaurantIDs = Set(savedIDs)
         }
@@ -43,19 +52,19 @@ class PlacesService: ObservableObject {
         if let service = verificationService {
             objc_setAssociatedObject(self, &PlacesService.verificationServiceKey, service, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
+        /// Otherwise your extension creates verificationService on demand - note.
     }
     
-    // Accepts completion handler
     func fetchNearbyRestaurants(
         latitude: Double,
         longitude: Double,
-        filter: FilterCriteria? = nil,
+        filter: FilterCriteria,
         completion: (() -> Void)? = nil
     ) {
         isLoading = true
         allRestaurants = []
         nextPageToken = nil
-
+        
         guard let url = GoogleMapConfig.getNearbyRestaurantsURL(
             userLocation: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
             filter: filter) else {
@@ -63,117 +72,201 @@ class PlacesService: ObservableObject {
             completion?()
             return
         }
-
+        
+        //  Pass filter into helper
         fetchRestaurants(from: url, using: filter, completion: completion)
     }
-
-    // passes completion through
+    
+    /// Added new method to load more restaurants
+    func loadMoreRestaurants(latitude: Double, longitude: Double, filter: FilterCriteria?) {
+        guard let pageToken = nextPageToken, !isFetchingNextPage else { return }
+        
+        isFetchingNextPage = true
+        isLoadingMore = true
+        
+        /// Create next page URL
+        var urlComponents = URLComponents(string: "https://maps.googleapis.com/maps/api/place/nearbysearch/json")
+        urlComponents?.queryItems = [
+            URLQueryItem(name: "pagetoken", value: pageToken),
+            URLQueryItem(name: "key", value: GoogleMapConfig.placesKey)
+        ]
+        
+        guard let url = urlComponents?.url else {
+            isFetchingNextPage = false
+            isLoadingMore = false
+            return
+        }
+        
+        fetchRestaurants(from: url, using: filter)
+    }
+    
     private func fetchRestaurants(
         from url: URL,
         using filter: FilterCriteria?,
         completion: (() -> Void)? = nil
     ) {
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+        let task = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            guard let self = self else { return }
+            
             DispatchQueue.main.async {
-                guard let self = self else { return }
-                self.isLoading = false
-                self.isFetchingNextPage = false
-                self.isLoadingMore = false
-                
-                defer {
-                    completion?() // Always call completion when done
-                }
-                
+                // Handle errors
                 if let error = error {
+                    print("Error fetching restaurants: \(error.localizedDescription)")
                     self.error = error
+                    self.isLoading = false
+                    self.isFetchingNextPage = false
+                    self.isLoadingMore = false
+                    completion?()
                     return
                 }
-
-                guard let data = data else { return }
-
-                do {
-                    let decoder = JSONDecoder()
-                    let response = try decoder.decode(PlacesResponse.self, from: data)
-                    self.nextPageToken = response.nextPageToken
-                    var newRestaurants = response.results
-                    if let filter = filter {
-                        newRestaurants = newRestaurants.filter { $0.rating >= filter.rating }
-                    }
-                    self.allRestaurants += newRestaurants
-                    for stub in newRestaurants {
-                        self.fetchPlaceDetails(for: stub.placeId) { result in
-                            if case .success(let full) = result {
-                                DispatchQueue.main.async {
-                                    if let idx = self.allRestaurants.firstIndex(where: { $0.id == full.id }) {
-                                        self.allRestaurants[idx] = full
-                                        let currentList = self.allRestaurants
-                                        let minRating = filter?.rating ?? 0.0
-                                        self.recommendedRestaurants = Array(
-                                            currentList
-                                                .filter { $0.rating >= minRating }
-                                                .sorted(by: { $0.rating > $1.rating })
-                                                .prefix(10)
-                                        )
-                                        self.popularRestaurants = Array(
-                                            currentList
-                                                .filter { $0.rating >= minRating && $0.numberOfRatings > 200 }
-                                                .sorted(by: { $0.numberOfRatings > $1.numberOfRatings })
-                                                .prefix(10)
-                                        )
+                
+                // Process data
+                if let data = data {
+                    do {
+                        // Parse JSON
+                        let decoder = JSONDecoder()
+                        let response = try decoder.decode(PlacesResponse.self, from: data)
+                        
+                        // Save next page token
+                        self.nextPageToken = response.nextPageToken
+                        
+                        // Process results with filter
+                        var newRestaurants = response.results
+                        if let filter = filter {
+                            newRestaurants = newRestaurants.filter { $0.rating >= filter.rating }
+                        }
+                        
+                        if self.isFetchingNextPage {
+                            // Add to existing results for pagination
+                            self.allRestaurants.append(contentsOf: newRestaurants)
+                        } else {
+                            // Replace results for new search
+                            self.allRestaurants = newRestaurants
+                        }
+                        
+                        // Fetch detailed info for each restaurant
+                        for stub in newRestaurants {
+                            self.fetchPlaceDetails(for: stub.placeId) { result in
+                                if case .success(let full) = result {
+                                    DispatchQueue.main.async {
+                                        if let idx = self.allRestaurants.firstIndex(where: { $0.id == full.id }) {
+                                            self.allRestaurants[idx] = full
+                                            // Process categories after updating
+                                            self.processCategories(filter: filter)
+                                        }
                                     }
                                 }
                             }
                         }
+                        
+                        // Initial processing of categories with current data
+                        self.processCategories(filter: filter)
+                        
+                        // Update verification status
+                        self.updateVerificationStatus()
+                        
+                        // Reset loading states
+                        self.isLoading = false
+                        self.isFetchingNextPage = false
+                        self.isLoadingMore = false
+                        
+                        // IMPORTANT: Store restaurants in Firebase
+                        self.storeRestaurantsInFirebase()
+                        
+                        completion?()
+                        
+                    } catch {
+                        print("Error decoding restaurant data: \(error.localizedDescription)")
+                        self.error = error
+                        self.isLoading = false
+                        self.isFetchingNextPage = false
+                        self.isLoadingMore = false
+                        completion?()
                     }
-                    let currentList = self.allRestaurants
-                    let minRating = filter?.rating ?? 0.0
-                    self.recommendedRestaurants = Array(
-                        currentList
-                            .filter { $0.rating >= minRating }
-                            .sorted(by: { $0.rating > $1.rating })
-                            .prefix(10)
-                    )
-                    self.popularRestaurants = Array(
-                        currentList
-                            .filter { $0.rating >= minRating && $0.numberOfRatings > 200 }
-                            .sorted(by: { $0.numberOfRatings > $1.numberOfRatings })
-                            .prefix(10)
-                    )
-                    self.findVerifiedRestaurants(from: self.allRestaurants)
-
-                } catch {
-                    self.error = error
                 }
             }
-        }.resume()
+        }
+        task.resume()
     }
     
+    // Process categories of restaurants
+    func processCategories(filter: FilterCriteria? = nil) {
+        let currentList = self.allRestaurants
+        let minRating = filter?.rating ?? 0.0
+        
+        // Popular restaurants - high rating count and sorted by rating
+        self.popularRestaurants = Array(
+            currentList
+                .filter { $0.rating >= minRating && $0.numberOfRatings > 200 }
+                .sorted(by: { $0.numberOfRatings > $1.numberOfRatings })
+                .prefix(10)
+        )
+        
+        // Recommended restaurants - sorted by rating
+        self.recommendedRestaurants = Array(
+            currentList
+                .filter { $0.rating >= minRating }
+                .sorted(by: { $0.rating > $1.rating })
+                .prefix(10)
+        )
+    }
+    
+    /// Find verified restaurants - updated for persistence
     private func findVerifiedRestaurants(from restaurants: [Restaurant]) {
         Task {
             let verifiedRestaurantsLocal = await findVerifiedRestaurantsAsync(from: restaurants)
+            
+            // Update the UI on main thread
             await MainActor.run {
                 self.recentlyVerified = verifiedRestaurantsLocal
             }
         }
     }
-
+    
+    // Updated to re-verify all restaurants to prevent stale verification data
     private func findVerifiedRestaurantsAsync(from restaurants: [Restaurant]) async -> [Restaurant] {
         var verifiedRestaurants: [Restaurant] = []
+        var updatedVerifiedIDs: Set<String> = []
         
-        for restaurant in restaurants where verifiedRestaurantIDs.contains(restaurant.id) {
-            verifiedRestaurants.append(restaurant)
-        }
-        for restaurant in restaurants where !verifiedRestaurantIDs.contains(restaurant.id) {
+        // Check each restaurant's current verification status
+        for restaurant in restaurants {
+            // Always verify the restaurant against our verification criteria
             let result = verificationService.verifyRestaurant(restaurant)
+            
             if result.isVerified {
                 verifiedRestaurants.append(restaurant)
-                verifiedRestaurantIDs.insert(restaurant.id)
-                UserDefaults.standard.set(Array(verifiedRestaurantIDs), forKey: "verifiedRestaurantIDs")
+                updatedVerifiedIDs.insert(restaurant.id)
             }
         }
         
+        // Update the saved IDs with only currently verified restaurants
+        verifiedRestaurantIDs = updatedVerifiedIDs
+        UserDefaults.standard.set(Array(verifiedRestaurantIDs), forKey: "verifiedRestaurantIDs")
+        
         return verifiedRestaurants
     }
+    
+    // Add this method to manually verify a restaurant
+    func manuallyVerifyRestaurant(_ restaurant: Restaurant) {
+        verifiedRestaurantIDs.insert(restaurant.id)
+        UserDefaults.standard.set(Array(verifiedRestaurantIDs), forKey: "verifiedRestaurantIDs")
+        
+        // Update the recentlyVerified list
+        if !recentlyVerified.contains(where: { $0.id == restaurant.id }) {
+            recentlyVerified.append(restaurant)
+        }
+    }
+    
+    // Add this method to manually unverify a restaurant
+    func manuallyUnverifyRestaurant(_ restaurant: Restaurant) {
+        verifiedRestaurantIDs.remove(restaurant.id)
+        UserDefaults.standard.set(Array(verifiedRestaurantIDs), forKey: "verifiedRestaurantIDs")
+        
+        // Update the Verified list
+        recentlyVerified.removeAll(where: { $0.id == restaurant.id })
+    }
+    
+    // MARK: - Google Reviews Functionality
     
     func fetchGoogleReviews(for placeID: String, completion: @escaping (Result<[GoogleReview], Error>) -> Void) {
         guard let url = GoogleMapConfig.getPlaceDetailsURL(placeId: placeID) else {

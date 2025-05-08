@@ -1,4 +1,3 @@
-
 ///  VerifiedRestaurantView.swift
 ///  DineHalal
 ///  Created by Joanne on 4/20/25.
@@ -47,24 +46,23 @@ struct VerifiedRestaurantsView: View {
                             if verifiedRestaurants.isEmpty {
                                 NoVerifiedRestaurantsView()
                             } else {
-                                /// Show verified restaurants
+                                /// Show verified restaurants with consistent spacing
                                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                                     ForEach(verifiedRestaurants) { restaurant in
                                         NavigationLink(destination: RestaurantDetails(
                                             restaurant: restaurant,
                                             verificationService: placesService.verificationService
                                         )) {
-                                            // Create a mock verification result since we know it's verified
-                                           // let mockResult = VerificationResult(isVerified: true, verifiedBy: "DineHalal", verificationDate: Date())
-                                            
                                             RestaurantCardWithVerification(
                                                 restaurant: restaurant,
                                                 verificationResult: placesService.getVerificationResult(for: restaurant)
                                             )
+                                            .padding(2) // Add small padding around each card
+                                            .contentShape(Rectangle()) // Ensure consistent tap area
                                         }
                                     }
                                 }
-                                .padding()
+                                .padding(10) // Consistent padding around the entire grid
                             }
                         }
                     }
@@ -74,7 +72,8 @@ struct VerifiedRestaurantsView: View {
                 if let location = locationManager.userLocation {
                     placesService.fetchNearbyRestaurants(
                         latitude: location.latitude,
-                        longitude: location.longitude
+                        longitude: location.longitude,
+                        filter: FilterCriteria()
                     )
                 } else {
                     locationManager.getLocation()

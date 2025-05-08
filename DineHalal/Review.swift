@@ -11,11 +11,11 @@ struct Review: Identifiable, Decodable, Equatable {
     var id: String
     var userId: String
     var restaurantId: String
-    var restaurantName: String  // ← Add this line
+    var restaurantName: String  // Added field from main-backup
     var rating: Int
     var comment: String
     var date: Date
-    var username: String?
+    var username: String?       // Added field from main-backup
     
     enum CodingKeys: String, CodingKey {
         case id, userId, restaurantId, restaurantName, rating, comment, date, username

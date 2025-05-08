@@ -9,7 +9,7 @@ struct FilterCriteria {
     var halalCertified: Bool = false
     var userVerified: Bool = false
     var thirdPartyVerified: Bool = false
-    var nearMe: Bool = false
+    //var nearMe: Bool = false
     var cityZip: String = ""
     var middleEastern: Bool = false
     var mediterranean: Bool = false
@@ -20,5 +20,3 @@ struct FilterCriteria {
     var priceModerate: Bool = false
     var priceExpensive: Bool = false
 }
-
-

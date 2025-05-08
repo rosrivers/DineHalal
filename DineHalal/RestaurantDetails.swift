@@ -106,6 +106,7 @@ struct RestaurantDetails: View {
                                         .foregroundColor(.green)
                                 }
                             }
+                            .padding(.vertical, 2)
                         }
                         .sheet(isPresented: $showingVerificationDetails) {
                             VerificationDetailsSheet(result: result, restaurant: restaurant)
@@ -148,6 +149,7 @@ struct RestaurantDetails: View {
                     .frame(height: 200)
                     .cornerRadius(12)
                     .padding(.horizontal)
+                
                 if let result = verificationResult {
                     Divider()
                         .padding(.horizontal)
@@ -231,6 +233,7 @@ struct RestaurantDetails: View {
                         }
                     }
                 }
+                
                 Divider()
 
                 Button(action: { showLeaveReviewSheet.toggle() }) {
@@ -281,21 +284,23 @@ struct RestaurantDetails: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-                // Fetch place details (for open/close times)
-                placesService.fetchPlaceDetails(for: restaurant.placeId) { result in
-                    switch result {
-                    case .success(let updatedRestaurant):
-                        self.restaurant = updatedRestaurant
-                    case .failure(let error):
-                        print("Error fetching place details: \(error)")
-                    }
+            // Fetch place details (for open/close times)
+            placesService.fetchPlaceDetails(for: restaurant.placeId) { result in
+                switch result {
+                case .success(let updatedRestaurant):
+                    self.restaurant = updatedRestaurant
+                case .failure(let error):
+                    print("Error fetching place details: \(error)")
                 }
-                
-                placesService.fetchNearbyRestaurants(
-                    latitude: restaurant.latitude,
-                    longitude: restaurant.longitude
-                )
             }
+            
+            placesService.fetchNearbyRestaurants(
+                latitude: restaurant.latitude,
+                longitude: restaurant.longitude,
+                filter: FilterCriteria()
+                
+            )
+        }
     }
 
     private func openInGoogleMaps() {
@@ -305,6 +310,7 @@ struct RestaurantDetails: View {
         }
     }
 }
+
 struct GooglePlaceImage: View {
     let photoReference: String
     var body: some View {
@@ -322,6 +328,7 @@ struct GooglePlaceImage: View {
         }
     }
 }
+
 struct StarRatingView: View {
     let rating: Double
     var body: some View {
@@ -338,55 +345,113 @@ struct StarRatingView: View {
         else { return "star" }
     }
 }
+
 struct VerificationDetailsSheet: View {
     let result: VerificationResult
     let restaurant: Restaurant
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Halal Verification Details").font(.headline)
+            Text("Halal Verification Details")
+                .font(.headline)
+            
             if result.isVerified {
-                if result.source == .communityVerified {
-                    Label("\(restaurant.name) is community verified as halal", systemImage: "person.2.fill")
-                        .foregroundColor(.orange)
-                } else {
-                    Label("\(restaurant.name) is verified as halal", systemImage: "checkmark.seal.fill")
-                        .foregroundColor(.green)
+                HStack {
+                    if result.source == .communityVerified {
+                        Image(systemName: "person.2.fill")
+                            .foregroundColor(.orange)
+                        Text("\(restaurant.name) is community verified as halal")
+                            .foregroundColor(.orange)
+                    } else {
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundColor(.green)
+                        Text("\(restaurant.name) is officially verified as halal")
+                            .foregroundColor(.green)
+                    }
                 }
+                
+                Divider()
+                
                 if result.source == .officialRegistry, let establishment = result.establishment {
-                    Divider()
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Official Registry Information").font(.subheadline).fontWeight(.bold)
+                        Text("Official Registry Information")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                        
                         Text("Registry Name: \(establishment.name)")
                         Text("Registry Address: \(establishment.address)")
                         Text("Certification: \(establishment.certificationType)")
                         Text("Registration: \(establishment.registrationNumber)")
+                        
+//                        HStack {
+//                            Text("Match Confidence:")
+//                            switch result.matchConfidence {
+//                            case .high: Text("High").foregroundColor(.green)
+//                            case .medium: Text("Medium").foregroundColor(.orange)
+//                            case .low: Text("Low").foregroundColor(.red)
+//                            }
+//                        }
+                    }
+                } else if result.source == .communityVerified, let voteData = result.voteData {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Community Verification")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .foregroundColor(.orange)
+                        
+                        Text("This restaurant has been verified as halal by community votes")
+                        
                         HStack {
-                            Text("Match Confidence:")
-                            switch result.matchConfidence {
-                            case .high: Text("High").foregroundColor(.green)
-                            case .medium: Text("Medium").foregroundColor(.orange)
-                            case .low: Text("Low").foregroundColor(.red)
-                            }
+                            Text("Upvotes: \(voteData.upvotes)")
+                                .foregroundColor(.green)
+                            Spacer()
+                            Text("Downvotes: \(voteData.downvotes)")
+                                .foregroundColor(.red)
                         }
+                        
+                        let approvalRate = Double(voteData.upvotes) / Double(voteData.upvotes + voteData.downvotes) * 100
+                        Text("Approval Rate: \(Int(approvalRate))%")
+                            .foregroundColor(approvalRate > 80 ? .green : .orange)
                     }
                 }
             } else {
-                Text("Not Verified").foregroundColor(.orange)
+                Text("Not Verified")
+                    .foregroundColor(.orange)
                 Text("This restaurant has not been verified as halal.")
+                
+                if let voteData = result.voteData {
+                    Divider()
+                    
+                    Text("Community Votes")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                    
+                    HStack {
+                        Text("Upvotes: \(voteData.upvotes)")
+                            .foregroundColor(.green)
+                        Spacer()
+                        Text("Downvotes: \(voteData.downvotes)")
+                            .foregroundColor(.red)
+                    }
+                }
             }
+            
             Spacer()
-        }.padding()
+        }
+        .padding()
     }
 }
+
 struct RestaurantMapView: View {
     let latitude: Double
     let longitude: Double
     let name: String
+    
     var body: some View {
         Map(initialPosition: .region(region)) {
             Marker(name, coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude))
         }
     }
+    
     private var region: MKCoordinateRegion {
         let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
         let span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)

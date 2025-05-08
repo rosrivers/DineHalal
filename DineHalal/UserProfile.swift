@@ -1,8 +1,9 @@
 //  UserProfile.swift
 //  Dine Halal
 //  Created by Iman Ikram on 3/11/25.
-//  Edited by Joana & Chelsea on 4/27/25
-//  Refactored on 5/4/25 to use Review model, grid layout, and delete support
+//  Edited/ modified - Joana
+//  Edited by Chelsea to add signout button
+//  Refactored to use Review model, grid layout, and delete support
 
 import FirebaseAuth
 import FirebaseFirestore
@@ -13,22 +14,25 @@ struct UserProfile: View {
     @State private var userName: String = ""
     @State private var userEmail: String = ""
     @State private var profileImageURL: URL?
-    @State private var userReviews: [Review] = []
+    @State private var userFavorites: [String] = [] // Just store restaurant names for now
+    @State private var userReviews: [Review] = [] // Using the structured Review model
     @State private var isLoading = true
     @State private var isSignedOut = false
-    @State private var reviewToEdit: Review? = nil
+    @State private var reviewToEdit: Review? = nil // For editing reviews
     @EnvironmentObject var favorites: Favorites
-
+    
     var body: some View {
         ZStack {
+            // Background Color
             Color(.accent)
-
+            
             if isLoading {
                 ProgressView()
             } else {
                 ScrollView {
                     VStack(spacing: 20) {
                         ZStack(alignment: .center) {
+                            // Background Image
                             Image("profile_bg")
                                 .resizable()
                                 .scaledToFill()
@@ -38,132 +42,74 @@ struct UserProfile: View {
                                 .shadow(radius: 5, x: 0, y: 5)
 
                             VStack(spacing: 8) {
+                                // Profile Picture
                                 ZStack {
                                     if let imageURL = profileImageURL {
                                         AsyncImage(url: imageURL) { image in
-                                            image.resizable().scaledToFill()
+                                            image
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 100, height: 100)
+                                                .clipShape(Circle())
                                         } placeholder: {
-                                            Circle().foregroundColor(.gray)
+                                            Circle()
+                                                .frame(width: 100, height: 100)
+                                                .foregroundColor(.gray)
                                             Image(systemName: "person.fill")
                                                 .resizable()
                                                 .scaledToFit()
                                                 .frame(width: 60, height: 60)
                                                 .foregroundColor(.white)
                                         }
-                                        .frame(width: 100, height: 100)
-                                        .clipShape(Circle())
                                     } else {
-                                        Circle().frame(width: 100, height: 100).foregroundColor(.gray)
+                                        Circle()
+                                            .frame(width: 100, height: 100)
+                                            .foregroundColor(.gray)
                                         Image(systemName: "person.fill")
                                             .resizable()
                                             .scaledToFit()
                                             .frame(width: 60, height: 60)
                                             .foregroundColor(.white)
                                     }
-
-//                                    Button(action: {
-//                                        print("Edit Avatar")
-//                                    }) {
-//                                        Image(systemName: "pencil.circle.fill")
-//                                            .resizable()
-//                                            .frame(width: 30, height: 30)
-//                                            .foregroundColor(.mud)
-//                                            .background(Circle().fill(Color.white))
-//                                    }
-//                                    .offset(x: 35, y: 35)
                                 }
                                 .offset(y: -18)
 
+                                // User Name
                                 Text(userName)
                                     .font(.title)
                                     .fontWeight(.bold)
                                     .padding(5)
                                     .padding(.horizontal, 10)
                                     .foregroundColor(.darkBrown)
-                                    .background(RoundedRectangle(cornerRadius: 5).fill(Color.accent).shadow(radius: 5))
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 5)
+                                            .fill(Color.accent)
+                                            .shadow(radius: 5)
+                                            .padding(1)
+                                    )
 
+                                // User Email
                                 Text(userEmail)
                                     .foregroundColor(.darkBrown.opacity(0.8))
                                     .padding(8)
                                     .padding(.horizontal, 10)
-                                    .background(RoundedRectangle(cornerRadius: 15).fill(Color.accent).shadow(radius: 3))
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 15)
+                                            .fill(Color.accent)
+                                            .shadow(radius: 3)
+                                            .padding(5)
+                                    )
                             }
-                            .padding(.top, 100)
+                            .padding(.top, 100) // Position elements within the background
                         }
-                        // **Favorites Section**
-                                                // NO MORE FAVORITES
-                        //                        VStack(alignment: .leading, spacing: 10) {
-                        //                            Text("My Favorites")
-                        //                                .font(.title2)
-                        //                                .fontWeight(.bold)
-                        //                                .foregroundColor(.darkBrown)
-                        //
-                        //                            if favorites.favorites.isEmpty {
-                        //                                Text("No favorites yet")
-                        //                                    .foregroundColor(.mud)
-                        //                            } else {
-                        //                                ScrollView(.horizontal, showsIndicators: false) {
-                        //                                    HStack(spacing: 15) {
-                        //                                        ForEach(favorites.favorites) { restaurant in
-                        //                                            NavigationLink {
-                        //                                                RestaurantDetails(restaurant: restaurant)
-                        //                                                    .environmentObject(favorites)
-                        //                                            } label: {
-                        //                                                VStack(spacing: 8) {
-                        //                                                    // Thumbnail
-                        //                                                    if let photoReference = restaurant.photoReference,
-                        //                                                       let url = GoogleMapConfig.getPhotoURL(photoReference: photoReference) {
-                        //                                                        AsyncImage(url: url) { phase in
-                        //                                                            switch phase {
-                        //                                                            case .empty:
-                        //                                                                ProgressView()
-                        //                                                                    .frame(width: 100, height: 100)
-                        //                                                            case .success(let image):
-                        //                                                                image
-                        //                                                                    .resizable()
-                        //                                                                    .scaledToFill()
-                        //                                                                    .frame(width: 100, height: 100)
-                        //                                                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                        //                                                            case .failure:
-                        //                                                                Image(systemName: "photo")
-                        //                                                                    .resizable()
-                        //                                                                    .frame(width: 100, height: 100)
-                        //                                                                    .foregroundColor(.gray)
-                        //                                                            @unknown default:
-                        //                                                                EmptyView()
-                        //                                                            }
-                        //                                                        }
-                        //                                                    } else {
-                        //                                                        Image(systemName: "photo")
-                        //                                                            .resizable()
-                        //                                                            .frame(width: 100, height: 100)
-                        //                                                            .foregroundColor(.gray)
-                        //                                                    }
-                        //
-                        //                                                    // Name
-                        //                                                    Text(restaurant.name)
-                        //                                                        .font(.caption)
-                        //                                                        .multilineTextAlignment(.center)
-                        //                                                        .frame(width: 100)
-                        //                                                        .foregroundColor(.primary)
-                        //                                                }
-                        //                                                .frame(width: 100)
-                        //                                            }
-                        //                                            .buttonStyle(PlainButtonStyle())
-                        //                                        }
-                        //                                    }
-                        //                                    .padding(.horizontal)
-                        //                                }
-                        //                            }
-                        //                        }
-                                                .padding()
-                                                // **Reviews Section**
+
+                        // **Reviews Section** - Combined from both versions
                         VStack(alignment: .leading) {
                             Text("My Reviews")
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.darkBrown)
-
+                            
                             if userReviews.isEmpty {
                                 Text("No reviews yet")
                                     .foregroundColor(.mud)
@@ -177,7 +123,6 @@ struct UserProfile: View {
 
                                             HStack(spacing: 2) {
                                                 ForEach(1...5, id: \.self) { index in
-
                                                     Image(systemName: index <= review.rating ? "star.fill" : "star")
                                                         .foregroundColor(.yellow)
                                                         .font(.system(size: 10))
@@ -205,28 +150,35 @@ struct UserProfile: View {
                                             }
                                         }
                                         .padding()
-                                        .background(Color(.systemGray6))
-                                        .cornerRadius(8)
+                                        .background(Color.gray.opacity(0.2))
+                                        .cornerRadius(12)
                                     }
                                 }
                             }
                         }
                         .padding()
 
+                        Spacer()
+                        // **Sign-Out Button** placed at the bottom of the page
                         Button(action: signOut) {
                             Text("Sign Out")
                                 .foregroundColor(.white)
                                 .padding()
-                                .background(Color.red)
+                                .background(Color.mud)
                                 .cornerRadius(10)
+                                .padding(.top)
+
                         }
                         .padding()
                     }
                 }
             }
         }
-        .onAppear(perform: loadUserData)
+        .onAppear {
+            loadUserData()
+        }
         .fullScreenCover(isPresented: $isSignedOut) {
+            // Navigate back to the Sign-In screen after signing out, passing the navigationPath
             SignInView(path: $navigationPath)
         }
         .sheet(item: $reviewToEdit) { review in
@@ -236,25 +188,43 @@ struct UserProfile: View {
         }
     }
 
+    // Sign-Out Function
     private func signOut() {
         do {
             try Auth.auth().signOut()
-            isSignedOut = true
-        } catch {
+            print("User signed out successfully.")
+            isSignedOut = true  // Trigger navigation to Sign-In view
+        } catch let error {
             print("Error signing out: \(error.localizedDescription)")
         }
     }
 
+    // Load user data from Firebase - Combined approach
     private func loadUserData() {
         guard let user = Auth.auth().currentUser else {
             isLoading = false
             return
         }
-
+        
         userName = user.displayName ?? "User"
         userEmail = user.email ?? ""
         profileImageURL = user.photoURL
-
+        
+        let db = Firestore.firestore()
+        
+        // Load favorites
+        db.collection("users").document(user.uid).collection("favorites")
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error getting favorites: \(error)")
+                } else {
+                    userFavorites = snapshot?.documents.compactMap { doc in
+                        doc.data()["name"] as? String
+                    } ?? []
+                }
+            }
+        
+        // Load reviews using FirebaseService (from main-backup)
         FirebaseService.shared.fetchUserReviews { reviews, error in
             if let reviews = reviews {
                 self.userReviews = reviews
@@ -262,10 +232,18 @@ struct UserProfile: View {
             isLoading = false
         }
     }
-
+    
+    // Delete review function from main-backup
     private func deleteReview(_ review: Review) {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         FirebaseService.shared.deleteReview(restaurantId: review.restaurantId, reviewId: review.id, userId: userId)
         userReviews.removeAll { $0.id == review.id }
     }
 }
+
+// **Preview**
+//struct UserProfileView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        UserProfile(navigationPath: .constant(NavigationPath()))
+//    }
+//}
