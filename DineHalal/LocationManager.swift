@@ -24,22 +24,18 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
     }
 
-    /// Call once up-front (e.g. in onAppear)
     func requestLocationPermission() {
         locationManager.requestWhenInUseAuthorization()
     }
 
-    /// Old single‐shot alias, so existing calls still work
     func getLocation() {
         startUpdatingLocation()
     }
 
-    /// Begin continuous updates; you’ll get delegate callbacks until you call stopUpdating()
     func startUpdatingLocation() {
         locationManager.startUpdatingLocation()
     }
 
-    /// Stop the updates once you’ve got what you need
     func stopUpdatingLocation() {
         locationManager.stopUpdatingLocation()
     }
@@ -53,8 +49,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
             switch status {
             case .authorizedAlways, .authorizedWhenInUse:
-                // immediately fire off a one‐shot if you like
-                manager.requestLocation()
+                self.getLocation()
             case .denied, .restricted:
                 self.errorMessage = "Location permission denied—using default location."
             default:
@@ -69,9 +64,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
         DispatchQueue.main.async {
             self.userLocation = loc.coordinate
-            // if you’re in continuous mode you might want to stop here:
             manager.stopUpdatingLocation()
-            // notify any observers
             NotificationCenter.default.post(name: .init("LocationUpdated"), object: nil)
         }
     }
