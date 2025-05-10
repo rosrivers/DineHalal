@@ -1,17 +1,16 @@
-///  PlacesService.swift
-///  DineHalal
-///  Created by Joanne on 4/1/25.
-///  Edited by Chelsea on 4/5/25.
-///  Edited by Iman Ikram on 4/28/2025
-///  Edited by Rosa on 05/05/25 to preload full opening-hours
-///"When your application displays results to the user, you should also display any attribution included in the response. The next_page_token can be used to retrieve additional results." - Google Places API Documentation
+//
+//  PlacesService.swift
+//  DineHalal
+//
+//  Created by Joanne on 4/1/25.
+//  Edited by Iman Ikram on 4/28/2025
+//  Edited by Rosa on 05/05/25 to preload full opening-hours
 
 import Foundation
 import CoreLocation
 import ObjectiveC
 import FirebaseFirestore
 
-/// Define PlacesResponse structure
 struct PlacesResponse: Codable {
     let results: [Restaurant]
     let status: String
@@ -27,24 +26,17 @@ class PlacesService: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
     
-    /// Added for loading state tracking
     @Published var isLoadingMore: Bool = false
     
-    /// Added for pagination
     private var nextPageToken: String?
     private var isFetchingNextPage = false
-    
-    /// Added to track verified restaurant IDs persistently
     private var verifiedRestaurantIDs: Set<String> = []
     
-    /// Public accessor for checking if more pages are available
     var hasMorePages: Bool {
         return nextPageToken != nil
     }
     
-    // Constructor with verification service
     init(verificationService: VerificationService? = nil) {
-        // Load any previously verified restaurants from UserDefaults
         if let savedIDs = UserDefaults.standard.stringArray(forKey: "verifiedRestaurantIDs") {
             verifiedRestaurantIDs = Set(savedIDs)
         }
@@ -55,6 +47,7 @@ class PlacesService: ObservableObject {
         /// Otherwise your extension creates verificationService on demand - note.
     }
     
+    // Accepts completion handler
     func fetchNearbyRestaurants(
         latitude: Double,
         longitude: Double,
@@ -64,7 +57,7 @@ class PlacesService: ObservableObject {
         isLoading = true
         allRestaurants = []
         nextPageToken = nil
-        
+
         guard let url = GoogleMapConfig.getNearbyRestaurantsURL(
             userLocation: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
             filter: filter) else {
@@ -72,8 +65,7 @@ class PlacesService: ObservableObject {
             completion?()
             return
         }
-        
-        //  Pass filter into helper
+
         fetchRestaurants(from: url, using: filter, completion: completion)
     }
     
@@ -215,8 +207,6 @@ class PlacesService: ObservableObject {
     private func findVerifiedRestaurants(from restaurants: [Restaurant]) {
         Task {
             let verifiedRestaurantsLocal = await findVerifiedRestaurantsAsync(from: restaurants)
-            
-            // Update the UI on main thread
             await MainActor.run {
                 self.recentlyVerified = verifiedRestaurantsLocal
             }
@@ -232,7 +222,6 @@ class PlacesService: ObservableObject {
         for restaurant in restaurants {
             // Always verify the restaurant against our verification criteria
             let result = verificationService.verifyRestaurant(restaurant)
-            
             if result.isVerified {
                 verifiedRestaurants.append(restaurant)
                 updatedVerifiedIDs.insert(restaurant.id)
