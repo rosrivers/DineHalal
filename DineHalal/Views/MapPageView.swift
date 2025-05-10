@@ -4,14 +4,13 @@
 //  Created by Rosa Rivera on 4/24/25.
 // modified by victoria to make markers pop up
 
-
 import SwiftUI
 import MapKit
 import CoreLocation
 
 struct MapPageView: View {
-    @EnvironmentObject var locationManager:LocationManager
-    @EnvironmentObject var placesService:PlacesService
+    @StateObject private var locationManager = LocationManager()
+    @StateObject private var placesService = PlacesService()
     @EnvironmentObject var navigationState: NavigationStateManager
     @State private var selectedRestaurant: Restaurant? = nil
     @State private var showPopup = false
@@ -21,10 +20,11 @@ struct MapPageView: View {
     @State private var showFilter = false
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060),
-        span:MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
     )
     @State private var annotations: [MKPointAnnotation] = []
-
+    @State private var lastRegionCenter: CLLocationCoordinate2D? = nil
+    
     var body: some View {
             ZStack {
                 // map ui
@@ -43,7 +43,6 @@ struct MapPageView: View {
                     }
                 }
                 .edgesIgnoringSafeArea(.all)
-
 //                .sheet(isPresented: $showPopup) {
 //                    if let selectedRestaurant = selectedRestaurant {
 //                        RestaurantDetails(restaurant: selectedRestaurant, verificationService: verificationService)
@@ -78,18 +77,12 @@ struct MapPageView: View {
                     
                     Spacer()
                 }
-
             }
             // Popup to restautant details page
             .sheet(item: $selectedRestaurant) { restaurant in
                 RestaurantDetails(restaurant: restaurant, verificationService: verificationService)
                     .environmentObject(favorites)
             }
-
-        }
-    }
-
-
             .onAppear(perform: initialLoad)
             .onReceive(locationManager.$userLocation.compactMap { $0 }) { coord in
                 region.center = coord
@@ -108,35 +101,28 @@ struct MapPageView: View {
                 }
             }
         }
-
     private func locateUser() {
         locationManager.requestLocationPermission()
         locationManager.getLocation()
     }
-
+    
     private func initialLoad() {
-        fetchAndAnnotate(
-            lat: region.center.latitude,
-            lon: region.center.longitude
-        )
+        fetchAndAnnotate(lat: region.center.latitude, lon: region.center.longitude)
     }
-
+    
     private func fetchAndAnnotate(lat: Double, lon: Double) {
-        placesService.fetchNearbyRestaurants(
-            latitude: lat,
-            longitude: lon,
-            filter: filterCriteria
-        ) {
+        placesService.fetchNearbyRestaurants(latitude: lat, longitude: lon, filter: filterCriteria) {
             DispatchQueue.main.async {
-                self.annotations = self.placesService.allRestaurants.map {
-                    let a = MKPointAnnotation()
-                    a.title = $0.name
-                    a.coordinate = CLLocationCoordinate2D(
-                        latitude:  $0.latitude,
-                        longitude: $0.longitude
-                    )
-                    return a
+                let newAnnotations = self.placesService.allRestaurants.map { restaurant in
+                    let annotation = MKPointAnnotation()
+                    annotation.title = restaurant.name
+                    annotation.coordinate = CLLocationCoordinate2D(latitude: restaurant.latitude, longitude: restaurant.longitude)
+                    return annotation
                 }
+
+                if newAnnotations.map({ $0.coordinate.latitude }) != self.annotations.map({ $0.coordinate.latitude }) ||
+                    newAnnotations.map({ $0.coordinate.longitude }) != self.annotations.map({ $0.coordinate.longitude }) {
+                    self.annotations = newAnnotations}
             }
         }
     }
@@ -144,27 +130,39 @@ struct MapPageView: View {
     private func applyFilters(_ criteria: FilterCriteria) {
         if !criteria.cityZip.isEmpty {
             geocodeZipCode(criteria.cityZip) { coord in
-                if let c = coord {
-                    region.center = c
+                if let coord = coord {
+                    region.center = coord
+                } else {
+                    fetchAndAnnotate(lat: region.center.latitude, lon: region.center.longitude)
                 }
-                fetchAndAnnotate(
-                    lat: region.center.latitude,
-                    lon: region.center.longitude
-                )
             }
-        } else if criteria.nearMe,
-                  let loc = locationManager.userLocation {
-            region.center = loc
-            fetchAndAnnotate(lat: loc.latitude, lon: loc.longitude)
+        } else if let userLoc = locationManager.userLocation {
+            // Use user location if no specific city/zip is provided
+            region.center = userLoc
         } else {
-            initialLoad()
+            fetchAndAnnotate(lat: region.center.latitude, lon: region.center.longitude)
         }
     }
-
-    private func geocodeZipCode(_ zip: String,
-                                completion: @escaping (CLLocationCoordinate2D?) -> Void) {
-        CLGeocoder().geocodeAddressString(zip) { marks, _ in
-            completion(marks?.first?.location?.coordinate)
+    
+    private func geocodeZipCode(_ zip: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
+        let geocoder = CLGeocoder()
+        geocoder.geocodeAddressString(zip) { placemarks, _ in
+            completion(placemarks?.first?.location?.coordinate)
         }
+    }
+    
+    private func distanceBetween(_ coord1: CLLocationCoordinate2D, _ coord2: CLLocationCoordinate2D) -> CLLocationDistance {
+        let loc1 = CLLocation(latitude: coord1.latitude, longitude: coord1.longitude)
+        let loc2 = CLLocation(latitude: coord2.latitude, longitude: coord2.longitude)
+        return loc1.distance(from: loc2)
     }
 }
+
+
+
+//struct MapPageView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        MapPageView()
+//            .environmentObject(NavigationStateManager())
+//    }
+//}
