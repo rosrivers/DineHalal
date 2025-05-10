@@ -7,6 +7,7 @@
 
 //  Edited by Iman Ikram on 4/28/2025 to add Google Reviews Section
 
+//Updated by Chelsea Bhuiyan to display username and date on the review
 import SwiftUI
 import FirebaseAuth
 
@@ -161,14 +162,13 @@ struct RestaurantReviewView: View {
     }
 }
 
-//new
 struct UserReviewRow: View {
     let review: Review
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(review.username ?? "Anonymous")
+                Text(displayedUsername(for: review))
                     .fontWeight(.semibold)
                 Spacer()
                 Text(review.date, style: .date)
@@ -183,6 +183,16 @@ struct UserReviewRow: View {
             }
             Text(review.comment)
                 .font(.body)
+        }
+    }
+
+    private func displayedUsername(for review: Review) -> String {
+        if let googleName = Auth.auth().currentUser?.displayName, !googleName.isEmpty {
+            return googleName
+        } else if let name = review.username, !name.isEmpty {
+            return name
+        } else {
+            return "Anonymous"
         }
     }
 }
