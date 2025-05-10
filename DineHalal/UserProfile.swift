@@ -206,7 +206,16 @@ struct UserProfile: View {
             return
         }
         
-        userName = user.displayName ?? "User"
+        if let displayName = user.displayName, !displayName.isEmpty {
+            userName = displayName
+        } else {
+            Firestore.firestore().collection("users").document(user.uid).getDocument { doc, _ in
+                if let data = doc?.data(), let name = data["username"] as? String {
+                    userName = name
+                }
+            }
+        }
+
         userEmail = user.email ?? ""
         profileImageURL = user.photoURL
         
