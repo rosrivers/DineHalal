@@ -11,10 +11,13 @@ import FirebaseAuth
 import Firebase
 
 struct ContentView: View {
-    @State private var navigationPath = NavigationPath() /// Keep track of the navigation path
-    @StateObject private var placesService = PlacesService() // Shared PlacesService
-    @EnvironmentObject var locationManager: LocationManager
-    
+    @State private var navigationPath = NavigationPath()
+    @EnvironmentObject var navigationState:NavigationStateManager
+    @EnvironmentObject var favorites:Favorites
+    @EnvironmentObject var verificationService:VerificationService
+    @EnvironmentObject var placesService:PlacesService
+    @EnvironmentObject var locationManager:LocationManager
+
     var body: some View {
         TabView {
             HomeScreen()
@@ -22,30 +25,30 @@ struct ContentView: View {
                     Image(systemName: "house.fill")
                     Text("Home")
                 }
-            
+
             // New Verified Restaurants tab
-            NavigationStack {
-                VerifiedRestaurantsView(placesService: placesService)
+            NavigationStack(path: $navigationPath) {
+                VerifiedRestaurantsView()
                     .navigationTitle("Verified Halal")
             }
             .tabItem {
                 Image(systemName: "checkmark.seal.fill")
                 Text("Verified")
             }
-            
+
             /// Pass navigationPath to UserProfile here
             UserProfile(navigationPath: $navigationPath)
                 .tabItem {
                     Image(systemName: "person.fill")
                     Text("Profile")
                 }
-            
+
             FavoritesView()
                 .tabItem {
                     Image(systemName: "heart.fill")
                     Text("Favorites")
                 }
-            
+
             MapPageView()
                 .tabItem {
                     Image(systemName: "map.fill")
@@ -53,26 +56,24 @@ struct ContentView: View {
                 }
         }
         .onAppear {
-            // Request location permission when the app appears
+            // Request permission and then fetch location
             locationManager.requestLocationPermission()
             locationManager.getLocation()
-            
-            // Set up location monitoring
-            // Instead of using onChange which requires Equatable
-            NotificationCenter.default.addObserver(forName: NSNotification.Name("LocationUpdated"), object: nil, queue: .main) { _ in
-                if let location = locationManager.userLocation {
-                    // FIXED: Added missing filter parameter
+
+            // Listen for updates and reload restaurants
+            NotificationCenter.default.addObserver(
+                forName: .init("LocationUpdated"),
+                object: nil,
+                queue: .main
+            ) { _ in
+                if let loc = locationManager.userLocation {
                     placesService.fetchNearbyRestaurants(
-                        latitude: location.latitude,
-                        longitude: location.longitude,
-                        filter: FilterCriteria() // Added default empty filter
+                        latitude: loc.latitude,
+                        longitude: loc.longitude,
+                        filter: FilterCriteria()
                     )
                 }
             }
         }
     }
 }
-
-//#Preview {
-//    ContentView()
-//}
