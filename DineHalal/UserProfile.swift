@@ -4,6 +4,7 @@
 //  Edited/ modified - Joana
 //  Edited by Chelsea to add signout button
 //  Refactored to use Review model, grid layout, and delete support
+//Edited by Chelsea to add reviews with edit button and dates
 
 import FirebaseAuth
 import FirebaseFirestore
@@ -20,7 +21,7 @@ struct UserProfile: View {
     @State private var isSignedOut = false
     @State private var reviewToEdit: Review? = nil // For editing reviews
     @EnvironmentObject var favorites: Favorites
-    
+
     var body: some View {
         ZStack {
             // Background Color
@@ -115,14 +116,14 @@ struct UserProfile: View {
                                     .foregroundColor(.mud)
                             } else {
                                 VStack(spacing: 12) {
-                                    ForEach(userReviews.sorted { $0.date > $1.date }) { review in
+                                    ForEach(userReviews) { review in
                                         VStack(alignment: .leading, spacing: 6) {
                                             Text(review.restaurantName)
                                                 .font(.headline)
                                                 .lineLimit(1)
 
                                             HStack(spacing: 2) {
-                                                ForEach(1...5, id: \.self) { index in
+                                                ForEach(1...5, id: \ .self) { index in
                                                     Image(systemName: index <= review.rating ? "star.fill" : "star")
                                                         .foregroundColor(.yellow)
                                                         .font(.system(size: 10))
@@ -132,6 +133,10 @@ struct UserProfile: View {
                                             Text(review.comment)
                                                 .font(.caption)
                                                 .lineLimit(2)
+
+                                            Text(review.date.formatted(date: .abbreviated, time: .omitted))
+                                                .font(.caption2)
+                                                .foregroundColor(.white)
 
                                             HStack {
                                                 Button(role: .destructive) {
@@ -150,6 +155,7 @@ struct UserProfile: View {
                                             }
                                         }
                                         .padding()
+                                        .frame(maxWidth: .infinity, alignment: .leading) //  Uniform width
                                         .background(Color.gray.opacity(0.2))
                                         .cornerRadius(12)
                                     }
@@ -183,7 +189,9 @@ struct UserProfile: View {
         }
         .sheet(item: $reviewToEdit) { review in
             EditReviewView(restaurantId: review.restaurantId, review: review) {
-                loadUserData()
+                DispatchQueue.main.async {
+                    loadUserData()
+                }
             }
         }
     }
@@ -206,7 +214,17 @@ struct UserProfile: View {
             return
         }
         
-        userName = user.displayName ?? "User"
+        if let displayName = user.displayName, !displayName.isEmpty {
+            userName = displayName
+        } else {
+            Firestore.firestore().collection("users").document(user.uid)
+                .getDocument(source: .server) { doc, _ in
+                    if let data = doc?.data(), let name = data["username"] as? String {
+                        userName = name
+                    }
+                }
+        }
+        
         userEmail = user.email ?? ""
         profileImageURL = user.photoURL
         
@@ -226,13 +244,25 @@ struct UserProfile: View {
         
         // Load reviews using FirebaseService (from main-backup)
         FirebaseService.shared.fetchUserReviews { reviews, error in
-            if let reviews = reviews {
-                self.userReviews = reviews
+            DispatchQueue.main.async {
+                if let reviews = reviews {
+                    self.userReviews = []  // Clear first
+                    self.userReviews = reviews.map { Review(
+                        id: $0.id,
+                        userId: $0.userId,
+                        restaurantId: $0.restaurantId,
+                        restaurantName: $0.restaurantName,
+                        rating: $0.rating,
+                        comment: $0.comment,
+                        date: $0.date,
+                        username: $0.username
+                    )}.sorted { $0.date > $1.date }
+                }
+                isLoading = false
             }
-            isLoading = false
+            
         }
     }
-    
     // Delete review function from main-backup
     private func deleteReview(_ review: Review) {
         guard let userId = Auth.auth().currentUser?.uid else { return }

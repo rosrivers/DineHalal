@@ -98,7 +98,7 @@ struct HomeScreen: View {
     
     @State private var annotations: [MKPointAnnotation] = []
     @State private var filterCriteria = FilterCriteria()
-    
+
     private func geocodeZipCode(_ zip: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
         let geocoder = CLGeocoder()
         geocoder.geocodeAddressString(zip) { placemarks, error in
@@ -112,20 +112,25 @@ struct HomeScreen: View {
             }
         }
     }
-    
+
     private func fetchUserData() {
         guard let userId = Auth.auth().currentUser?.uid else {
             print("No authenticated user")
             return
         }
-        guard let user = Auth.auth().currentUser else {
-            print("No authenticated user")
-            return
+
+        if let displayName = Auth.auth().currentUser?.displayName, !displayName.isEmpty {
+            userName = displayName
+        } else {
+            Firestore.firestore().collection("users").document(userId).getDocument { doc, error in
+                if let data = doc?.data(), let name = data["username"] as? String {
+                    userName = name
+                }
+            }
         }
-        userName = user.displayName ?? "User"
-        
+
         let db = Firestore.firestore()
-        
+
         db.collection("users").document(userId).collection("favorites")
             .addSnapshotListener { snapshot, error in
                 if let error = error {
@@ -134,7 +139,7 @@ struct HomeScreen: View {
                 }
                 self.userFavorites = snapshot?.documents.compactMap { $0.documentID } ?? []
             }
-        
+
         db.collection("users").document(userId).collection("reviews")
             .addSnapshotListener { snapshot, error in
                 if let error = error {
@@ -146,7 +151,7 @@ struct HomeScreen: View {
                 } ?? []
             }
     }
-    
+
     // Function to fetch restaurants based on user location
     private func fetchRestaurantsForCurrentLocation() {
         if !filterCriteria.cityZip.isEmpty {
@@ -173,7 +178,7 @@ struct HomeScreen: View {
             )
         }
     }
-    
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -355,10 +360,3 @@ struct HomeScreen: View {
         }
     }
 }
-    
-//    struct HomeScreen_Previews: PreviewProvider {
-//        static var previews: some View {
-//            HomeScreen()
-//                .environmentObject(NavigationStateManager())
-//        }
-//    }

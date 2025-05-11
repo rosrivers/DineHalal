@@ -9,7 +9,7 @@ import FirebaseAuth
 class FirebaseService {
     static let shared = FirebaseService()
     private let db = Firestore.firestore()
-    
+
     // Fetch all restaurants
     func fetchAllRestaurants(completion: @escaping ([Restaurant]?, Error?) -> Void) {
         db.collection("restaurants").getDocuments { (snapshot, error) in
@@ -17,69 +17,61 @@ class FirebaseService {
                 completion(nil, error)
                 return
             }
-            
             guard let documents = snapshot?.documents else {
                 completion(nil, nil)
                 return
             }
-            
             let restaurants = documents.compactMap { doc -> Restaurant? in
                 try? doc.data(as: Restaurant.self)
             }
             completion(restaurants, nil)
         }
     }
-    
+
     // Fetch user favorites
     func fetchUserFavorites(completion: @escaping ([Restaurant]?, Error?) -> Void) {
         guard let userId = Auth.auth().currentUser?.uid else {
             completion(nil, NSError(domain: "FirebaseService", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"]))
             return
         }
-        
         db.collection("users").document(userId).collection("favorites").getDocuments { (snapshot, error) in
             if let error = error {
                 completion(nil, error)
                 return
             }
-            
             guard let documents = snapshot?.documents else {
                 completion(nil, nil)
                 return
             }
-            
             let favorites = documents.compactMap { doc -> Restaurant? in
                 try? doc.data(as: Restaurant.self)
             }
             completion(favorites, nil)
         }
     }
-    
+
     // Fetch user reviews
     func fetchUserReviews(completion: @escaping ([Review]?, Error?) -> Void) {
         guard let userId = Auth.auth().currentUser?.uid else {
             completion(nil, NSError(domain: "FirebaseService", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"]))
             return
         }
-        
-        db.collection("users").document(userId).collection("reviews").getDocuments { (snapshot, error) in
+        db.collection("users").document(userId).collection("reviews").getDocuments(source: .server) { (snapshot, error) in
             if let error = error {
                 completion(nil, error)
                 return
             }
-            
             guard let documents = snapshot?.documents else {
                 completion(nil, nil)
                 return
             }
-            
             let reviews = documents.compactMap { doc -> Review? in
                 try? doc.data(as: Review.self)
             }
             completion(reviews, nil)
         }
     }
-    
+
     // Fetch reviews for a restaurant
     func fetchRestaurantReviews(restaurantId: String, completion: @escaping ([Review]?, Error?) -> Void) {
         db.collection("restaurants").document(restaurantId).collection("reviews").getDocuments { (snapshot, error) in
@@ -87,12 +79,10 @@ class FirebaseService {
                 completion(nil, error)
                 return
             }
-            
             guard let documents = snapshot?.documents else {
                 completion(nil, nil)
                 return
             }
-            
             let reviews = documents.compactMap { doc -> Review? in
                 try? doc.data(as: Review.self)
             }
@@ -103,7 +93,7 @@ class FirebaseService {
     func getCurrentUserID() -> String? {
         return Auth.auth().currentUser?.uid
     }
-    
+
     // Add review for a restaurant
     func addReview(restaurantId: String, restaurantName: String, rating: Int, comment: String, username: String) {
         guard let user = Auth.auth().currentUser else { return }
@@ -140,7 +130,7 @@ class FirebaseService {
             .updateData([
                 "reviewCount": FieldValue.increment(Int64(1))
             ])
-
+        
         // Recalculate and update average rating
         let reviewsRef = db.collection("restaurants")
             .document(restaurantId)
@@ -186,32 +176,42 @@ class FirebaseService {
             }
     }
 
-    func updateReview(restaurantId: String, review: Review) {
-        let db = Firestore.firestore()
-        guard let userId = Auth.auth().currentUser?.uid else { return }
+    func updateReview(restaurantId: String, review: Review, completion: @escaping (Bool) -> Void) {
+        guard let userId = Auth.auth().currentUser?.uid else {
+            completion(false)
+            return
+        }
 
-        // Update restaurant review
-        let restaurantReviewRef = db.collection("restaurants").document(restaurantId)
-            .collection("reviews").document(review.id)
-
-        restaurantReviewRef.setData([
+        let updatedData: [String: Any] = [
             "rating": review.rating,
             "comment": review.comment,
             "date": Timestamp(date: Date()),
             "username": review.username ?? "Anonymous",
             "userId": userId
-        ], merge: true)
+        ]
 
-        // Update user review
-        let userReviewRef = db.collection("users").document(userId)
-            .collection("reviews").document(review.id)
+        let group = DispatchGroup()
 
-        userReviewRef.setData([
-            "rating": review.rating,
-            "comment": review.comment,
-            "date": Timestamp(date: Date()),
-            "username": review.username ?? "Anonymous",
-            "restaurantId": restaurantId
-        ], merge: true)
+        group.enter()
+        db.collection("restaurants")
+            .document(restaurantId)
+            .collection("reviews")
+            .document(review.id)
+            .setData(updatedData, merge: true) { _ in
+                group.leave()
+            }
+
+        group.enter()
+        db.collection("users")
+            .document(userId)
+            .collection("reviews")
+            .document(review.id)
+            .setData(updatedData, merge: true) { _ in
+                group.leave()
+            }
+
+        group.notify(queue: .main) {
+            completion(true)
+        }
     }
 }

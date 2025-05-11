@@ -1,28 +1,35 @@
 //  EditReviewView.swift
 //  DineHalal
 //
-//  Allows users to edit a previously submitted review.
+// Created by Chelsea to allows users to edit a previously submitted review.
 
 import SwiftUI
 
 struct EditReviewView: View {
     let restaurantId: String
-    @State var review: Review
+    let review: Review
     var onSave: () -> Void
     @Environment(\.dismiss) var dismiss
 
+    @State private var reviewText: String
+    @State private var reviewRating: Int
     @State private var isSubmitting = false
+
+    init(restaurantId: String, review: Review, onSave: @escaping () -> Void) {
+        self.restaurantId = restaurantId
+        self.review = review
+        self.onSave = onSave
+        _reviewText = State(initialValue: review.comment)
+        _reviewRating = State(initialValue: review.rating)
+    }
 
     var body: some View {
         NavigationView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Edit Your Review")
-                    .font(.headline)
-
                 // Rating Picker
                 Text("Rating")
                     .font(.subheadline)
-                Picker("Rating", selection: $review.rating) {
+                Picker("Rating", selection: $reviewRating) {
                     ForEach(1...5, id: \.self) { star in
                         Text("\(star) \(star == 1 ? "star" : "stars")")
                     }
@@ -30,7 +37,7 @@ struct EditReviewView: View {
                 .pickerStyle(SegmentedPickerStyle())
 
                 // Comment Field
-                TextEditor(text: $review.comment)
+                TextEditor(text: $reviewText)
                     .frame(height: 150)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
@@ -42,13 +49,20 @@ struct EditReviewView: View {
                     guard !isSubmitting else { return }
                     isSubmitting = true
 
+                    var updatedReview = review
+                    updatedReview.comment = reviewText
+                    updatedReview.rating = reviewRating
+
                     FirebaseService.shared.updateReview(
                         restaurantId: restaurantId,
-                        review: review
-                    )
-
-                    onSave()
-                    dismiss()
+                        review: updatedReview
+                    ) { success in
+                        isSubmitting = false
+                        if success {
+                            onSave()
+                            dismiss()
+                        }
+                    }
                 }) {
                     Text(isSubmitting ? "Saving..." : "Save Changes")
                         .frame(maxWidth: .infinity)
