@@ -15,6 +15,7 @@ import FirebaseAuth
 struct RestaurantReviewView: View {
     let restaurantId: String
     @Binding var isPresented: Bool
+    var onDelete: (() -> Void)? = nil
     @State private var reviews: [Review] = []
     @State private var isLoading = true
     @State private var showDeleteAlert = false
@@ -135,6 +136,7 @@ struct RestaurantReviewView: View {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         FirebaseService.shared.deleteReview(restaurantId: restaurantId, reviewId: review.id, userId: userId)
         reviews.removeAll { $0.id == review.id }
+        onDelete?()
     }
 
     private func fetchGoogleReviews() {

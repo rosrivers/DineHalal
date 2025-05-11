@@ -12,6 +12,8 @@ import FirebaseFirestore // Required to fetch user full name
 struct LeaveReviewView: View {
     let restaurantId: String
     let restaurantName: String // Added this to store restaurant name
+    var onSubmit: (() -> Void)? = nil //  Added callback
+
     @Environment(\.presentationMode) var presentationMode
     @State private var reviewRating = 0
     @State private var reviewText = ""
@@ -75,6 +77,8 @@ struct LeaveReviewView: View {
                 comment: reviewText,
                 username: fullName
             )
+
+            onSubmit?() //  Trigger callback
 
             // Dismiss the review screen
             presentationMode.wrappedValue.dismiss()

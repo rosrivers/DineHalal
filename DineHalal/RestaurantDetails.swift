@@ -4,6 +4,12 @@
 ///  Edited by Chelsea on 4/5/25.
 ///  Further Edited by Chelsea on 4/27/25 to add Leave Review feature and clickable reviews count
 ///  Edited by Rosa to add in closing / opening correctly
+///  RestaurantDetails.swift
+///  Dine Halal
+///  Created by Iman Ikram and Joana on 3/11/25.
+///  Edited by Chelsea on 4/5/25.
+///  Further Edited by Chelsea on 4/27/25 to add Leave Review feature and clickable reviews count
+///  Edited by Rosa to add in closing / opening correctly
 
 import SwiftUI
 import MapKit
@@ -21,6 +27,7 @@ struct RestaurantDetails: View {
     @State private var verificationResult: VerificationResult?
     @State private var showLeaveReviewSheet = false
     @State private var showAllReviews = false
+    @State private var reviewCount: Int
 
     init(restaurant: Restaurant, verificationService: VerificationService) {
         _restaurant = State(initialValue: restaurant)
@@ -30,6 +37,7 @@ struct RestaurantDetails: View {
             center: CLLocationCoordinate2D(latitude: restaurant.latitude, longitude: restaurant.longitude),
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         ))
+        _reviewCount = State(initialValue: restaurant.numberOfRatings)
     }
 
     var body: some View {
@@ -80,12 +88,14 @@ struct RestaurantDetails: View {
                         Text("\(restaurant.rating, specifier: "%.1f")")
                             .foregroundColor(.gray)
                         Button(action: { showAllReviews.toggle() }) {
-                            Text("(\(restaurant.numberOfRatings) reviews)")
+                            Text("(\(reviewCount) reviews)")
                                 .font(.subheadline)
                                 .foregroundColor(.blue)
                         }
                         .sheet(isPresented: $showAllReviews) {
-                            RestaurantReviewView(restaurantId: restaurant.id, isPresented: $showAllReviews)
+                            RestaurantReviewView(restaurantId: restaurant.id, isPresented: $showAllReviews, onDelete: {
+                                reviewCount = max(reviewCount - 1, 0)
+                            })
                         }
                     }
 
@@ -250,7 +260,9 @@ struct RestaurantDetails: View {
                 }
                 .padding(.horizontal)
                 .sheet(isPresented: $showLeaveReviewSheet) {
-                    LeaveReviewView(restaurantId: restaurant.id, restaurantName: restaurant.name)
+                    LeaveReviewView(restaurantId: restaurant.id, restaurantName: restaurant.name, onSubmit: {
+                        reviewCount += 1
+                    })
                 }
 
                 Divider()
@@ -298,7 +310,6 @@ struct RestaurantDetails: View {
                 latitude: restaurant.latitude,
                 longitude: restaurant.longitude,
                 filter: FilterCriteria()
-                
             )
         }
     }
@@ -310,6 +321,7 @@ struct RestaurantDetails: View {
         }
     }
 }
+
 
 struct GooglePlaceImage: View {
     let photoReference: String
