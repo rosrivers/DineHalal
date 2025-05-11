@@ -184,7 +184,7 @@ class PlacesService: ObservableObject {
     // Process categories of restaurants
     func processCategories(filter: FilterCriteria? = nil) {
         let currentList = self.allRestaurants
-        let minRating = filter?.rating ?? 0.0
+        let minRating = filter?.rating ?? 4.5
         
         // Popular restaurants - high rating count and sorted by rating
         self.popularRestaurants = Array(
@@ -195,12 +195,12 @@ class PlacesService: ObservableObject {
         )
         
         // Recommended restaurants - sorted by rating
-        self.recommendedRestaurants = Array(
-            currentList
-                .filter { $0.rating >= minRating }
-                .sorted(by: { $0.rating > $1.rating })
-                .prefix(10)
-        )
+//        self.recommendedRestaurants = Array(
+//            currentList
+//                .filter { $0.rating >= minRating }
+//                .sorted(by: { $0.rating > $1.rating })
+//                .prefix(10)
+//        )
     }
     
     /// Find verified restaurants - updated for persistence
