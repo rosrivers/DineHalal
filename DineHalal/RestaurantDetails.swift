@@ -10,6 +10,7 @@
 ///  Edited by Chelsea on 4/5/25.
 ///  Further Edited by Chelsea on 4/27/25 to add Leave Review feature and clickable reviews count
 ///  Edited by Rosa to add in closing / opening correctly
+///  Edited by chelsea on 5/10/25 to dynamically update the review count 
 
 import SwiftUI
 import MapKit
