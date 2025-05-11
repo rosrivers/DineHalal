@@ -136,7 +136,7 @@ struct UserProfile: View {
 
                                             Text(review.date.formatted(date: .abbreviated, time: .omitted))
                                                 .font(.caption2)
-                                                .foregroundColor(.white)
+                                                .foregroundColor(.mud)
 
                                             HStack {
                                                 Button(role: .destructive) {
@@ -156,7 +156,7 @@ struct UserProfile: View {
                                         }
                                         .padding()
                                         .frame(maxWidth: .infinity, alignment: .leading) //  Uniform width
-                                        .background(Color.gray.opacity(0.2))
+                                        .background(Color.beige)
                                         .cornerRadius(12)
                                     }
                                 }
