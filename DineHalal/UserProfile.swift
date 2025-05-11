@@ -20,7 +20,7 @@ struct UserProfile: View {
     @State private var isSignedOut = false
     @State private var reviewToEdit: Review? = nil // For editing reviews
     @EnvironmentObject var favorites: Favorites
-    
+
     var body: some View {
         ZStack {
             // Background Color
@@ -122,7 +122,7 @@ struct UserProfile: View {
                                                 .lineLimit(1)
 
                                             HStack(spacing: 2) {
-                                                ForEach(1...5, id: \.self) { index in
+                                                ForEach(1...5, id: \ .self) { index in
                                                     Image(systemName: index <= review.rating ? "star.fill" : "star")
                                                         .foregroundColor(.yellow)
                                                         .font(.system(size: 10))
@@ -132,6 +132,10 @@ struct UserProfile: View {
                                             Text(review.comment)
                                                 .font(.caption)
                                                 .lineLimit(2)
+
+                                            Text(review.date.formatted(date: .abbreviated, time: .omitted))
+                                                .font(.caption2)
+                                                .foregroundColor(.white)
 
                                             HStack {
                                                 Button(role: .destructive) {
@@ -150,6 +154,7 @@ struct UserProfile: View {
                                             }
                                         }
                                         .padding()
+                                        .frame(maxWidth: .infinity, alignment: .leading) //  Uniform width
                                         .background(Color.gray.opacity(0.2))
                                         .cornerRadius(12)
                                     }
