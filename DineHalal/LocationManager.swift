@@ -65,6 +65,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         DispatchQueue.main.async {
             self.userLocation = loc.coordinate
             manager.stopUpdatingLocation()
+
+            /// Post a notification if other parts of the app still use this
             NotificationCenter.default.post(name: .init("LocationUpdated"), object: nil)
         }
     }
