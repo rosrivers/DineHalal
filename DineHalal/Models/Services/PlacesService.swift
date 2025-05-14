@@ -5,6 +5,7 @@
 //  Created by Joanne on 4/1/25.
 //  Edited by Iman Ikram on 4/28/2025
 //  Edited by Rosa on 05/05/25 to preload full opening-hours
+//
 
 import Foundation
 import CoreLocation
@@ -44,10 +45,8 @@ class PlacesService: ObservableObject {
         if let service = verificationService {
             objc_setAssociatedObject(self, &PlacesService.verificationServiceKey, service, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
-        /// Otherwise your extension creates verificationService on demand - note.
     }
     
-    // Accepts completion handler
     func fetchNearbyRestaurants(
         latitude: Double,
         longitude: Double,
@@ -69,14 +68,12 @@ class PlacesService: ObservableObject {
         fetchRestaurants(from: url, using: filter, completion: completion)
     }
     
-    /// Added new method to load more restaurants
     func loadMoreRestaurants(latitude: Double, longitude: Double, filter: FilterCriteria?) {
         guard let pageToken = nextPageToken, !isFetchingNextPage else { return }
         
         isFetchingNextPage = true
         isLoadingMore = true
         
-        /// Create next page URL
         var urlComponents = URLComponents(string: "https://maps.googleapis.com/maps/api/place/nearbysearch/json")
         urlComponents?.queryItems = [
             URLQueryItem(name: "pagetoken", value: pageToken),
@@ -91,7 +88,7 @@ class PlacesService: ObservableObject {
         
         fetchRestaurants(from: url, using: filter)
     }
-    
+
     private func fetchRestaurants(
         from url: URL,
         using filter: FilterCriteria?,
@@ -99,111 +96,95 @@ class PlacesService: ObservableObject {
     ) {
         let task = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
             guard let self = self else { return }
-            
-            DispatchQueue.main.async {
-                // Handle errors
-                if let error = error {
-                    print("Error fetching restaurants: \(error.localizedDescription)")
+
+            if let error = error {
+                DispatchQueue.main.async {
                     self.error = error
                     self.isLoading = false
                     self.isFetchingNextPage = false
                     self.isLoadingMore = false
                     completion?()
-                    return
                 }
+                return
+            }
+
+            guard let data = data else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.isFetchingNextPage = false
+                    self.isLoadingMore = false
+                    completion?()
+                }
+                return
+            }
+
+            do {
+                let decoder = JSONDecoder()
+                let response = try decoder.decode(PlacesResponse.self, from: data)
                 
-                // Process data
-                if let data = data {
-                    do {
-                        // Parse JSON
-                        let decoder = JSONDecoder()
-                        let response = try decoder.decode(PlacesResponse.self, from: data)
-                        
-                        // Save next page token
-                        self.nextPageToken = response.nextPageToken
-                        
-                        // Process results with filter
-                        var newRestaurants = response.results
-                        if let filter = filter {
-                            newRestaurants = newRestaurants.filter { $0.rating >= filter.rating }
-                        }
-                        
-                        if self.isFetchingNextPage {
-                            // Add to existing results for pagination
-                            self.allRestaurants.append(contentsOf: newRestaurants)
-                        } else {
-                            // Replace results for new search
-                            self.allRestaurants = newRestaurants
-                        }
-                        
-                        // Fetch detailed info for each restaurant
-                        for stub in newRestaurants {
-                            self.fetchPlaceDetails(for: stub.placeId) { result in
-                                if case .success(let full) = result {
-                                    DispatchQueue.main.async {
-                                        if let idx = self.allRestaurants.firstIndex(where: { $0.id == full.id }) {
-                                            self.allRestaurants[idx] = full
-                                            // Process categories after updating
-                                            self.processCategories(filter: filter)
-                                        }
-                                    }
+                var newRestaurants = response.results
+                if let filter = filter {
+                    newRestaurants = newRestaurants.filter { $0.rating >= filter.rating }
+                }
+
+                DispatchQueue.main.async {
+                    self.nextPageToken = response.nextPageToken
+                    if self.isFetchingNextPage {
+                        self.allRestaurants.append(contentsOf: newRestaurants)
+                    } else {
+                        self.allRestaurants = newRestaurants
+                    }
+
+                    self.updateVerificationStatus()
+                    self.isLoading = false
+                    self.isFetchingNextPage = false
+                    self.isLoadingMore = false
+                    self.storeRestaurantsInFirebase()
+                    completion?()
+                }
+
+                // per-place detail loading (non-blocking)
+                let limitedRestaurants = newRestaurants.prefix(10)
+
+                for stub in limitedRestaurants {
+                    self.fetchPlaceDetails(for: stub.placeId) { result in
+                        if case .success(let full) = result {
+                            DispatchQueue.main.async {
+                                if let idx = self.allRestaurants.firstIndex(where: { $0.id == full.id }) {
+                                    self.allRestaurants[idx] = full
                                 }
+                                self.processCategories(filter: filter)
                             }
                         }
-                        
-                        // Initial processing of categories with current data
-                        self.processCategories(filter: filter)
-                        
-                        // Update verification status
-                        self.updateVerificationStatus()
-                        
-                        // Reset loading states
-                        self.isLoading = false
-                        self.isFetchingNextPage = false
-                        self.isLoadingMore = false
-                        
-                        // IMPORTANT: Store restaurants in Firebase
-                        self.storeRestaurantsInFirebase()
-                        
-                        completion?()
-                        
-                    } catch {
-                        print("Error decoding restaurant data: \(error.localizedDescription)")
-                        self.error = error
-                        self.isLoading = false
-                        self.isFetchingNextPage = false
-                        self.isLoadingMore = false
-                        completion?()
                     }
+                }
+
+            } catch {
+                DispatchQueue.main.async {
+                    self.error = error
+                    self.isLoading = false
+                    self.isFetchingNextPage = false
+                    self.isLoadingMore = false
+                    completion?()
                 }
             }
         }
+
         task.resume()
     }
     
-    // Process categories of restaurants
     func processCategories(filter: FilterCriteria? = nil) {
         let currentList = self.allRestaurants
         let minRating = filter?.rating ?? 4.5
         
-        // Popular restaurants - high rating count and sorted by rating
         self.popularRestaurants = Array(
             currentList
                 .filter { $0.rating >= minRating && $0.numberOfRatings > 200 }
                 .sorted(by: { $0.numberOfRatings > $1.numberOfRatings })
                 .prefix(10)
         )
-        
-        // Recommended restaurants - sorted by rating
-//        self.recommendedRestaurants = Array(
-//            currentList
-//                .filter { $0.rating >= minRating }
-//                .sorted(by: { $0.rating > $1.rating })
-//                .prefix(10)
-//        )
     }
     
-    /// Find verified restaurants - updated for persistence
     private func findVerifiedRestaurants(from restaurants: [Restaurant]) {
         Task {
             let verifiedRestaurantsLocal = await findVerifiedRestaurantsAsync(from: restaurants)
@@ -212,51 +193,42 @@ class PlacesService: ObservableObject {
             }
         }
     }
-    
-    // Updated to re-verify all restaurants to prevent stale verification data
+
     private func findVerifiedRestaurantsAsync(from restaurants: [Restaurant]) async -> [Restaurant] {
         var verifiedRestaurants: [Restaurant] = []
         var updatedVerifiedIDs: Set<String> = []
-        
-        // Check each restaurant's current verification status
+
         for restaurant in restaurants {
-            // Always verify the restaurant against our verification criteria
             let result = verificationService.verifyRestaurant(restaurant)
             if result.isVerified {
                 verifiedRestaurants.append(restaurant)
                 updatedVerifiedIDs.insert(restaurant.id)
             }
         }
-        
-        // Update the saved IDs with only currently verified restaurants
+
         verifiedRestaurantIDs = updatedVerifiedIDs
         UserDefaults.standard.set(Array(verifiedRestaurantIDs), forKey: "verifiedRestaurantIDs")
         
         return verifiedRestaurants
     }
     
-    // Add this method to manually verify a restaurant
     func manuallyVerifyRestaurant(_ restaurant: Restaurant) {
         verifiedRestaurantIDs.insert(restaurant.id)
         UserDefaults.standard.set(Array(verifiedRestaurantIDs), forKey: "verifiedRestaurantIDs")
-        
-        // Update the recentlyVerified list
+
         if !recentlyVerified.contains(where: { $0.id == restaurant.id }) {
             recentlyVerified.append(restaurant)
         }
     }
     
-    // Add this method to manually unverify a restaurant
     func manuallyUnverifyRestaurant(_ restaurant: Restaurant) {
         verifiedRestaurantIDs.remove(restaurant.id)
         UserDefaults.standard.set(Array(verifiedRestaurantIDs), forKey: "verifiedRestaurantIDs")
-        
-        // Update the Verified list
         recentlyVerified.removeAll(where: { $0.id == restaurant.id })
     }
     
-    // MARK: - Google Reviews Functionality
-    
+    // MARK: - Google Reviews
+
     func fetchGoogleReviews(for placeID: String, completion: @escaping (Result<[GoogleReview], Error>) -> Void) {
         guard let url = GoogleMapConfig.getPlaceDetailsURL(placeId: placeID) else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1)))
@@ -270,14 +242,14 @@ class PlacesService: ObservableObject {
                 }
                 return
             }
-            
+
             guard let data = data else {
                 DispatchQueue.main.async {
                     completion(.failure(NSError(domain: "No data", code: -1)))
                 }
                 return
             }
-            
+
             do {
                 let response = try JSONDecoder().decode(GooglePlaceDetailsResponse.self, from: data)
                 let reviews = response.result.reviews ?? []
@@ -292,8 +264,6 @@ class PlacesService: ObservableObject {
         }.resume()
     }
     
-    // MARK: - Models for Google Reviews
-    
     struct GooglePlaceDetailsResponse: Codable {
         let result: GooglePlaceDetailsResult
     }
@@ -304,7 +274,7 @@ class PlacesService: ObservableObject {
 
     struct GoogleReview: Codable, Identifiable {
         var id: String { authorName + (relativeTimeDescription ?? UUID().uuidString) }
-        
+
         let authorName: String
         let rating: Int
         let text: String
@@ -320,8 +290,8 @@ class PlacesService: ObservableObject {
         }
     }
     
-    // MARK: - Fetch Place Details (for full opening hours)
-    
+    // MARK: - Fetch Place Details
+
     func fetchPlaceDetails(
         for placeID: String,
         completion: @escaping (Result<Restaurant, Error>) -> Void
@@ -360,7 +330,6 @@ class PlacesService: ObservableObject {
         }.resume()
     }
 
-    // Helper struct to decode detailed Place response
     private struct GooglePlaceDetailsRestaurantResponse: Codable {
         let result: Restaurant
     }
