@@ -58,22 +58,23 @@ struct FavoritesList: View {
     @EnvironmentObject var verificationService: VerificationService
 
     var body: some View {
-        LazyVStack(spacing: 16) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 16)], spacing: 16) {
             ForEach(favorites.favorites) { restaurant in
                 NavigationLink(destination: RestaurantDetails(restaurant: restaurant, verificationService: verificationService).environmentObject(favorites)) {
-                    FavoriteTile(restaurant: restaurant)
+                    FavoriteCard(restaurant: restaurant)
                 }
                 .buttonStyle(PlainButtonStyle())
             }
         }
-        .padding(.horizontal)
+        .padding()
     }
 }
 
-struct FavoriteTile: View {
+struct FavoriteCard: View {
     let restaurant: Restaurant
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack {
             if let ref = restaurant.photoReference,
                let url = GoogleMapConfig.getPhotoURL(photoReference: ref) {
                 AsyncImage(url: url) { phase in
@@ -82,31 +83,37 @@ struct FavoriteTile: View {
                         image
                             .resizable()
                             .scaledToFill()
-                            .frame(height: 150)
-                            .clipped()
-                            .cornerRadius(10)
                     default:
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.2))
-                            .frame(height: 150)
-                            .cornerRadius(10)
+                        Image("food_placeholder")
+                            .resizable()
+                            .scaledToFill()
                     }
                 }
+                .frame(width: 160, height: 160)
+                .clipped()
+                .cornerRadius(12)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(restaurant.name)
                     .font(.headline)
-                    .foregroundColor(.primary)
+                    .lineLimit(1)
 
-                Text(restaurant.vicinity)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                HStack(spacing: 2) {
+                    ForEach(0..<5) { index in
+                        Image(systemName: index < Int(restaurant.rating) ? "star.fill" : "star")
+                            .foregroundColor(.yellow)
+                            .font(.system(size: 10))
+                    }
+                }
             }
-            .padding(.horizontal, 4)
+            .frame(width: 160, alignment: .leading)
+            .padding(.vertical, 6)
         }
+        .frame(width: 170, height: 230)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(16)
         .shadow(radius: 2)
     }
 }
+
