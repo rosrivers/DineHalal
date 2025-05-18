@@ -29,7 +29,7 @@ struct ContentView: View {
             // New Verified Restaurants tab
             NavigationStack(path: $navigationPath) {
                 VerifiedRestaurantsView()
-                    .navigationTitle("Verified Halal")
+                    
             }
             .tabItem {
                 Image(systemName: "checkmark.seal.fill")
