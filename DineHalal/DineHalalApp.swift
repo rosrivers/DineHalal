@@ -5,6 +5,7 @@
 import SwiftUI
 import Firebase
 import FirebaseFirestore
+import FirebaseAuth
 import GoogleSignIn
 import GoogleMaps
 
@@ -43,6 +44,11 @@ struct DineHalalApp: App {
             SplashScreenView()
                 .environmentObject(navigationState)
                 .environmentObject(favorites)
+                    .onAppear {
+                        if Auth.auth().currentUser != nil {
+                            favorites.loadFavoritesFromFirestore()
+                        }
+                    }
                 .environmentObject(verificationService)
                 .environmentObject(placesService)
                 .environmentObject(locationManager)
