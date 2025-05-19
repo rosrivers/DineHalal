@@ -75,25 +75,27 @@ struct FavoriteCard: View {
 
     var body: some View {
         VStack {
-            if let ref = restaurant.photoReference,
-               let url = GoogleMapConfig.getPhotoURL(photoReference: ref) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    default:
-                        Image("food_placeholder")
-                            .resizable()
-                            .scaledToFill()
+            ZStack {
+                if let ref = restaurant.photoReference,
+                   let url = GoogleMapConfig.getPhotoURL(photoReference: ref) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        default:
+                            Image("food_placeholder")
+                                .resizable()
+                                .scaledToFill()
+                        }
                     }
-                }
-                .frame(width: 160, height: 160)
-                .clipped()
-                .cornerRadius(12)
+                } 
             }
-
+            .frame(width: 160, height: 160)
+            .clipped()
+            .cornerRadius(12)
+            
             VStack(alignment: .leading, spacing: 4) {
                 Text(restaurant.name)
                     .font(.headline)
@@ -111,7 +113,7 @@ struct FavoriteCard: View {
             .padding(.vertical, 6)
         }
         .frame(width: 170, height: 230)
-        .background(Color(.systemBackground))
+        .background(Color.card)
         .cornerRadius(16)
         .shadow(radius: 2)
     }
