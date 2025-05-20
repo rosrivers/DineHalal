@@ -28,6 +28,14 @@ No more **second-guessing**. With DineHalal, finding **authentic halal food** is
 <!-- TECHNOLOGIES USED -->
 <h2 id="technologies-used"> Technologies Used </h2>
 
+- **Xcode** for building and testing the iOS application  
+- **SwiftUI** for iOS development  
+- **Google Places/Maps API** for restaurant data  
+- **Firestore Firebase** for database infrastructure  
+- **Firebase Authentication** for secure user login  
+- **Figma** for UI prototyping  
+- **GitHub** for version control and collaboration among team members  
+
 ![----------------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
 <!-- TO DO - DONE LIST BELOW -->
