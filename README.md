@@ -75,12 +75,99 @@ The app now includes:
 - Location-based restaurant discovery (relies on restaurant data- not integrated yet)
 
 ## Next Steps 
-- [ ] Restaurant API Integration
-- [ ] Real-time Location Updates
+- [x] Restaurant API Integration
+- [x] Real-time Location Updates
 
 Note: The Google Maps integration is now complete with the necessary API configuration.
 ---
-## Verification System 🔍
-- **PDF Parser Integration** - Implemented a robust PDF parsing system to extract halal certification data.
-- **Restaurant Verification** - Built automated verification service that cross-references Yelp restaurant data with halal registration information.
-- **Data Model Layer** - structured models for HalalEstablishment and Restaurant to ensure reliable data handling.
+# Places API Integration
+
+This module handles the integration of Google Places API within the DineHalal app to fetch and display halal restaurant data.
+
+## Overview
+
+- Fetches halal restaurants based on user location.
+- Retrieves details including restaurant name, address, photo, and coordinates (geolocation).
+- Handles API requests, response parsing, and error management.
+
+## How It Works
+
+1. **Location Access**:  
+   The app requests the user's permission to access location data.
+
+2. **API Request**:  
+   Using the user's coordinates/loaction, the app sends a request to the Google Places API with appropriate filters (e.g., `type=restaurant`, `keyword=halal`).
+
+3. **Data Processing**:  
+   The response is parsed to extract relevant fields:
+   - Name
+   - Address
+   - Photo reference
+   - Latitude & longitude
+
+4. **Display**:  
+   Restaurants are rendered on the Home screen, with details and map integration available on the Restaurant Details page.
+
+## Configuration
+
+- Set your Google Places API Key in the project’s configuration file or environment variables.
+- Ensure location permissions are handled in `Info.plist`for iOS.
+
+## Relevant Files
+
+- `PlacesService.swift`: Handles API requests and parsing.
+- `RestaurantListViewModel.swift`: Manages state and data binding for the restaurant list.
+- `RestaurantDetailView.swift`: Displays detailed restaurant information including map.
+
+## Error Handling
+
+- Handles network errors, invalid API responses, and missing data gracefully.
+- Displays user-friendly error messages if data cannot be loaded.
+
+## Notes
+
+- Be mindful of Google API rate limits.
+- API keys should be kept secure and never exposed in the client app.
+
+# Halal Verification System
+
+This module implements a dual-layer halal verification feature for DineHalal, ensuring the trustworthiness of restaurant listings.
+
+## Overview
+
+- Combines **official certification** with **community-driven verification**.
+- Displays verification badges on restaurant profiles.
+
+## How It Works
+
+### 1. Official Verification
+
+- Imports and parses official halal certification lists (PDF converted to CSV) from recognized authority (The New York State of Agriculture Department).
+- Matches restaurant names and/or addresses with imported data.
+- Restaurants with a match are marked as "Officially Verified" in the UI.
+
+### 2. Community Verification
+
+- Allows users to submit feedback or vote on a restaurant's halal status.
+- Aggregates user input to determine "Community Verified" status.
+
+## Configuration
+
+- Official certification data should be uploaded in supported formats (CSV/PDF) and placed in the designated directory.
+- Community verification is managed through the app’s interface and backed by the database.
+
+## Relevant Files
+
+- `HalalVerificationService.swift`: Handles certification parsing and verification logic.
+- `CommunityVerificationModel.swift`: Manages user-submitted verification and voting.
+- `RestaurantDetailView.swift`: Renders verification badges and handles user input.
+
+## Error Handling
+
+- Handles conflicting or ambiguous verification statuses.
+- Provides clear messaging in the UI when verification is pending or disputed.
+
+## Notes
+- Regular updates to official certification lists are recommended.
+- Community input is moderated to prevent abuse or misinformation and condinated voting.
+
