@@ -165,7 +165,7 @@ This module implements a dual-layer halal verification feature for DineHalal, en
 ## Error Handling
 
 - Handles conflicting or ambiguous verification statuses.
-- Provides clear messaging in the UI when verification is pending or disputed.
+- Provides clear messaging in the UI when verification is pending or disputed. 
 
 ## Notes
 - Regular updates to official certification lists are recommended.
